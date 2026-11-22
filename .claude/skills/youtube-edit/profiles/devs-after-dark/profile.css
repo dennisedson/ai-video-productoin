@@ -1,0 +1,34 @@
+  /* ===== profile: Devs:After Dark (STYLE.md). Appended after the house CSS, so these rules win. ===== */
+  @font-face { font-family: "Playfair Display"; src: url("fonts/playfair-display-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: block; }
+  @font-face { font-family: "Playfair Display"; src: url("fonts/playfair-display-latin-700-italic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: block; }
+  @font-face { font-family: "Playfair Display"; src: url("fonts/playfair-display-latin-800-italic.woff2") format("woff2"); font-weight: 800; font-style: italic; font-display: block; }
+  @font-face { font-family: "Inter"; src: url("fonts/inter-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "Inter"; src: url("fonts/inter-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-display: block; }
+  @font-face { font-family: "Inter"; src: url("fonts/inter-latin-600-normal.woff2") format("woff2"); font-weight: 600; font-display: block; }
+  @font-face { font-family: "Inter"; src: url("fonts/inter-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: block; }
+  @font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-display: block; }
+  @font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: block; }
+  /* headlines and lower lines: Playfair Display 700, tight; the key word in amber ITALIC, as the site's "after" */
+  .slabel, .st-title, .serif, .lower { font-family: "Playfair Display", Georgia, serif; font-weight: 700; letter-spacing: -.02em; }
+  .lower .w.em, .st-title .em, .slabel .em { color: var(--cyan); font-style: italic; }
+  .lower.amber .w.em { color: var(--magenta); }
+  /* labels: JetBrains Mono caps with tracking (the site's eyebrows and episode numbers) */
+  .tag .label, .list .eyebrow, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 500; text-transform: uppercase; letter-spacing: .14em; }
+  /* cards: night paper, a hairline, a soft drop; cream text, 12px radius */
+  .pointer, .list, .bullets, .popout, .cl-list { border-radius: 12px; }
+  .pls .t, .pointer .txt, .list .item .t, .bullets .b .t, .cl-list .t { color: #F3EEE2; text-shadow: none; }
+  .tag .label, .list .eyebrow { color: #8A8D99; }
+  .pls .icn .ic, .cl-list .icn .ic { stroke: #F3EEE2; }
+  .pls.cyan .t { color: var(--cyan); } .pls.cyan .ic { stroke: var(--cyan); }
+  .list .item .d { background: var(--cyan); box-shadow: none; }
+  .tag .pip { background: rgba(255,255,255,.12); } .tag .pip.done { background: rgba(251,191,36,.45); }
+  .tag .pip.now { background: var(--cyan); box-shadow: 0 0 12px rgba(251,191,36,.6); }
+  /* the wash: night with one warm desk-lamp glow and a vignette (the site's --vignette .3) */
+  .cut { background: radial-gradient(1000px 700px at 78% 18%, rgba(251,191,36,.10), transparent 70%),
+                     radial-gradient(1600px 1100px at 50% 50%, transparent 55%, rgba(0,0,0,.3) 100%), #0F1116; }
+  .gridbg { opacity: .10; }
+  /* punchline chip: night card, cream words, the payoff in sky, an amber hairline */
+  .chip { border: 1px solid rgba(251,191,36,.30); }
+  .chip .inner { color: #F3EEE2; text-shadow: none; }
+  /* lower lines over footage: a tight night edge so amber and cream hold on any background */
+  .lower { color: #F3EEE2; text-shadow: 0 0 2px rgba(15,17,22,.95), 0 0 6px rgba(15,17,22,.9), 0 3px 10px rgba(15,17,22,.85), 0 8px 32px rgba(15,17,22,.7); }

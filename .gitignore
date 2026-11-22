@@ -1,0 +1,17 @@
+# Footage, edits and renders stay on each machine
+videos/*
+!videos/.gitkeep
+Claude outputs/
+
+# Per-machine pipeline config, written by pipeline/install.sh
+.claude/skills/youtube-edit/pipeline/config.sh
+
+# The upstream WeAreNoCode copy (44 MB of demo assets); the live skill is .claude/skills/youtube-edit
+WeAreNoCode-YouTube-Editor/youtube-edit/
+
+# Local Claude Code settings and caches
+.claude/settings.local.json
+__pycache__/
+*.pyc
+.DS_Store
+.repo-export.tgz

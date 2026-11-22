@@ -1,0 +1,18 @@
+{
+  "name": "Devs:After Dark",
+  "about": "The Devs:After Dark video podcast (devsafterdark.com, tokens read from the live site 2026-11-22): near-black night, warm cream type, amber key words in Playfair italic, mono labels. Rules in STYLE.md; look in profile.css.",
+  "tokens": {
+    "--cyan": "#FBBF24",
+    "--blue": "#0F1116",
+    "--magenta": "#7DD3FC",
+    "--amber": "#8A8D99",
+    "--white": "#F3EEE2"
+  },
+  "body_font": "\"Inter\", system-ui, -apple-system, sans-serif",
+  "glass_bg": "rgba(22,25,34,0.92)",
+  "glass_bg_cut": "#161922",
+  "glass_border": "rgba(255,255,255,0.10)",
+  "glass_shadow": "0 24px 60px rgba(0,0,0,0.45)",
+  "css": "profile.css",
+  "chip_bg": "rgba(15,17,22,0.92)"
+}

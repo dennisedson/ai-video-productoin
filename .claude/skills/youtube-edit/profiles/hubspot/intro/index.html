@@ -1,0 +1,101 @@
+<!doctype html>
+<!-- HubSpot intro sting (3 s). A template: scripts/bookends.py fills {{EYEBROW}} (the series line) and {{TITLE}}
+     (the episode, one span per letter) and stages fonts, GSAP and sfx next to it. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face { font-family: "HubSpot Sans"; src: url("fonts/HubSpotSans-Medium.woff2") format("woff2"); font-weight: 500; font-display: block; }
+  @font-face { font-family: "HubSpot Sans"; src: url("fonts/HubSpotSans-Bold.woff2") format("woff2"); font-weight: 700; font-display: block; }
+  @font-face { font-family: "HubSpot Serif"; src: url("fonts/HubSpotSerif-Medium.woff2") format("woff2"); font-weight: 500; font-display: block; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#042729; }
+  #stage { position:relative; width:1920px; height:1080px; overflow:hidden;
+    background: radial-gradient(1200px 900px at 72% 50%, #0A3A3C 0%, #042729 70%); font-family:"HubSpot Sans", sans-serif; }
+  #grain { position:absolute; inset:0; opacity:.18;
+    background-image: radial-gradient(rgba(245,240,238,.35) 1.2px, transparent 1.3px); background-size: 36px 36px;
+    -webkit-mask-image: radial-gradient(900px 700px at 72% 50%, #000 0%, transparent 75%); mask-image: radial-gradient(900px 700px at 72% 50%, #000 0%, transparent 75%); }
+  .mask { position:absolute; overflow:hidden; }
+  #eyebrow-m { left:196px; top:330px; height:70px; width:1000px; }
+  #eyebrow { display:flex; align-items:center; gap:20px; font-weight:500; font-size:44px; color:#B9CDBE; letter-spacing:.01em; line-height:70px; }
+  #eyebrow i { width:18px; height:18px; border-radius:50%; background:#FF4800; display:inline-block; }
+  #title-m { left:180px; top:385px; height:400px; width:1100px; }
+  #title { font-family:"HubSpot Serif", serif; font-weight:500; font-size:300px; line-height:400px; color:#F5F0EE; letter-spacing:-.02em; white-space:nowrap; }
+  #title span { display:inline-block; }
+  #rule { position:absolute; left:200px; top:800px; width:560px; height:12px; border-radius:6px; background:#FF4800; transform-origin:0 50%; }
+  /* the HubSpot sprocket (official file), built piece by piece */
+  .spr { position:absolute; width:346px; height:356px; transform-origin:0 0; }
+  .spr .rot { position:absolute; inset:0; transform-origin:248.6px 208.3px; }
+  .spr .pc { position:absolute; inset:0; }
+  .spr img { position:absolute; left:0; top:0; width:345.8px; height:356px; display:block; }
+  .spr .hub { clip-path: circle(92.5px at 248.6px 208.3px); transform-origin:248.6px 208.3px; }
+  .spr .w-t { clip-path: polygon(248.6px 208.3px, 100.0px -290.0px, 249.1px -311.7px, 398.0px -289.8px); }
+  .spr .g-t { clip-path: circle(92px at 248.6px 208.3px); }
+  .spr .n-t { clip-path: circle(34.5px at 248.8px 46.5px); transform-origin:248.8px 46.5px; }
+  .spr .w-bl { clip-path: polygon(248.6px 208.3px, -13.0px 657.7px, -122.9px 572.1px, -206.2px 460.4px); }
+  .spr .g-bl { clip-path: circle(92px at 248.6px 208.3px); }
+  .spr .n-bl { clip-path: circle(31.6px at 130.8px 323.8px); transform-origin:130.8px 323.8px; }
+  .spr .w-tl { clip-path: polygon(248.6px 208.3px, -216.4px -24.5px, -145.0px -131.5px, -49.7px -217.7px); }
+  .spr .g-tl { clip-path: circle(92px at 248.6px 208.3px); }
+  .spr .n-tl { clip-path: circle(38.0px at 41.5px 38.5px); transform-origin:41.5px 38.5px; }
+</style>
+</head>
+<body>
+  <div id="stage" data-composition-id="sting" data-start="0" data-duration="3.0" data-fps="30" data-width="1920" data-height="1080">
+    <div id="grain"></div>
+    <div class="mask" id="eyebrow-m"><div id="eyebrow"><i></i>{{EYEBROW}}</div></div>
+    <div class="mask" id="title-m"><div id="title">{{TITLE}}</div></div>
+    <div id="rule"></div>
+    <div class="spr" id="spr" style="left:1407px; top:362px;"><div class="rot">
+      <div class="pc w-t"><div class="pc g-t"><img src="assets/hubspot-sprocket.svg" alt=""></div></div>
+      <div class="pc w-bl"><div class="pc g-bl"><img src="assets/hubspot-sprocket.svg" alt=""></div></div>
+      <div class="pc w-tl"><div class="pc g-tl"><img src="assets/hubspot-sprocket.svg" alt=""></div></div>
+      <div class="pc n-t"><img src="assets/hubspot-sprocket.svg" alt=""></div>
+      <div class="pc n-bl"><img src="assets/hubspot-sprocket.svg" alt=""></div>
+      <div class="pc n-tl"><img src="assets/hubspot-sprocket.svg" alt=""></div>
+      <div class="pc hub"><img src="assets/hubspot-sprocket.svg" alt=""></div>
+    </div></div>
+    <audio id="sfx-in" src="sfx/whoosh-short.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.45"></audio>
+    <audio id="sfx-hit" src="sfx/impact-bass-1.mp3" data-start="0.30" data-duration="2.1" data-track-index="21" data-volume="0.30"></audio>
+    <audio id="sfx-out" src="sfx/whoosh-short.mp3" data-start="2.38" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+  </div>
+<script src="vendor/gsap.min.js"></script>
+<script>
+  const tl = gsap.timeline({ paused: true });
+  tl.set('#title span', { yPercent: 110 }, 0);
+  tl.set('#eyebrow', { y: 70 }, 0);
+  tl.set('#rule', { scaleX: 0 }, 0);
+  // in
+  // sprocket: spins in from -120 deg while the ring pops, the spokes grow out, the end circles snap on; ends upright
+  tl.set('#spr', { scale: 1.0000 }, 0);
+  tl.set('#spr .rot', { rotation: -120 }, 0);
+  tl.set('#spr .hub', { scale: 0 }, 0);
+  tl.set('#spr .n-t', { scale: 0 }, 0);
+  tl.set('#spr .g-t', { clipPath: 'circle(0.0px at 248.6px 208.3px)' }, 0);
+  tl.set('#spr .n-bl', { scale: 0 }, 0);
+  tl.set('#spr .g-bl', { clipPath: 'circle(0.0px at 248.6px 208.3px)' }, 0);
+  tl.set('#spr .n-tl', { scale: 0 }, 0);
+  tl.set('#spr .g-tl', { clipPath: 'circle(0.0px at 248.6px 208.3px)' }, 0);
+  tl.to('#spr .rot', { rotation: 0, duration: 1.1, ease: 'power3.out' }, 0.26);
+  tl.to('#spr .hub', { scale: 1, duration: 0.45, ease: 'back.out(2.2)' }, 0.26);
+  tl.fromTo('#spr .g-t', { clipPath: 'circle(90.0px at 248.6px 208.3px)' }, { clipPath: 'circle(133.3px at 248.6px 208.3px)', duration: 0.24, ease: 'power2.out', immediateRender: false }, 0.56);
+  tl.to('#spr .n-t', { scale: 1, duration: 0.34, ease: 'back.out(3)' }, 0.75);
+  tl.fromTo('#spr .g-bl', { clipPath: 'circle(90.0px at 248.6px 208.3px)' }, { clipPath: 'circle(139.4px at 248.6px 208.3px)', duration: 0.25, ease: 'power2.out', immediateRender: false }, 0.65);
+  tl.to('#spr .n-bl', { scale: 1, duration: 0.34, ease: 'back.out(3)' }, 0.85);
+  tl.fromTo('#spr .g-tl', { clipPath: 'circle(90.0px at 248.6px 208.3px)' }, { clipPath: 'circle(235.8px at 248.6px 208.3px)', duration: 0.41, ease: 'power2.out', immediateRender: false }, 0.74);
+  tl.to('#spr .n-tl', { scale: 1, duration: 0.34, ease: 'back.out(3)' }, 1.10);
+  tl.to('#spr .rot', { rotation: 90, scale: 0, duration: 0.42, ease: 'back.in(1.6)' }, 2.40);
+  tl.to('#eyebrow', { y: 0, duration: 0.5, ease: 'power3.out' }, 0.05);
+  tl.to('#title span', { yPercent: 0, duration: 0.6, ease: 'power4.out', stagger: 0.04 }, 0.12);
+  tl.to('#rule', { scaleX: 1, duration: 0.5, ease: 'power3.inOut' }, 0.42);
+  // hold: slow drift
+  tl.to('#title-m', { x: 10, duration: 1.8, ease: 'none' }, 0.6);
+  // out
+  tl.to('#title span', { yPercent: -110, duration: 0.42, ease: 'power3.in', stagger: 0.025 }, 2.35);
+  tl.to('#eyebrow', { y: -70, duration: 0.38, ease: 'power3.in' }, 2.38);
+  tl.to('#rule', { scaleX: 0, transformOrigin: '100% 50%', duration: 0.4, ease: 'power3.in' }, 2.38);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["sting"] = tl;
+</script>
+</body>
+</html>

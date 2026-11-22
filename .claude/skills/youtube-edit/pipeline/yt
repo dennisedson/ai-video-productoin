@@ -1,0 +1,20 @@
+#!/bin/bash
+# yt: the pipeline from the terminal (no AI).  yt status | yt run NAME cut|storyboard|render | yt log NAME | yt open NAME
+. "$(cd "$(dirname "$0")" && pwd)/lib.sh"
+case "${1:-status}" in
+  status)
+    printf '%-24s %-14s %s\n' VIDEO STAGE "LAST CHANGE"
+    for s in "$ROOT"/videos/*/state.json; do
+      [ -f "$s" ] || continue
+      python3 -c 'import json,sys,os; s=json.load(open(sys.argv[1])); h=s["history"][-1]
+print("%-24s %-14s %s %s" % (os.path.basename(os.path.dirname(sys.argv[1])), s["stage"], h["at"], h.get("note","")))' "$s"
+    done ;;
+  run)
+    [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt run NAME cut|storyboard|render"; exit 2; }
+    mkdir -p "$ROOT/videos/$2/pipeline"
+    nohup bash "$PIPE/stage.sh" "$2" "$3" >> "$ROOT/videos/$2/pipeline/stage.log" 2>&1 &
+    echo "started $3 for $2 (log: videos/$2/pipeline/stage.log)" ;;
+  log) tail -n "${3:-40}" "$ROOT/videos/$2/pipeline/stage.log" ;;
+  open) for f in REVIEW-B.html REVIEW-A.html; do [ -f "$ROOT/videos/$2/$f" ] && { open "$ROOT/videos/$2/$f"; exit 0; }; done; echo "no review page yet" ;;
+  *) echo "yt status | yt run NAME STAGE | yt log NAME [LINES] | yt open NAME"; exit 2 ;;
+esac

@@ -1,0 +1,29 @@
+  /* ===== profile: HubSpot (STYLE.md). Appended after the house CSS, so these rules win. ===== */
+  @font-face { font-family: "HubSpot Sans"; src: url("fonts/HubSpotSans-Book.woff2") format("woff2"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "HubSpot Sans"; src: url("fonts/HubSpotSans-Medium.woff2") format("woff2"); font-weight: 500; font-display: block; }
+  @font-face { font-family: "HubSpot Sans"; src: url("fonts/HubSpotSans-Bold.woff2") format("woff2"); font-weight: 700; font-display: block; }
+  @font-face { font-family: "HubSpot Serif"; src: url("fonts/HubSpotSerif-Book.woff2") format("woff2"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "HubSpot Serif"; src: url("fonts/HubSpotSerif-Medium.woff2") format("woff2"); font-weight: 500; font-display: block; }
+  /* headlines and big callouts: HubSpot Serif Medium, the heaviest weight there is; never a stroke or faux bold */
+  .slabel, .st-title, .serif { font-family: "HubSpot Serif", Georgia, serif; font-weight: 500; }
+  /* cards as on the HubSpot developer docs: solid Cream #F5F0EE, no border, no shadow, 14px radius, text #110C0A */
+  .glass { backdrop-filter: none; -webkit-backdrop-filter: none; border-width: 0; }
+  .pointer, .list, .bullets, .popout, .cl-list { border-radius: 14px; }
+  .pls .t, .tag .label, .pointer .txt, .list .eyebrow, .list .item .t, .bullets .b .t, .cl-list .t { color: #110C0A; text-shadow: none; }
+  .pls .icn .ic, .cl-list .icn .ic { stroke: #110C0A; }
+  .pls.cyan .t { color: var(--cyan); } .pls.cyan .ic { stroke: var(--cyan); }
+  .pls.amber .t { color: #110C0A; } .pls.amber .ic { stroke: #110C0A; }
+  .list .item .d { background: #110C0A; box-shadow: none; }
+  .tag .pip { background: rgba(4,39,41,.18); } .tag .pip.done { background: rgba(4,39,41,.55); }
+  .tag .pip.now { background: var(--cyan); box-shadow: none; }
+  .bullets .b .d { box-shadow: none; }
+  .pointer .chev span { filter: none; }
+  /* the wash behind full-frame scenes and layouts: Deep Teal with one soft sage light (one gradient per frame) */
+  .cut { background: radial-gradient(1100px 760px at 14% 10%, rgba(185,205,190,.10), transparent 70%), #042729; }
+  .gridbg { opacity: .18; }
+  /* punchline chip: the Deep-Teal card (dark scenes), white words, the payoff in Pink, a pink hairline so it holds on the wash */
+  .chip { border: 1px solid rgba(252,195,220,.35); }
+  .chip .inner { color: #FFFFFF; text-shadow: none; }
+  /* lower lines over footage: a tight Deep-Teal edge so the Orange key word holds on warm clothes and skin (it vanished on a
+     red shirt with the house's soft black shadow) */
+  .lower { text-shadow: 0 0 2px rgba(4,39,41,.95), 0 0 6px rgba(4,39,41,.9), 0 3px 10px rgba(4,39,41,.85), 0 8px 32px rgba(4,39,41,.7); }
