@@ -1,6 +1,7 @@
 #!/bin/bash
 # yt: the pipeline from the terminal (no AI).
-#   yt status | yt watch [SECONDS] | yt run NAME cut|storyboard|render [--here] | yt log NAME | yt open NAME | yt host
+#   yt status | yt watch [SECONDS] | yt run NAME cut|storyboard|render [--here|--fast] | yt log NAME | yt open NAME | yt host
+#   --fast: ignore PRIORITY=background for this run (all cores, louder); a stage already running can't be moved off it
 #   hand-off (work Mac): yt bundle NAME [DIR] | yt import NAME VIDEO [CHAPTERS]     home Mac: yt clean-renders
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 case "${1:-status}" in
@@ -9,7 +10,7 @@ case "${1:-status}" in
   watch)    # yt status every N seconds (default 10) until Ctrl-C
     while :; do clear; date '+%H:%M:%S'; python3 "$PIPE/progress.py" "$ROOT"; sleep "${2:-10}"; done ;;
   run)
-    [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt run NAME cut|storyboard|render [--here]"; exit 2; }
+    [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt run NAME cut|storyboard|render [--here|--fast]"; exit 2; }
     mkdir -p "$ROOT/videos/$2/pipeline"
     nohup bash "$PIPE/stage.sh" "$2" "$3" "${4:-}" >> "$ROOT/videos/$2/pipeline/stage.log" 2>&1 &
     echo "started $3 for $2${4:+ ($4)} (log: videos/$2/pipeline/stage.log)" ;;
@@ -35,5 +36,5 @@ case "${1:-status}" in
     done ;;
   log) tail -n "${3:-40}" "$ROOT/videos/$2/pipeline/stage.log" ;;
   open) for f in REVIEW-B.html REVIEW-A.html; do [ -f "$ROOT/videos/$2/$f" ] && { open "$ROOT/videos/$2/$f"; exit 0; }; done; echo "no review page yet" ;;
-  *) echo "yt status | yt watch [S] | yt run NAME STAGE [--here] | yt log NAME [LINES] | yt open NAME | yt host | yt bundle NAME | yt import NAME VIDEO | yt clean-renders"; exit 2 ;;
+  *) echo "yt status | yt watch [S] | yt run NAME STAGE [--here|--fast] | yt log NAME [LINES] | yt open NAME | yt host | yt bundle NAME | yt import NAME VIDEO | yt clean-renders"; exit 2 ;;
 esac

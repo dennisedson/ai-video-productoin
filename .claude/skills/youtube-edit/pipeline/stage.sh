@@ -7,11 +7,11 @@
 #              RENDER_HOST_DIR=handoff makes a bundle zip to carry over by hand -> awaiting-import (yt import)
 # Approvals come from Dennis in a Claude Code thread (see the project's CLAUDE.md), which starts the next stage with `yt run`.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
-NAME="${1:?usage: stage.sh NAME cut|storyboard|render [--here]}"; STAGE="${2:?stage}"; OPT="${3:-}"
+NAME="${1:?usage: stage.sh NAME cut|storyboard|render [--here|--fast]}"; STAGE="${2:?stage}"; OPT="${3:-}"
 # PRIORITY=background (install.sh --priority background, for the work Mac): cut and storyboard run at macOS background
 # priority (taskpolicy -b: the efficiency cores, throttled disk), so the fans stay down and the stages take longer.
 # The render keeps normal priority (on the work Mac it is sent to the home Mac anyway).
-if [ "${PRIORITY:-normal}" = background ] && [ "$STAGE" != render ] && [ -z "${YT_BACKGROUND:-}" ] \
+if [ "${PRIORITY:-normal}" = background ] && [ "$STAGE" != render ] && [ "$OPT" != --fast ] && [ -z "${YT_BACKGROUND:-}" ] \
    && command -v taskpolicy >/dev/null 2>&1; then
   export YT_BACKGROUND=1
   exec taskpolicy -b /bin/bash "$0" "$@"

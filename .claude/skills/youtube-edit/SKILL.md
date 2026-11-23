@@ -312,7 +312,10 @@ in the storyboard depends on the flat cut's size (the composition is 1920x1080 a
 the raw frame, `"src"` its size), so the preview and the 4K render line up. The exception is a file made from the flat
 cut's picture (a subject matte, a span cut to its own file): that is made from a 4K flat cut, and `render.json` then
 leaves `face_raw` out. With `PRIORITY=background` in `pipeline/config.sh` (`install.sh --priority background`, the
-work Mac) the cut and storyboard stages run under `taskpolicy -b`: the efficiency cores, quieter and slower.
+work Mac) the cut and storyboard stages run under `taskpolicy -b`: the efficiency cores, quieter and slower. In a
+rush, `yt run <name> <stage> --fast` starts one stage on all cores; the setting itself stays. A stage already running
+can't be sped up: `taskpolicy -B -p` returns 0 but leaves a `taskpolicy -b` process in the background (tested), so the
+only way is to restart it with `--fast`, which repeats the stage from the start.
 Each checkpoint ends in a Mac notification that opens `REVIEW-A.html` / `REVIEW-B.html` (the video, the stills, the
 write-up). Dennis approves or sends notes in a Claude Code thread on the project; the project's `CLAUDE.md` says how
 that thread records them (`approvals/A.md`, `B.md`), applies notes, and starts the next stage with `pipeline/yt run`.
