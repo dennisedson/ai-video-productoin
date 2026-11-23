@@ -10,11 +10,14 @@
 NAME="${1:?usage: stage.sh NAME cut|storyboard|render [--here|--fast]}"; STAGE="${2:?stage}"; OPT="${3:-}"
 # PRIORITY=background (install.sh --priority background, for the work Mac): cut and storyboard run at macOS background
 # priority (taskpolicy -b: the efficiency cores, throttled disk), so the fans stay down and the stages take longer.
+# PRIORITY=utility (install.sh --priority utility): taskpolicy -c utility, nearly full speed (a 30 s clip: 20 s vs 17 s
+# normal, 222 s background) while other apps keep the upper hand; fans about as at normal.
 # The render keeps normal priority (on the work Mac it is sent to the home Mac anyway).
-if [ "${PRIORITY:-normal}" = background ] && [ "$STAGE" != render ] && [ "$OPT" != --fast ] && [ -z "${YT_BACKGROUND:-}" ] \
+case "${PRIORITY:-normal}" in background) TP=(-b) ;; utility) TP=(-c utility) ;; *) TP=() ;; esac
+if [ ${#TP[@]} -gt 0 ] && [ "$STAGE" != render ] && [ "$OPT" != --fast ] && [ -z "${YT_BACKGROUND:-}" ] \
    && command -v taskpolicy >/dev/null 2>&1; then
   export YT_BACKGROUND=1
-  exec taskpolicy -b /bin/bash "$0" "$@"
+  exec taskpolicy "${TP[@]}" /bin/bash "$0" "$@"
 fi
 W="videos/$NAME"; cd "$ROOT" || exit 1
 mkdir -p "$W/pipeline"

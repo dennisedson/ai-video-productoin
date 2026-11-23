@@ -131,9 +131,11 @@ and rendered on the home Mac only.
 
 ### Work Mac (once)
 1. `git pull && git fetch --tags` in the Video folder.
-2. `bash .claude/skills/youtube-edit/pipeline/install.sh --render-host handoff --priority background`
-   (`--render-host none` renders on the work Mac again). `--priority background` runs the cut and storyboard stages
-   on the efficiency cores so the fans stay down; they take longer (`--priority normal` undoes it). In a rush:
+2. `bash .claude/skills/youtube-edit/pipeline/install.sh --render-host handoff --priority utility`
+   (`--render-host none` renders on the work Mac again). `--priority utility` runs the cut and storyboard stages at
+   nearly full speed while other apps keep priority. `--priority background` puts them on the efficiency cores so the
+   fans stay down, but the video steps take about 13x longer (a cut pass: ~45 min instead of ~4). `--priority normal`
+   undoes either. In a rush:
    `yt run <name> cut --fast` runs that stage on all cores (a stage already running can't be sped up). The checkpoints
    work at 1080p on both Macs: only the final render builds 4K.
 3. `yt host` should say renders are handed off by hand.

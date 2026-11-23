@@ -6,7 +6,7 @@ INBOX="$ROOT/videos/_inbox"
 [ -f "$PIPE/config.sh" ] && . "$PIPE/config.sh"     # written by install.sh: CLAUDE_BIN, EXTRA_PATH, BUDGET_USD, MODEL, RENDER_HOST_DIR, PRIORITY
 : "${CLAUDE_BIN:=claude}"; : "${BUDGET_USD:=20}"; : "${MODEL:=}"
 : "${RENDER_HOST_DIR:=}"    # the work Mac: the home Mac's Video folder, mounted path or user@host:/path (empty = here)
-: "${PRIORITY:=normal}"    # background = cut and storyboard on the efficiency cores (quieter, slower)
+: "${PRIORITY:=normal}"    # background = efficiency cores (quieter, much slower); utility = nearly full speed, other apps first
 [ -n "${EXTRA_PATH:-}" ] && export PATH="$EXTRA_PATH:$PATH"
 
 log() { mkdir -p "$INBOX"; echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$INBOX/pipeline.log"; }

@@ -10,14 +10,15 @@
 #                      Kept on later runs; --render-host none goes back to rendering here.
 #   --serve-renders    (the home Mac) also load the render agent that renders bundles the work Mac sends (render-host.sh).
 #   --priority background  (the work Mac) run the cut and storyboard stages at background priority: quieter fans,
-#                      slower stages. Kept on later runs; --priority normal goes back.
+#                      slower stages (~13x on the video steps). --priority utility: nearly full speed, other apps
+#                      first, fans about as at normal. Kept on later runs; --priority normal goes back.
 USER_PY="$(command -v python3 || true)"
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 BUDGET=20; MOD=""; RHOST="${RENDER_HOST_DIR:-}"; SERVE=0; PRIO="${PRIORITY:-normal}"
 while [ $# -gt 0 ]; do case "$1" in
   --budget) BUDGET="$2"; shift ;; --model) MOD="$2"; shift ;;
   --render-host) RHOST="$2"; [ "$RHOST" = none ] && RHOST=""; shift ;; --serve-renders) SERVE=1 ;;
-  --priority) PRIO="$2"; shift; case "$PRIO" in background|normal) ;; *) echo "--priority background|normal"; exit 2 ;; esac ;;
+  --priority) PRIO="$2"; shift; case "$PRIO" in background|utility|normal) ;; *) echo "--priority background|utility|normal"; exit 2 ;; esac ;;
   *) echo "unknown option $1"; exit 2 ;;
 esac; shift; done
 [ "$(uname)" = Darwin ] || { echo "install.sh sets up launchd on the Mac; run it there."; exit 1; }
@@ -44,7 +45,7 @@ EXTRA_PATH="$dirs:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 BUDGET_USD="$BUDGET"   # cap per Claude stage (claude -p --max-budget-usd)
 MODEL="$MOD"           # empty = Claude Code's default model
 RENDER_HOST_DIR="$RHOST"   # the home Mac's Video folder as mounted here; empty = render on this Mac
-PRIORITY="$PRIO"           # background = cut and storyboard on the efficiency cores (quieter, slower)
+PRIORITY="$PRIO"           # background = efficiency cores (quieter, much slower); utility = nearly full speed, other apps first
 CFG
 mkdir -p "$INBOX"
 LABEL="com.youtube-edit.inbox"; PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"; mkdir -p "$HOME/Library/LaunchAgents"
@@ -85,6 +86,7 @@ PL
   echo "Both are in System Settings > General > Sharing."
 fi
 [ "$PRIO" = background ] && echo "cut and storyboard run at background priority (quieter, slower)"
+[ "$PRIO" = utility ] && echo "cut and storyboard run at utility priority (nearly full speed, other apps first)"
 if [ "$RHOST" = handoff ]; then echo "renders are handed off: approving B makes a bundle zip on the Desktop; yt import NAME VIDEO brings it back"
 elif [ -n "$RHOST" ]; then echo "renders go to the home Mac at $RHOST (asks first when it can't be reached; check with: yt host)"; fi
 command -v terminal-notifier >/dev/null || echo "tip: 'brew install terminal-notifier' makes a notification click open the review page"

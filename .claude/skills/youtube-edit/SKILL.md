@@ -312,7 +312,10 @@ in the storyboard depends on the flat cut's size (the composition is 1920x1080 a
 the raw frame, `"src"` its size), so the preview and the 4K render line up. The exception is a file made from the flat
 cut's picture (a subject matte, a span cut to its own file): that is made from a 4K flat cut, and `render.json` then
 leaves `face_raw` out. With `PRIORITY=background` in `pipeline/config.sh` (`install.sh --priority background`, the
-work Mac) the cut and storyboard stages run under `taskpolicy -b`: the efficiency cores, quieter and slower. In a
+work Mac) the cut and storyboard stages run under `taskpolicy -b`: the efficiency cores, quieter and much slower
+(measured on a 4K camera file: one apply-cut pass ~45 min vs 248 s at normal priority). `PRIORITY=utility`
+(`--priority utility`, the work Mac's choice) runs them under `taskpolicy -c utility`: nearly full speed (a 30 s clip
+20 s vs 17 s normal), other apps first. Priority never changes the output, only how long it takes. In a
 rush, `yt run <name> <stage> --fast` starts one stage on all cores; the setting itself stays. A stage already running
 can't be sped up: `taskpolicy -B -p` returns 0 but leaves a `taskpolicy -b` process in the background (tested), so the
 only way is to restart it with `--fast`, which repeats the stage from the start.
