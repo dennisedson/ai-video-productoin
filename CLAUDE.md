@@ -12,7 +12,7 @@ unattended Claude Code run for the judgment calls), and a Mac notification opens
 its "Hands-off pipeline" section.
 
 Stages: queued -> cutting -> **awaiting-A** -> storyboarding -> **awaiting-B** -> rendering -> done (or failed).
-On the work Mac a render waiting for the home Mac shows as **awaiting-host**.
+On the work Mac (hand-off) an approved render waits as **awaiting-import** until its video comes back.
 
 ## When Dennis approves or sends notes in this thread
 
@@ -30,11 +30,11 @@ or "approve agents-3 with the face on the right". Then:
    tell him what changed, and wait for his approval. The state stays where it is.
 4. "approve" (with or without small notes you apply first): start the next stage in the background and stop there:
    at A `bash .claude/skills/youtube-edit/pipeline/yt run <name> storyboard`, at B `bash .claude/skills/youtube-edit/pipeline/yt run <name> render`. Do not do the next stage's work in this thread.
-   **Before a render on the work Mac** (the render host is set: `yt host` says so), run `bash .claude/skills/youtube-edit/pipeline/yt host` first. If
-   the home Mac isn't ready, don't start the render: tell him why and ask whether he'll fix it (wake the home Mac,
-   reconnect; then check again and start with `yt run <name> render`) or wants it rendered on the work Mac
-   (`yt run <name> render --here`). The
-   same applies to "render <name>" for a video in awaiting-host.
+   **On the work Mac** (`yt host` says renders are handed off) the render stage packs `~/Desktop/<name>-render.zip`:
+   tell him to drag it through Screen Sharing into the home Mac's `videos/_render-inbox/`. When he says the video
+   is back ("agents-3 is back, it's in Downloads"), find the file and run `bash .claude/skills/youtube-edit/pipeline/yt import <name> <video>`;
+   if it refuses, say why. With an automatic render host (SSH or a share) instead, run `yt host` first and, when the
+   home Mac isn't ready, ask whether he'll fix it or wants `yt run <name> render --here`.
 5. Keep replies short: what you changed, what starts next, and that a notification will come.
 
 ## Machines
@@ -42,6 +42,7 @@ or "approve agents-3 with the face on the right". Then:
 This repo is cloned on two Macs: the home Mac and the HubSpot work Mac. `videos/` is not in git, so footage, edits and
 renders stay on the machine that made them. On the work Mac there are no Tella or Epidemic Sound connectors: take
 screen recordings as plain files (the "Two-file tutorials" route), use HubSpot-licensed music and the sound effects in
-`shared/sfx`, and default to the `hubspot` profile. The work Mac renders on the home Mac (its Video folder over SSH,
-`homemac`) and asks when the home Mac can't be reached; Devs:After Dark is edited and rendered on the home Mac only. When the
+`shared/sfx`, and default to the `hubspot` profile. Company software on the work Mac blocks file sharing and SSH to the home
+network, so its renders are handed off by hand: a bundle zip carried over Screen Sharing, rendered on the home Mac,
+the video carried back and imported (`yt import`). Devs:After Dark is edited and rendered on the home Mac only. When the
 skill changes ("save this to the skill"), commit it and push, so the other Mac gets it with `git pull`.

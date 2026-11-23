@@ -3,7 +3,8 @@
 #   cut        mechanical prep (no AI), then headless Claude finishes Checkpoint A  -> awaiting-A, notification
 #   storyboard headless Claude builds Checkpoint B, a 1080p preview render and render.json -> awaiting-B, notification
 #   render     render-mac.sh (no AI) -> done, notification; on the home Mac when RENDER_HOST_DIR is set (asks first
-#              when the home Mac isn't mounted or ready: Check again / Render on this Mac / Later -> awaiting-host)
+#              when the home Mac isn't mounted or ready: Check again / Render on this Mac / Later -> awaiting-host);
+#              RENDER_HOST_DIR=handoff makes a bundle zip to carry over by hand -> awaiting-import (yt import)
 # Approvals come from Dennis in a Claude Code thread (see the project's CLAUDE.md), which starts the next stage with `yt run`.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 NAME="${1:?usage: stage.sh NAME cut|storyboard|render [--here]}"; STAGE="${2:?stage}"; OPT="${3:-}"
@@ -82,7 +83,16 @@ render)
   # With RENDER_HOST_DIR set (the work Mac: the home Mac's Video folder, mounted or user@host:/path over SSH), the render
 # runs on the home Mac.
   # When the home Mac isn't ready, ask: never fall back to rendering here on its own. `yt run NAME render --here` skips it.
+  # RENDER_HOST_DIR=handoff: make the bundle zip on the Desktop for you to carry over (Screen Sharing), -> awaiting-import.
   WHERE=here; [ -n "${RENDER_HOST_DIR:-}" ] && [ "$OPT" != --here ] && WHERE=home
+  if [ "$WHERE" = home ] && [ "$RENDER_HOST_DIR" = handoff ]; then
+    python3 "$PIPE/remote-render.py" --project "$W" --zip "${HANDOFF_DIR:-$HOME/Desktop}" | tee "$W/pipeline/bundle.out"
+    [ "${PIPESTATUS[0]}" -eq 0 ] || fail "making the hand-off bundle failed (see pipeline/stage.log)"
+    ZIP="$(awk -F'\t' '$1=="BUNDLE"{print $2}' "$W/pipeline/bundle.out")"
+    state_set "$NAME" awaiting-import "bundle: $ZIP"
+    notify "YouTube edit: $NAME" "Bundle ready: drag $(basename "$ZIP") into the home Mac's videos/_render-inbox. Then: yt import $NAME <video>." "$ZIP"
+    exit 0
+  fi
   while [ "$WHERE" = home ]; do
     why="$(python3 "$PIPE/remote-render.py" --check --host "$RENDER_HOST_DIR")" && break
     echo "== $(date '+%H:%M:%S') home Mac not ready: $why"

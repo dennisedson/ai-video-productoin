@@ -290,6 +290,12 @@ size settles and moves the files to `videos/<name>/raw/`; `stage.sh` then runs e
   never falls back on its own:** a dialog asks Check again / Render on this Mac / Later (Later, or no answer in 4 h:
   `awaiting-host` and a notification); `yt run <name> render --here` renders on the work Mac; `yt host` checks the
   share. A failed home render keeps the bundle there (`render-remote.log` comes back) so it can resume with `--from`.
+  **Hand-off** (`--render-host handoff`, the HubSpot work Mac, where SMB and SSH to the home network are blocked): the
+  render stage packs the same bundle into `~/Desktop/<name>-render.zip` (`remote-render.py --zip`, `yt bundle`) ->
+  `awaiting-import`; carried into the home Mac's `videos/_render-inbox/` by hand (Screen Sharing), `render-host.sh`
+  unpacks it once it opens as a whole zip and has stopped growing, renders it, and notifies with `out/`; the video
+  comes back by hand and `yt import <name> <video>` (`import-render.py`: picture, sound, length vs the composition)
+  delivers it and marks it done. `yt clean-renders` on the home Mac removes finished jobs.
 **The checkpoints never encode 4K.** Every `apply-cut.py` run in the cut and storyboard stages adds
 `--vf scale=-2:1080`; `render-mac.sh` builds the one 4K flat cut from `face_raw`, `cut-list.json` and `grade`. Nothing
 in the storyboard depends on the flat cut's size (the composition is 1920x1080 and `layout.face_crop` is a region of

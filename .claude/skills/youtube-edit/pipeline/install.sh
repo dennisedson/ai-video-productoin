@@ -5,6 +5,8 @@
 # (and every 2 minutes). Nothing here needs admin rights.
 #   --render-host DIR  (the work Mac) render on the home Mac: DIR is its Video folder, either mounted here as a share
 #                      (/Volumes/Video) or over SSH (user@host:/Users/you/AI/claude-cowork/Video, with a key set up).
+#                      Or "handoff": approving B makes a bundle zip on the Desktop to carry over by hand (Screen
+#                      Sharing) into the home Mac's videos/_render-inbox; yt import brings the video back.
 #                      Kept on later runs; --render-host none goes back to rendering here.
 #   --serve-renders    (the home Mac) also load the render agent that renders bundles the work Mac sends (render-host.sh).
 #   --priority background  (the work Mac) run the cut and storyboard stages at background priority: quieter fans,
@@ -76,7 +78,8 @@ PL
   echo "Both are in System Settings > General > Sharing."
 fi
 [ "$PRIO" = background ] && echo "cut and storyboard run at background priority (quieter, slower)"
-[ -n "$RHOST" ] && echo "renders go to the home Mac at $RHOST (asks first when it can't be reached; check with: yt host)"
+if [ "$RHOST" = handoff ]; then echo "renders are handed off: approving B makes a bundle zip on the Desktop; yt import NAME VIDEO brings it back"
+elif [ -n "$RHOST" ]; then echo "renders go to the home Mac at $RHOST (asks first when it can't be reached; check with: yt host)"; fi
 command -v terminal-notifier >/dev/null || echo "tip: 'brew install terminal-notifier' makes a notification click open the review page"
 ln -sf "$PIPE/yt" "$HOME/.local/bin/yt" 2>/dev/null || { mkdir -p "$HOME/.local/bin" && ln -sf "$PIPE/yt" "$HOME/.local/bin/yt"; }
 notify "YouTube edit pipeline" "Installed. Drop recordings into videos/_inbox/<name>/ to start an edit."

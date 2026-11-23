@@ -11,6 +11,9 @@ bundle from the home Mac. No AI runs on either side.
 
   python3 remote-render.py --check --host HOST          exit 0 = the home Mac can take a render, 3 = not
   python3 remote-render.py --project videos/NAME --host HOST [--keep] [--poll 20] [--timeout-h 8]
+  python3 remote-render.py --project videos/NAME --zip ~/Desktop   the hand-off: the same bundle as one zip
+                                 (<name>-render.zip) to carry over by hand, e.g. dragged through Screen Sharing into
+                                 the home Mac's videos/_render-inbox/; import the result with import-render.py
 
 The bundle is what render-mac.sh reads: render.json, storyboard.json, cut-list.json, chapters/notes files, the face
 file named by render.json's face_raw, and public/ without the files the render rebuilds (input-video.mp4 when face_raw
@@ -19,7 +22,8 @@ is set, face-crop.mp4 when face_crop is set, the HyperFrames cache).
 import argparse, io, json, os, re, shlex, shutil, socket, subprocess, sys, tarfile, tempfile, time
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--host", required=True, help="the home Mac's Video folder: a mounted path, or user@host:/path for SSH")
+ap.add_argument("--host", help="the home Mac's Video folder: a mounted path, or user@host:/path for SSH")
+ap.add_argument("--zip", metavar="DIR", help="write the bundle as DIR/<name>-render.zip for a hand-off, then stop")
 ap.add_argument("--project", help="videos/NAME on this Mac")
 ap.add_argument("--check", action="store_true", help="only say whether the home Mac can take a render")
 ap.add_argument("--keep", action="store_true", help="leave the bundle on the home Mac after a successful render")
@@ -235,7 +239,12 @@ def make_host(spec):
     return MountedHost(spec)
 
 
-host = make_host(a.host)
+if not a.host and not a.zip:
+    sys.exit("--host is required (or --zip DIR for a hand-off)")
+if a.host == "handoff" and a.check:
+    print("renders are handed off by hand: yt run NAME render makes the bundle zip (yt bundle NAME), yt import brings it back")
+    sys.exit(0)
+host = make_host(a.host) if a.host and not a.zip else None
 
 if a.check:
     p = host.problem()
@@ -247,10 +256,11 @@ if not a.project:
 W = os.path.abspath(a.project.rstrip("/"))
 cfg = json.load(open(os.path.join(W, "render.json")))
 name = os.path.basename(W)
-p = host.problem()
-if p:
-    say("cannot render on the home Mac:", p)
-    sys.exit(3)
+if host:
+    p = host.problem()
+    if p:
+        say("cannot render on the home Mac:", p)
+        sys.exit(3)
 
 
 # ---- 1. the bundle -------------------------------------------------------------------------------------------------
@@ -289,6 +299,22 @@ files = bundle_files()
 total = sum(s for _, s in files)
 info = {"name": name, "from": socket.gethostname(), "sent_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "files": len(files), "bytes": total}
+
+if a.zip:                                                  # the hand-off: one zip, job.json last (the home Mac checks it)
+    import zipfile
+    outdir = os.path.abspath(os.path.expanduser(a.zip)); os.makedirs(outdir, exist_ok=True)
+    out = os.path.join(outdir, "%s-render.zip" % name); tmpz = out + ".partial"
+    info["via"] = "handoff"
+    say("packing %d files, %.2f GB" % (len(files), total / 1e9))
+    t0 = time.time()
+    with zipfile.ZipFile(tmpz, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as z:   # video doesn't compress
+        for rel, size in files:
+            z.write(os.path.join(W, rel), arcname=name + "/" + rel)
+        z.writestr(name + "/job.json", json.dumps(info, indent=1))
+    os.replace(tmpz, out)
+    say("packed in %d s: %s (%.2f GB)" % (time.time() - t0, out, os.path.getsize(out) / 1e9))
+    print("BUNDLE\t%s" % out)
+    sys.exit(0)
 say("sending %d files, %.2f GB, to %s" % (len(files), total / 1e9, host.label))
 t0 = time.time()
 try:

@@ -1,6 +1,7 @@
 #!/bin/bash
 # yt: the pipeline from the terminal (no AI).
 #   yt status | yt run NAME cut|storyboard|render [--here] | yt log NAME | yt open NAME | yt host
+#   hand-off (work Mac): yt bundle NAME [DIR] | yt import NAME VIDEO [CHAPTERS]     home Mac: yt clean-renders
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 case "${1:-status}" in
   status)
@@ -18,7 +19,24 @@ print("%-24s %-14s %s %s" % (os.path.basename(os.path.dirname(sys.argv[1])), s["
   host)   # can the home Mac take a render right now?
     if [ -z "$RENDER_HOST_DIR" ]; then echo "no render host set: renders run on this Mac (install.sh --render-host DIR sets one)"; exit 0; fi
     python3 "$PIPE/remote-render.py" --check --host "$RENDER_HOST_DIR" ;;
+  bundle)   # the render bundle as one zip (default ~/Desktop) to carry to the home Mac by hand
+    [ -n "${2:-}" ] || { echo "yt bundle NAME [DIR]"; exit 2; }
+    python3 "$PIPE/remote-render.py" --project "$ROOT/videos/$2" --zip "${3:-$HOME/Desktop}" ;;
+  import)   # the finished video back from the home Mac: check, deliver, mark done
+    [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt import NAME VIDEO.mp4 [chapters.txt]"; exit 2; }
+    out="$(python3 "$PIPE/import-render.py" "$ROOT/videos/$2" "$3" ${4:+"$4"})" || { echo "$out"; exit 1; }
+    echo "$out"
+    D="$(echo "$out" | awk -F'\t' '$1=="DELIVERED"{print $2}')"
+    state_set "$2" done "rendered on the home Mac (hand-off)"
+    notify "YouTube edit: $2" "Imported and delivered to $D." "$D"
+    echo "done. On the home Mac, yt clean-renders removes the bundle there." ;;
+  clean-renders)   # the home Mac: remove finished hand-off and remote jobs from videos/_render-inbox
+    for d in "$ROOT"/videos/_render-inbox/*/; do
+      [ -f "$d/status.json" ] || continue
+      st="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("stage",""))' "$d/status.json")"
+      case "$st" in done|failed) rm -rf "$d" && echo "removed $(basename "$d") ($st)" ;; *) echo "kept $(basename "$d") ($st)" ;; esac
+    done ;;
   log) tail -n "${3:-40}" "$ROOT/videos/$2/pipeline/stage.log" ;;
   open) for f in REVIEW-B.html REVIEW-A.html; do [ -f "$ROOT/videos/$2/$f" ] && { open "$ROOT/videos/$2/$f"; exit 0; }; done; echo "no review page yet" ;;
-  *) echo "yt status | yt run NAME STAGE [--here] | yt log NAME [LINES] | yt open NAME | yt host"; exit 2 ;;
+  *) echo "yt status | yt run NAME STAGE [--here] | yt log NAME [LINES] | yt open NAME | yt host | yt bundle NAME | yt import NAME VIDEO | yt clean-renders"; exit 2 ;;
 esac

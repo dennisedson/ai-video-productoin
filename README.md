@@ -102,62 +102,59 @@ If IT blocks LaunchAgents, skip this step: run the same stages by hand in a Clau
 
 The home Mac renders much faster, so the work Mac does the edit (the cut, the storyboard, both checkpoints) and the
 home Mac does the 4K render. Nothing AI runs on the home Mac for this, so the personal Claude account isn't involved.
-The work Mac sends only what the render needs (about 1.5 GB of a 10 GB project), gets the finished video back, delivers
-it to `~/Movies/YouTube Renders/<name>/` as usual, and deletes the files from the home Mac.
+Only what the render needs goes over (about 1.3 GB for a tutorial; the 4K flat cut is built on the home Mac).
 
-The work Mac reaches the home Mac's Video folder **over SSH** (the setup below; it works where company software blocks
-file sharing, as on the HubSpot work Mac) or, where file sharing is allowed, as a **mounted share**.
+**On the HubSpot work Mac this is a hand-off by hand**, because company software blocks file sharing and SSH to the
+home network (check with your manager or IT that carrying renders over this way is fine):
 
-**If the home Mac can't be reached, it asks, and never renders on the work Mac without asking.** When the render is
-about to start:
-- from a Claude Code thread (approving at Checkpoint B): Claude runs `yt host` and asks you whether to fix it (wake
-  the home Mac, check the network) or render on the work Mac;
-- unattended: a dialog on the work Mac: **Check again**, **Render on this Mac**, or **Later**. Later (or no answer in
-  4 hours) leaves the video in `awaiting-host` with a notification; start it again with `yt run <name> render`, or
-  `yt run <name> render --here` to render on the work Mac.
+1. Approve Checkpoint B as usual. Instead of rendering, the work Mac packs the render bundle into
+   `~/Desktop/<name>-render.zip` and notifies you; the video waits in **awaiting-import** (`yt bundle <name>` makes the
+   zip again any time).
+2. Drag the zip through Screen Sharing into the home Mac's `videos/_render-inbox/` (open that folder in Finder on the
+   home Mac, inside the Screen Sharing window).
+3. The home Mac's render agent waits until the zip has finished copying, unpacks it and renders. Its notification
+   opens `videos/_render-inbox/<name>/out/`.
+4. Drag the video (and `chapters.txt`) back to the work Mac, then `yt import <name> <video>` there: it checks the file
+   (picture, sound, length), delivers it to `~/Movies/YouTube Renders/<name>/` and marks the video done. Or tell the
+   Claude Code thread where you put it.
+5. On the home Mac, `yt clean-renders` removes finished jobs, so no work footage stays there.
 
-Devs:After Dark doesn't use this: it's edited and rendered on the home Mac only.
+`yt run <name> render --here` renders on the work Mac instead. Devs:After Dark doesn't use any of this: it's edited
+and rendered on the home Mac only.
 
 ### Home Mac (once)
 1. `git pull` in the Video folder, then `bash .claude/skills/youtube-edit/pipeline/install.sh --serve-renders`.
    That loads a second agent that watches `videos/_render-inbox/` and checks in every minute.
-2. System Settings → General → Sharing → **Remote Login** on. Click ⓘ and set "Allow access for" to only your user.
-3. The home Mac renders only while it's awake and you're logged in. If it sleeps, the work Mac sees that (the agent
-   stops checking in) and asks. Battery → Options: prevent automatic sleeping on power adapter when the display is off.
-4. Optional: in the Google Home app (Wi-Fi → Devices), reserve this Mac's address (`192.168.86.48`) so it doesn't change.
+2. The home Mac renders only while it's awake and you're logged in. Battery → Options: prevent automatic sleeping on
+   power adapter when the display is off.
 
 ### Work Mac (once)
 1. `git pull && git fetch --tags` in the Video folder.
-2. A key just for this, so the background pipeline never needs a password:
+2. `bash .claude/skills/youtube-edit/pipeline/install.sh --render-host handoff --priority background`
+   (`--render-host none` renders on the work Mac again). `--priority background` runs the cut and storyboard stages
+   on the efficiency cores so the fans stay down; they take longer (`--priority normal` undoes it). The checkpoints
+   work at 1080p on both Macs: only the final render builds 4K.
+3. `yt host` should say renders are handed off by hand.
 
-       ssh-keygen -t ed25519 -f ~/.ssh/homemac -N "" -C "work Mac to home Mac renders"
-       ssh-copy-id -i ~/.ssh/homemac.pub dennisedson@192.168.86.48     # the home Mac's password, once
+### Where the network allows it: automatic over SSH or a mounted share
+On a Mac that may reach the home Mac directly, the work Mac can send the bundle, wait, and fetch the result on its own
+(not on the HubSpot work Mac, where both are blocked):
+- **SSH:** Remote Login on the home Mac; on the other Mac a key (`ssh-keygen -t ed25519 -f ~/.ssh/homemac -N ""`,
+  `ssh-copy-id -i ~/.ssh/homemac.pub you@<home address>`), a `Host homemac` entry in `~/.ssh/config` with `HostName`,
+  `User` and `IdentityFile ~/.ssh/homemac`, then `install.sh --render-host homemac:/Users/<you>/AI/claude-cowork/Video`.
+- **Mounted share:** File Sharing on the home Mac with the Video folder shared; mount `smb://<home address>` → Video,
+  then `install.sh --render-host /Volumes/Video`.
 
-3. Add to `~/.ssh/config` (create it if it's missing):
-
-       Host homemac
-         HostName 192.168.86.48
-         User dennisedson
-         IdentityFile ~/.ssh/homemac
-
-   `ssh homemac true` should return with no password prompt.
-4. `bash .claude/skills/youtube-edit/pipeline/install.sh --render-host homemac:/Users/dennisedson/AI/claude-cowork/Video --priority background`
-   (`--render-host none` turns it off). `--priority background` runs the cut and storyboard stages on the
-   efficiency cores so the fans stay down; they take longer (`--priority normal` undoes it). The checkpoints work at
-   1080p on both Macs: only the final render builds 4K.
-5. `yt host` should say `home Mac ready`.
-
-**With a mounted share instead** (where file sharing isn't blocked): turn on File Sharing on the home Mac and share the
-Video folder; on the work Mac mount `smb://192.168.86.48` → Video, then `install.sh --render-host /Volumes/Video`.
+When the home Mac can't be reached the render asks (from a Claude Code thread, or a dialog: Check again / Render on
+this Mac / Later -> awaiting-host) and never falls back on its own. `yt host` says what's missing.
 
 ### If something goes wrong
-- `yt host` says what's missing: unreachable over SSH (with SSH's own reason), not mounted, the agent isn't installed,
-  or the home Mac hasn't checked in.
-- A render that fails on the home Mac comes back as `failed` with its log in `videos/<name>/render-remote.log`. The
-  files stay on the home Mac (`videos/_render-inbox/<name>/`): `yt run <name> render` sends them again, or resume
-  there with `render-mac.sh videos/_render-inbox/<name> --from STEP`.
-- If the connection drops during a render, the home Mac keeps rendering and the work Mac keeps checking for 10
-  minutes, then stops. When it's back, `yt run <name> render` sends it again.
+- A render that fails on the home Mac: its log is `videos/_render-inbox/<name>/render.log` there (and, in the
+  automatic modes, comes back as `videos/<name>/render-remote.log`). Resume on the home Mac with
+  `render-mac.sh videos/_render-inbox/<name> --from STEP`, or send the bundle again.
+- `yt import` refuses a file without picture or sound, or whose length doesn't match the composition: check you
+  dragged back the right video.
+- A zip in the render inbox that isn't a render bundle is renamed `.rejected`, with a notification.
 
 ### Going back to the known-good version
 The tag `before-remote-render` (commit `dfbf480`) is the setup both Macs ran on 2026-11-22: renders on each Mac, 4K

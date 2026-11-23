@@ -19,6 +19,7 @@ PY
 
 status rendering "starting"
 FROM="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("from","the work Mac"))' "$J/job.json" 2>/dev/null)"
+VIA="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("via",""))' "$J/job.json" 2>/dev/null)"
 python3 - "$J/render.json" "$ROOT/$J/out" <<'PY'
 import json, sys
 p = sys.argv[1]; c = json.load(open(p)); c["deliver"] = sys.argv[2]
@@ -36,7 +37,11 @@ rc=${PIPESTATUS[0]}
 if [ "$rc" -eq 0 ] && ls "$J"/out/*.mp4 >/dev/null 2>&1; then
   status done "delivered to out/"
   log "render host: $n done"
-  notify "Render host" "Rendered $n; the work Mac is copying it back."
+  if [ "$VIA" = handoff ]; then
+    notify "Render host" "Rendered $n. Drag the video in videos/_render-inbox/$n/out/ back to the work Mac, then: yt import $n <video>." "$ROOT/$J/out"
+  else
+    notify "Render host" "Rendered $n; the work Mac is copying it back."
+  fi
 else
   err="$(grep -m1 '^!! ' "$J/render-host.log" 2>/dev/null | sed 's/^!! //')"
   status failed "" "${err:-render-mac.sh exited $rc}"
