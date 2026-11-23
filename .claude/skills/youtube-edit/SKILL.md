@@ -80,6 +80,11 @@ synthetic media and must end with `OK` (the media tests skip themselves without 
   pipeline's cut stage ends `failed`. `ffmpeg-full` has it but is keg-only: installing it is not enough while plain
   `ffmpeg` owns `/opt/homebrew/bin/ffmpeg`. Unlink `ffmpeg` and `brew link --force ffmpeg-full`. A later `brew upgrade`
   or reinstall of plain `ffmpeg` can take the link back, so rerun the `grep drawtext` check when the error returns.
+- **Gotcha: the pipeline's Python is not the terminal's.** launchd starts with a bare PATH, so the pipeline uses the
+  folders in `pipeline/config.sh`, and with `/opt/homebrew/bin` first that was Homebrew's `python3`, without numpy, while
+  the terminal's (pyenv) had it: scripts passed by hand and the cut stage failed with `No module named 'numpy'`.
+  install.sh now picks the first `python3` that imports numpy and puts its folder first, and every stage runs a preflight
+  (numpy, `drawtext`) that stops at once with the fix. After changing Python or ffmpeg, rerun install.sh.
 - **Optional connectors:** Tella (screen tutorials) and Epidemic Sound. Without Tella, record the screen with anything.
 - numpy scripts: `sync-tracks.py`, `tighten-cut.py`, `sliver.py`, `edge-audit.py`, `dead-air.py`. Node: `stutter-scan.py`
   (it runs `find-cut-candidates.mjs`) and the cut review page (`build-edl-review.mjs`).

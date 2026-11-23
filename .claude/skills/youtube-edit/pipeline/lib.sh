@@ -20,6 +20,13 @@ p=sys.argv[1]; s=json.load(open(p)) if os.path.exists(p) else {"history": []}
 s["stage"]=sys.argv[2]; s["history"].append({"stage": sys.argv[2], "at": time.strftime("%Y-%m-%d %H:%M:%S"), "note": sys.argv[3]})
 json.dump(s, open(p, "w"), indent=1)' "$ROOT/videos/$1/state.json" "$2" "${3:-}"; log "$1 -> $2 ${3:-}"; }
 
+# preflight: prints what the pipeline's own python3 and ffmpeg (the ones on EXTRA_PATH, not the terminal's) lack; empty = ready
+preflight() {
+  python3 -c "import numpy" 2>/dev/null || echo "$(command -v python3) has no numpy: '$(command -v python3)' -m pip install numpy, or rerun install.sh;"
+  ffmpeg -hide_banner -filters 2>/dev/null | grep -q drawtext \
+    || echo "ffmpeg ($(command -v ffmpeg || echo 'not found')) has no drawtext: brew install ffmpeg-full && brew unlink ffmpeg; brew link --force ffmpeg-full;"
+}
+
 # notify TITLE MESSAGE [FILE TO OPEN ON CLICK]; terminal-notifier makes the click open the file, osascript cannot
 notify() {
   if command -v terminal-notifier >/dev/null 2>&1; then

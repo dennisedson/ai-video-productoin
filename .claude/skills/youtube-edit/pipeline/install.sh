@@ -11,6 +11,7 @@
 #   --serve-renders    (the home Mac) also load the render agent that renders bundles the work Mac sends (render-host.sh).
 #   --priority background  (the work Mac) run the cut and storyboard stages at background priority: quieter fans,
 #                      slower stages. Kept on later runs; --priority normal goes back.
+USER_PY="$(command -v python3 || true)"
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 BUDGET=20; MOD=""; RHOST="${RENDER_HOST_DIR:-}"; SERVE=0; PRIO="${PRIORITY:-normal}"
 while [ $# -gt 0 ]; do case "$1" in
@@ -29,7 +30,13 @@ if [ -z "$CLAUDE" ]; then
   echo "The Claude Code command line ('claude') is not on your PATH. Install it (see https://code.claude.com/docs),"
   echo "run 'claude' once to sign in, then run this script again."; exit 1
 fi
-dirs=""; for c in python3 ffmpeg node auto-editor "$CLAUDE"; do d="$(dirname "$(command -v "$c" || echo "$c")")"; case ":$dirs:" in *":$d:"*) ;; *) dirs="${dirs:+$dirs:}$d" ;; esac; done
+# the scripts need numpy: use the first python3 that has it (the terminal's own first), its folder first on EXTRA_PATH
+PY=""; for p in "$USER_PY" $(which -a python3); do
+  [ -n "$p" ] && "$p" -c "import numpy" 2>/dev/null && { PY="$("$p" -c 'import sys; print(sys.executable)')"; break; }
+done
+[ -n "$PY" ] || { echo "no python3 with numpy: python3 -m pip install numpy (or brew install numpy), then run this again"; exit 1; }
+dirs=""; for c in "$PY" ffmpeg node auto-editor "$CLAUDE"; do d="$(dirname "$(command -v "$c" || echo "$c")")"; case ":$dirs:" in *":$d:"*) ;; *) dirs="${dirs:+$dirs:}$d" ;; esac; done
+pf="$(PATH="$dirs:$PATH" preflight)"; [ -z "$pf" ] || { echo "not ready: $pf"; exit 1; }
 cat > "$PIPE/config.sh" <<CFG
 # written by install.sh on $(date '+%Y-%m-%d %H:%M'); launchd starts with a bare PATH, so the tools' folders are listed here
 CLAUDE_BIN="$CLAUDE"
