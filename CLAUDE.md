@@ -30,6 +30,11 @@ or "approve agents-3 with the face on the right". Then:
    tell him what changed, and wait for his approval. The state stays where it is.
 4. "approve" (with or without small notes you apply first): start the next stage in the background and stop there:
    at A `bash .claude/skills/youtube-edit/pipeline/yt run <name> storyboard`, at B `bash .claude/skills/youtube-edit/pipeline/yt run <name> render`. Do not do the next stage's work in this thread.
+   When he says "rush", "fast" or "I need it soon" ("approve agents-3, rush"), add `--fast` (`yt run <name> storyboard
+   --fast`, or `yt run <name> cut --fast` when he asks for a cut rerun): that stage runs on all cores despite
+   `PRIORITY=background`, louder and quicker. The render already runs at normal priority, so `--fast` changes nothing
+   there. A stage already running can't be sped up; restarting it with `--fast` repeats it from the start, so say what
+   that costs before doing it.
    **On the work Mac** (`yt host` says renders are handed off) the render stage packs `~/Desktop/<name>-render.zip`:
    tell him to drag it through Screen Sharing into the home Mac's `videos/_render-inbox/`. When he says the video
    is back ("agents-3 is back, it's in Downloads"), find the file and run `bash .claude/skills/youtube-edit/pipeline/yt import <name> <video>`;
