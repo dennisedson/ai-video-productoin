@@ -90,7 +90,8 @@ Needs the `claude` command line signed in once and permission to add a LaunchAge
 
 Then drop recordings into `videos/_inbox/<name>/` (camera file, screen file for a tutorial, optional `notes.txt` such
 as "HubSpot profile"). A notification comes at each checkpoint; approve or send notes in a Claude Code thread
-("approve <name>, grade blacks"). `yt status`, `yt log <name>`, `yt run <name> cut|storyboard|render`.
+("approve <name>, grade blacks"). `yt status` (every video with its progress; `yt watch` keeps it on screen), `yt log <name>`,
+`yt run <name> cut|storyboard|render`.
 `--budget N` caps each Claude stage (default $20); `uninstall.sh` removes it. `install.sh` writes
 `pipeline/config.sh` for that machine; it isn't in git.
 

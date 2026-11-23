@@ -1,16 +1,13 @@
 #!/bin/bash
 # yt: the pipeline from the terminal (no AI).
-#   yt status | yt run NAME cut|storyboard|render [--here] | yt log NAME | yt open NAME | yt host
+#   yt status | yt watch [SECONDS] | yt run NAME cut|storyboard|render [--here] | yt log NAME | yt open NAME | yt host
 #   hand-off (work Mac): yt bundle NAME [DIR] | yt import NAME VIDEO [CHAPTERS]     home Mac: yt clean-renders
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 case "${1:-status}" in
-  status)
-    printf '%-24s %-14s %s\n' VIDEO STAGE "LAST CHANGE"
-    for s in "$ROOT"/videos/*/state.json; do
-      [ -f "$s" ] || continue
-      python3 -c 'import json,sys,os; s=json.load(open(sys.argv[1])); h=s["history"][-1]
-print("%-24s %-14s %s %s" % (os.path.basename(os.path.dirname(sys.argv[1])), s["stage"], h["at"], h.get("note","")))' "$s"
-    done ;;
+  status)   # every video, its stage and progress (render: from the log; cut and storyboard: ~ estimated from earlier runs)
+    python3 "$PIPE/progress.py" "$ROOT" ;;
+  watch)    # yt status every N seconds (default 10) until Ctrl-C
+    while :; do clear; date '+%H:%M:%S'; python3 "$PIPE/progress.py" "$ROOT"; sleep "${2:-10}"; done ;;
   run)
     [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt run NAME cut|storyboard|render [--here]"; exit 2; }
     mkdir -p "$ROOT/videos/$2/pipeline"
@@ -38,5 +35,5 @@ print("%-24s %-14s %s %s" % (os.path.basename(os.path.dirname(sys.argv[1])), s["
     done ;;
   log) tail -n "${3:-40}" "$ROOT/videos/$2/pipeline/stage.log" ;;
   open) for f in REVIEW-B.html REVIEW-A.html; do [ -f "$ROOT/videos/$2/$f" ] && { open "$ROOT/videos/$2/$f"; exit 0; }; done; echo "no review page yet" ;;
-  *) echo "yt status | yt run NAME STAGE [--here] | yt log NAME [LINES] | yt open NAME | yt host | yt bundle NAME | yt import NAME VIDEO | yt clean-renders"; exit 2 ;;
+  *) echo "yt status | yt watch [S] | yt run NAME STAGE [--here] | yt log NAME [LINES] | yt open NAME | yt host | yt bundle NAME | yt import NAME VIDEO | yt clean-renders"; exit 2 ;;
 esac

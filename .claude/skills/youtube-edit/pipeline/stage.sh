@@ -20,6 +20,7 @@ W="videos/$NAME"; cd "$ROOT" || exit 1
 mkdir -p "$W/pipeline"
 fail() { state_set "$NAME" failed "$STAGE: $1"; notify "YouTube edit: $NAME" "Stopped in $STAGE: $1" "$ROOT/$W/pipeline/stage.log"; exit 1; }
 run() { echo "== $(date '+%H:%M:%S') $*"; "$@" || fail "$(basename "$1") $2 failed (see pipeline/stage.log)"; }
+echo "==== $(date '+%Y-%m-%d %H:%M:%S') $STAGE"   # where this run starts in stage.log (progress.py reads it)
 pf="$(preflight)"; [ -z "$pf" ] || { echo "== preflight: $pf"; fail "setup: $pf"; }
 
 claude_stage() {   # claude_stage PROMPT_FILE: headless Claude Code from the project root, so CLAUDE.md and the skill load

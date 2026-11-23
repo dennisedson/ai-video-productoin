@@ -316,7 +316,10 @@ work Mac) the cut and storyboard stages run under `taskpolicy -b`: the efficienc
 Each checkpoint ends in a Mac notification that opens `REVIEW-A.html` / `REVIEW-B.html` (the video, the stills, the
 write-up). Dennis approves or sends notes in a Claude Code thread on the project; the project's `CLAUDE.md` says how
 that thread records them (`approvals/A.md`, `B.md`), applies notes, and starts the next stage with `pipeline/yt run`.
-`yt status` lists every edit. Unattended runs never render 4K, never change the skill, and write only inside their
+`yt status` lists every edit with its progress (`pipeline/progress.py`: a render's percentage from its `render.log`, its
+steps weighted by this Mac's earlier renders and HyperFrames' frame count inside the render step; cut and storyboard as
+`~` elapsed against this Mac's median for that stage, from `state.json` histories; hand-off jobs in `_render-inbox/`);
+`yt watch [s]` refreshes it. Unattended runs never render 4K, never change the skill, and write only inside their
 video folder. Local compute is free, so previews and variants replace guessing from stills; tokens go only to the
 two judgment runs and to Dennis's notes.
 
