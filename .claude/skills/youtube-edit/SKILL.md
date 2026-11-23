@@ -274,9 +274,9 @@ size settles and moves the files to `videos/<name>/raw/`; `stage.sh` then runs e
 - **cut:** the mechanical prep with no AI (30 fps screen, Parakeet, auto-editor, paper cut, camera check, screen
   activity and windows), then one unattended `claude -p` run (`prompts/checkpoint-a.md`, `--permission-mode auto
   --permission-prompts none`, a `--max-budget-usd` cap) for the judgment calls and the review MP4;
-- **storyboard:** one `claude -p` run (`prompts/checkpoint-b.md`): the 4K flat cut with the chosen grade, the
+- **storyboard:** one `claude -p` run (`prompts/checkpoint-b.md`): the flat cut with the chosen grade (1080p), the
   storyboard, the sheet, **a 1080p draft preview of the whole video** and, when a choice is close, **6 to 10 s variant
-  clips** of each option, then `render.json`;
+  clips** of each option, then `render.json` with `face_raw` and `grade`;
 - **render:** `render-mac.sh`, no AI. **On the work Mac it runs on the home Mac** when `pipeline/config.sh` has
   `RENDER_HOST_DIR` (`install.sh --render-host /Volumes/Video`: the home Mac's Video folder, mounted as a share).
   `remote-render.py` checks the share and the home agent's heartbeat (`videos/_render-inbox/.host-alive`), copies the
@@ -288,6 +288,13 @@ size settles and moves the files to `videos/<name>/raw/`; `stage.sh` then runs e
   never falls back on its own:** a dialog asks Check again / Render on this Mac / Later (Later, or no answer in 4 h:
   `awaiting-host` and a notification); `yt run <name> render --here` renders on the work Mac; `yt host` checks the
   share. A failed home render keeps the bundle there (`render-remote.log` comes back) so it can resume with `--from`.
+**The checkpoints never encode 4K.** Every `apply-cut.py` run in the cut and storyboard stages adds
+`--vf scale=-2:1080`; `render-mac.sh` builds the one 4K flat cut from `face_raw`, `cut-list.json` and `grade`. Nothing
+in the storyboard depends on the flat cut's size (the composition is 1920x1080 and `layout.face_crop` is a region of
+the raw frame, `"src"` its size), so the preview and the 4K render line up. The exception is a file made from the flat
+cut's picture (a subject matte, a span cut to its own file): that is made from a 4K flat cut, and `render.json` then
+leaves `face_raw` out. With `PRIORITY=background` in `pipeline/config.sh` (`install.sh --priority background`, the
+work Mac) the cut and storyboard stages run under `taskpolicy -b`: the efficiency cores, quieter and slower.
 Each checkpoint ends in a Mac notification that opens `REVIEW-A.html` / `REVIEW-B.html` (the video, the stills, the
 write-up). Dennis approves or sends notes in a Claude Code thread on the project; the project's `CLAUDE.md` says how
 that thread records them (`approvals/A.md`, `B.md`), applies notes, and starts the next stage with `pipeline/yt run`.

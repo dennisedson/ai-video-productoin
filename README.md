@@ -128,8 +128,10 @@ Devs:After Dark doesn't use this: it's edited and rendered on the home Mac only.
 2. Finder → Go → Connect to Server → `smb://<home Mac's name>.local` → choose **Video**. Tick "Remember this password
    in my keychain". It mounts at `/Volumes/Video`. To mount it at login, add it to System Settings → General → Login
    Items.
-3. `bash .claude/skills/youtube-edit/pipeline/install.sh --render-host /Volumes/Video` (use the path it actually
-   mounted at; `--render-host none` turns this off).
+3. `bash .claude/skills/youtube-edit/pipeline/install.sh --render-host /Volumes/Video --priority background` (use the
+   path it actually mounted at; `--render-host none` turns this off). `--priority background` runs the cut and
+   storyboard stages on the efficiency cores so the fans stay down; they take longer (`--priority normal` undoes it).
+   The checkpoints already work at 1080p on both Macs: only the final render builds 4K.
 4. `yt host` should say `home Mac ready`. The first time, macOS may ask whether Terminal can use network volumes:
    allow it.
 

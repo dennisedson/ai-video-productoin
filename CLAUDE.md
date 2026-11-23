@@ -25,7 +25,8 @@ or "approve agents-3 with the face on the right". Then:
    At A record the camera grade he chose; when he names none, use `blacks` and say so.
 3. Notes without "approve": make the change now by the skill's rules (at A: the cut, `cut-list.json`, PAPER-CUT.md and
    the review MP4; at B: `storyboard.json`, compose, checks, `snaps/sheet.png`, and the preview if the change moves
-   anything), rebuild the review page (`python3 .claude/skills/youtube-edit/pipeline/review-page.py videos/<name> A|B`),
+   anything; the checkpoints work at 1080p, so any apply-cut.py run here gets `--vf scale=-2:1080` and only
+   render-mac.sh builds 4K), rebuild the review page (`python3 .claude/skills/youtube-edit/pipeline/review-page.py videos/<name> A|B`),
    tell him what changed, and wait for his approval. The state stays where it is.
 4. "approve" (with or without small notes you apply first): start the next stage in the background and stop there:
    at A `bash .claude/skills/youtube-edit/pipeline/yt run <name> storyboard`, at B `bash .claude/skills/youtube-edit/pipeline/yt run <name> render`. Do not do the next stage's work in this thread.

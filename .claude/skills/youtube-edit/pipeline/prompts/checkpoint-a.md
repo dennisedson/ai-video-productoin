@@ -14,8 +14,9 @@ Already done (no AI): {W}/raw/screenshare.mp4 (30 fps), {W}/audio-raw.wav, {W}/t
 Do:
 1. Check the paper cut against transcript-raw.json for the known misreads (a list read as restarts, real content read as
    a retake, the middle of a sentence cut as a restart) and fix them with hand-cut.py. Keep jokes and reactions.
-2. tighten-cut, sliver, edge-audit to 0, apply-cut.py on the raw camera file with --grade none (the grade is chosen at
-   Checkpoint A), transcribe the flat cut with Parakeet, dead-air until it plans nothing, stutter-scan, and make the real
+2. tighten-cut, sliver, edge-audit to 0, apply-cut.py on the raw camera file with --grade none --vf scale=-2:1080 (the
+   grade is chosen at Checkpoint A; the checkpoints work at 1080p and only the final render builds 4K), transcribe the
+   flat cut with Parakeet, dead-air until it plans nothing, stutter-scan, and make the real
    fixes (cut stutters at word boundaries by the audio; check every join by a fresh transcription).
 3. Tutorial: decide the waits from activity.json and contact sheets (cut silent waits on both files; ramps.json for waits
    you talk through, unless the screen shows something you are reading or highlighting), pick the window crops in source
@@ -27,5 +28,6 @@ Do:
    the speed-ups, the crops, the face side, the camera check with your recommended grade (Dennis's camera is usually
    `blacks`), and "Decisions for Dennis".
 
-Rules: never render 4K and never run render-mac.sh; look at images sparingly (contact sheets over single frames); write
+Rules: never render 4K, never encode a 4K flat cut (every apply-cut.py run here gets --vf scale=-2:1080) and never run
+render-mac.sh; look at images sparingly (contact sheets over single frames); write
 only inside {W}; do not change the skill. End with a three-line summary.

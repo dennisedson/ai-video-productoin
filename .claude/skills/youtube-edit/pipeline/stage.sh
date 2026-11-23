@@ -7,6 +7,14 @@
 # Approvals come from Dennis in a Claude Code thread (see the project's CLAUDE.md), which starts the next stage with `yt run`.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 NAME="${1:?usage: stage.sh NAME cut|storyboard|render [--here]}"; STAGE="${2:?stage}"; OPT="${3:-}"
+# PRIORITY=background (install.sh --priority background, for the work Mac): cut and storyboard run at macOS background
+# priority (taskpolicy -b: the efficiency cores, throttled disk), so the fans stay down and the stages take longer.
+# The render keeps normal priority (on the work Mac it is sent to the home Mac anyway).
+if [ "${PRIORITY:-normal}" = background ] && [ "$STAGE" != render ] && [ -z "${YT_BACKGROUND:-}" ] \
+   && command -v taskpolicy >/dev/null 2>&1; then
+  export YT_BACKGROUND=1
+  exec taskpolicy -b /bin/bash "$0" "$@"
+fi
 W="videos/$NAME"; cd "$ROOT" || exit 1
 mkdir -p "$W/pipeline"
 fail() { state_set "$NAME" failed "$STAGE: $1"; notify "YouTube edit: $NAME" "Stopped in $STAGE: $1" "$ROOT/$W/pipeline/stage.log"; exit 1; }
