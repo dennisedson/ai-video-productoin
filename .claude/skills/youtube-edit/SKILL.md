@@ -270,14 +270,24 @@ commands. A session that reaches this folder from anywhere else (a cloud or Cowo
 the mic, the screen file for a tutorial, an optional `notes.txt`: profile, cutoff, anything else) start an edit with
 nobody at the keyboard: a launchd agent (`pipeline/install.sh`, once) runs `inbox.sh`, which claims the folder once its
 size settles and moves the files to `videos/<name>/raw/`; `stage.sh` then runs each stage and sets `state.json`
-(queued, cutting, awaiting-A, storyboarding, awaiting-B, rendering, done or failed):
+(queued, cutting, awaiting-A, storyboarding, awaiting-B, [awaiting-host,] rendering, done or failed):
 - **cut:** the mechanical prep with no AI (30 fps screen, Parakeet, auto-editor, paper cut, camera check, screen
   activity and windows), then one unattended `claude -p` run (`prompts/checkpoint-a.md`, `--permission-mode auto
   --permission-prompts none`, a `--max-budget-usd` cap) for the judgment calls and the review MP4;
 - **storyboard:** one `claude -p` run (`prompts/checkpoint-b.md`): the 4K flat cut with the chosen grade, the
   storyboard, the sheet, **a 1080p draft preview of the whole video** and, when a choice is close, **6 to 10 s variant
   clips** of each option, then `render.json`;
-- **render:** `render-mac.sh`, no AI.
+- **render:** `render-mac.sh`, no AI. **On the work Mac it runs on the home Mac** when `pipeline/config.sh` has
+  `RENDER_HOST_DIR` (`install.sh --render-host /Volumes/Video`: the home Mac's Video folder, mounted as a share).
+  `remote-render.py` checks the share and the home agent's heartbeat (`videos/_render-inbox/.host-alive`), copies the
+  render bundle (render.json, storyboard.json, cut-list.json, the face file named by `face_raw`, `public/` without the
+  flat cut, face crop and cache: about 1.5 GB of a 9.6 GB project) into the home Mac's `videos/_render-inbox/<name>/`,
+  waits on its `status.json`, copies the finished video back, delivers it here and deletes the bundle there. On the
+  home Mac, `install.sh --serve-renders` loads a second agent (`render-host.sh` → `render-host-job.sh`) that runs
+  `render-mac.sh` on each bundle with delivery redirected into its `out/`. **When the home Mac isn't ready the render
+  never falls back on its own:** a dialog asks Check again / Render on this Mac / Later (Later, or no answer in 4 h:
+  `awaiting-host` and a notification); `yt run <name> render --here` renders on the work Mac; `yt host` checks the
+  share. A failed home render keeps the bundle there (`render-remote.log` comes back) so it can resume with `--from`.
 Each checkpoint ends in a Mac notification that opens `REVIEW-A.html` / `REVIEW-B.html` (the video, the stills, the
 write-up). Dennis approves or sends notes in a Claude Code thread on the project; the project's `CLAUDE.md` says how
 that thread records them (`approvals/A.md`, `B.md`), applies notes, and starts the next stage with `pipeline/yt run`.

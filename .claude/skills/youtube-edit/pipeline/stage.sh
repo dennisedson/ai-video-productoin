@@ -2,10 +2,11 @@
 # stage.sh NAME cut|storyboard|render: one stage of the hands-off pipeline for videos/NAME.
 #   cut        mechanical prep (no AI), then headless Claude finishes Checkpoint A  -> awaiting-A, notification
 #   storyboard headless Claude builds Checkpoint B, a 1080p preview render and render.json -> awaiting-B, notification
-#   render     render-mac.sh (no AI) -> done, notification
+#   render     render-mac.sh (no AI) -> done, notification; on the home Mac when RENDER_HOST_DIR is set (asks first
+#              when the home Mac isn't mounted or ready: Check again / Render on this Mac / Later -> awaiting-host)
 # Approvals come from Dennis in a Claude Code thread (see the project's CLAUDE.md), which starts the next stage with `yt run`.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
-NAME="${1:?usage: stage.sh NAME cut|storyboard|render}"; STAGE="${2:?stage}"
+NAME="${1:?usage: stage.sh NAME cut|storyboard|render [--here]}"; STAGE="${2:?stage}"; OPT="${3:-}"
 W="videos/$NAME"; cd "$ROOT" || exit 1
 mkdir -p "$W/pipeline"
 fail() { state_set "$NAME" failed "$STAGE: $1"; notify "YouTube edit: $NAME" "Stopped in $STAGE: $1" "$ROOT/$W/pipeline/stage.log"; exit 1; }
@@ -23,6 +24,14 @@ try:
     print((j.get("result") or "")[-1500:])
 except Exception as e: print("claude: no JSON result (%s)" % e)' "$W/pipeline/claude-$STAGE.json"
   [ $rc -eq 0 ] || fail "Claude stopped (exit $rc)"
+}
+ask_host() {   # ask_host WHY: a dialog on this Mac; prints again|here|later (later when nobody answers within 4 h)
+  command -v osascript >/dev/null 2>&1 || { echo later; return; }
+  local why="${1//\"/\'}" r
+  r="$(osascript -e "display dialog \"$NAME is ready to render on the home Mac, but $why.
+
+Mount the home Mac's Video share, then choose Check again.\" with title \"YouTube edit\" buttons {\"Later\", \"Render on this Mac\", \"Check again\"} default button \"Check again\" giving up after 14400" 2>/dev/null)" || { echo later; return; }
+  case "$r" in *"gave up:true"*) echo later ;; *"Check again"*) echo again ;; *"this Mac"*) echo here ;; *) echo later ;; esac
 }
 need() { for f in "$@"; do [ -e "$W/$f" ] || fail "missing $f after the $STAGE stage"; done; }
 
@@ -62,10 +71,38 @@ storyboard)
   notify "YouTube edit: $NAME" "Checkpoint B (storyboard + preview) is ready to review." "$ROOT/$W/REVIEW-B.html"
   ;;
 render)
-  state_set "$NAME" rendering
-  bash "$SK/scripts/render-mac.sh" "$W" || fail "render-mac.sh failed (see $W/render.log; resume with --from)"
-  state_set "$NAME" done
-  OUT="$(python3 -c 'import json,sys,os; c=json.load(open(sys.argv[1])); print(os.path.expanduser(c.get("deliver","~/Movies/YouTube Renders/"+c.get("name",""))))' "$W/render.json")"
+  # With RENDER_HOST_DIR set (the work Mac: the home Mac's Video folder, mounted), the render runs on the home Mac.
+  # When the home Mac isn't ready, ask: never fall back to rendering here on its own. `yt run NAME render --here` skips it.
+  WHERE=here; [ -n "${RENDER_HOST_DIR:-}" ] && [ "$OPT" != --here ] && WHERE=home
+  while [ "$WHERE" = home ]; do
+    why="$(python3 "$PIPE/remote-render.py" --check --host "$RENDER_HOST_DIR")" && break
+    echo "== $(date '+%H:%M:%S') home Mac not ready: $why"
+    case "$(ask_host "$why")" in
+      again) ;;
+      here) WHERE=here ;;
+      *) state_set "$NAME" awaiting-host "$why"
+         notify "YouTube edit: $NAME" "Ready to render on the home Mac, but $why. Then: yt run $NAME render (--here renders on this Mac)."
+         exit 0 ;;
+    esac
+  done
+  if [ "$WHERE" = home ]; then
+    state_set "$NAME" rendering "on the home Mac"
+    python3 "$PIPE/remote-render.py" --project "$W" --host "$RENDER_HOST_DIR" | tee "$W/pipeline/remote-render.out"
+    rc=${PIPESTATUS[0]}
+    if [ "$rc" -eq 3 ]; then
+      state_set "$NAME" awaiting-host "the home Mac went away before the bundle was sent"
+      notify "YouTube edit: $NAME" "The home Mac went away before the render was sent. Mount it, then: yt run $NAME render (--here renders on this Mac)."
+      exit 0
+    fi
+    [ "$rc" -eq 0 ] || fail "the render on the home Mac failed (see $W/render-remote.log)"
+    OUT="$(awk -F'\t' '$1=="DELIVERED"{print $2}' "$W/pipeline/remote-render.out")"
+    state_set "$NAME" done "rendered on the home Mac"
+  else
+    state_set "$NAME" rendering "on this Mac"
+    bash "$SK/scripts/render-mac.sh" "$W" || fail "render-mac.sh failed (see $W/render.log; resume with --from)"
+    OUT="$(python3 -c 'import json,sys,os; c=json.load(open(sys.argv[1])); print(os.path.expanduser(c.get("deliver","~/Movies/YouTube Renders/"+c.get("name",""))))' "$W/render.json")"
+    state_set "$NAME" done
+  fi
   notify "YouTube edit: $NAME" "Rendered and checked. Delivered to $OUT." "$OUT"
   ;;
 *) echo "unknown stage $STAGE"; exit 2 ;;

@@ -1,5 +1,6 @@
 #!/bin/bash
-# yt: the pipeline from the terminal (no AI).  yt status | yt run NAME cut|storyboard|render | yt log NAME | yt open NAME
+# yt: the pipeline from the terminal (no AI).
+#   yt status | yt run NAME cut|storyboard|render [--here] | yt log NAME | yt open NAME | yt host
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 case "${1:-status}" in
   status)
@@ -10,11 +11,14 @@ case "${1:-status}" in
 print("%-24s %-14s %s %s" % (os.path.basename(os.path.dirname(sys.argv[1])), s["stage"], h["at"], h.get("note","")))' "$s"
     done ;;
   run)
-    [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt run NAME cut|storyboard|render"; exit 2; }
+    [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt run NAME cut|storyboard|render [--here]"; exit 2; }
     mkdir -p "$ROOT/videos/$2/pipeline"
-    nohup bash "$PIPE/stage.sh" "$2" "$3" >> "$ROOT/videos/$2/pipeline/stage.log" 2>&1 &
-    echo "started $3 for $2 (log: videos/$2/pipeline/stage.log)" ;;
+    nohup bash "$PIPE/stage.sh" "$2" "$3" "${4:-}" >> "$ROOT/videos/$2/pipeline/stage.log" 2>&1 &
+    echo "started $3 for $2${4:+ ($4)} (log: videos/$2/pipeline/stage.log)" ;;
+  host)   # can the home Mac take a render right now?
+    if [ -z "$RENDER_HOST_DIR" ]; then echo "no render host set: renders run on this Mac (install.sh --render-host DIR sets one)"; exit 0; fi
+    python3 "$PIPE/remote-render.py" --check --host "$RENDER_HOST_DIR" ;;
   log) tail -n "${3:-40}" "$ROOT/videos/$2/pipeline/stage.log" ;;
   open) for f in REVIEW-B.html REVIEW-A.html; do [ -f "$ROOT/videos/$2/$f" ] && { open "$ROOT/videos/$2/$f"; exit 0; }; done; echo "no review page yet" ;;
-  *) echo "yt status | yt run NAME STAGE | yt log NAME [LINES] | yt open NAME"; exit 2 ;;
+  *) echo "yt status | yt run NAME STAGE [--here] | yt log NAME [LINES] | yt open NAME | yt host"; exit 2 ;;
 esac

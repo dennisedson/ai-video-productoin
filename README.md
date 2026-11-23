@@ -98,6 +98,51 @@ If IT blocks LaunchAgents, skip this step: run the same stages by hand in a Clau
 
 ---
 
+## Render work videos on the home Mac
+
+The home Mac renders much faster, so the work Mac does the edit (the cut, the storyboard, both checkpoints) and the
+home Mac does the 4K render. Nothing AI runs on the home Mac for this, so the personal Claude account isn't involved.
+The work Mac sends only what the render needs (about 1.5 GB of a 10 GB project), gets the finished video back, delivers
+it to `~/Movies/YouTube Renders/<name>/` as usual, and deletes the files from the home Mac.
+
+**If the home Mac isn't mounted, it asks, and never renders on the work Mac without asking.** When the render is
+about to start:
+- from a Claude Code thread (approving at Checkpoint B): Claude runs `yt host` and asks you whether to mount the home
+  Mac or render on the work Mac;
+- unattended: a dialog on the work Mac: **Check again** (after you mount it), **Render on this Mac**, or **Later**.
+  Later (or no answer in 4 hours) leaves the video in `awaiting-host` with a notification; start it again with
+  `yt run <name> render`, or `yt run <name> render --here` to render on the work Mac.
+
+Devs:After Dark doesn't use this: it's edited and rendered on the home Mac only.
+
+### Home Mac (once)
+1. `git pull` in the Video folder, then `bash .claude/skills/youtube-edit/pipeline/install.sh --serve-renders`.
+   That loads a second agent that watches `videos/_render-inbox/` and checks in every minute.
+2. System Settings → General → Sharing → **File Sharing** on. Under Shared Folders add the Video folder
+   (`~/AI/claude-cowork/Video`) and give your user Read & Write.
+3. The home Mac renders only while it's awake and you're logged in. If it sleeps, the work Mac sees that (the agent
+   stops checking in) and asks. Energy settings: keep it awake on power while the display is off.
+
+### Work Mac (once)
+1. `git pull` in the Video folder.
+2. Finder → Go → Connect to Server → `smb://<home Mac's name>.local` → choose **Video**. Tick "Remember this password
+   in my keychain". It mounts at `/Volumes/Video`. To mount it at login, add it to System Settings → General → Login
+   Items.
+3. `bash .claude/skills/youtube-edit/pipeline/install.sh --render-host /Volumes/Video` (use the path it actually
+   mounted at; `--render-host none` turns this off).
+4. `yt host` should say `home Mac ready`. The first time, macOS may ask whether Terminal can use network volumes:
+   allow it.
+
+### If something goes wrong
+- `yt host` says what's missing: not mounted, the agent isn't installed, or the home Mac hasn't checked in.
+- A render that fails on the home Mac comes back as `failed` with its log in `videos/<name>/render-remote.log`. The
+  files stay on the home Mac (`videos/_render-inbox/<name>/`): `yt run <name> render` sends them again, or resume
+  there with `render-mac.sh videos/_render-inbox/<name> --from STEP`.
+- If the share drops during a render, the home Mac keeps rendering and the work Mac keeps waiting for 10 minutes, then
+  stops. Mount it again and run `yt run <name> render` to send it again.
+
+---
+
 ## Turn the home Mac's folder into a clone (once)
 
 The home folder (`~/AI/claude-cowork/Video`) already has these files, so connect it to the repo instead of cloning
