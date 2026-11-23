@@ -198,10 +198,13 @@ as they are.
 - If both Macs changed the skill, `git pull` merges; `SKILL.md` is long, so commit small and often to avoid conflicts.
 
 ## Music and sound
-- Sound effects: `shared/sfx` (the free HyperFrames library).
-- Music on the work Mac: no Epidemic Sound connector. Use music HubSpot is licensed to use, put the file in the
-  video's folder and tell Claude which one. A personal or creator Epidemic Sound licence may not cover a company
-  channel, so check before using those tracks in HubSpot videos.
+- Sound effects inside the edit: `shared/sfx` (the free HyperFrames library), on both Macs.
+- Music: the skill mixes it onto the finished master (ducked under the voice, a no-music twin kept, `MUSIC.md`).
+  The Epidemic Sound connector is allowed only on the home Mac, so for a work video music goes on there, after the
+  4K render and before the video goes back: in a Claude Code thread on the home Mac's Video folder, "add music to
+  <name> in the render inbox" (the files land next to the video in `out/`); then drag the music version back and
+  `yt import` it. Check that your Epidemic Sound plan covers videos on HubSpot's channel; a personal or creator
+  licence may not.
 
 ## Licences
 The skill started as WeAreNoCode's starter kit (MIT, see `WeAreNoCode-YouTube-Editor/LICENSES/`). The HubSpot fonts in

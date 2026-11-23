@@ -41,8 +41,11 @@ or "approve agents-3 with the face on the right". Then:
 
 This repo is cloned on two Macs: the home Mac and the HubSpot work Mac. `videos/` is not in git, so footage, edits and
 renders stay on the machine that made them. On the work Mac there are no Tella or Epidemic Sound connectors: take
-screen recordings as plain files (the "Two-file tutorials" route), use HubSpot-licensed music and the sound effects in
-`shared/sfx`, and default to the `hubspot` profile. Company software on the work Mac blocks file sharing and SSH to the home
+screen recordings as plain files (the "Two-file tutorials" route), use the sound effects in `shared/sfx`, and default
+to the `hubspot` profile. Music for a work video goes on at the home Mac, which has the Epidemic Sound connector: when
+asked there to "add music to <name> in the render inbox", work on `videos/_render-inbox/<name>/out/` by the skill's
+Music rules (two or three tracks under the same 12 s, cut to length, ducked, limiter, a no-music twin, `MUSIC.md`),
+writing next to the video in `out/`; never in the work Mac's thread. Company software on the work Mac blocks file sharing and SSH to the home
 network, so its renders are handed off by hand: a bundle zip carried over Screen Sharing, rendered on the home Mac,
 the video carried back and imported (`yt import`). Devs:After Dark is edited and rendered on the home Mac only. When the
 skill changes ("save this to the skill"), commit it and push, so the other Mac gets it with `git pull`.
