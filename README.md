@@ -135,6 +135,20 @@ Devs:After Dark doesn't use this: it's edited and rendered on the home Mac only.
 4. `yt host` should say `home Mac ready`. The first time, macOS may ask whether Terminal can use network volumes:
    allow it.
 
+### Going back to the known-good version
+The tag `before-remote-render` (commit `dfbf480`) is the setup both Macs ran on 2026-11-22: renders on each Mac, 4K
+checkpoints, the inbox agent only. `videos/` isn't in git, so going back or forward never touches footage or edits,
+and a video started on either version renders on the other. On either Mac, from the Video folder, with no stage
+running (`yt status`):
+
+    bash .claude/skills/youtube-edit/pipeline/uninstall.sh      # stops both agents (this version knows both)
+    git checkout before-remote-render
+    bash .claude/skills/youtube-edit/pipeline/install.sh        # the old installer: inbox agent only, fresh config
+
+Forward again: `git checkout main && git pull`, then `install.sh` with the flags you use on that Mac. If the tag
+isn't there (`git tag` shows nothing), use `dfbf480` in its place, or create it once: `git tag before-remote-render
+dfbf480 && git push origin before-remote-render`.
+
 ### If something goes wrong
 - `yt host` says what's missing: not mounted, the agent isn't installed, or the home Mac hasn't checked in.
 - A render that fails on the home Mac comes back as `failed` with its log in `videos/<name>/render-remote.log`. The
