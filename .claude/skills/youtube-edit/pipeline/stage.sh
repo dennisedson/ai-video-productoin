@@ -38,7 +38,7 @@ ask_host() {   # ask_host WHY: a dialog on this Mac; prints again|here|later (la
   local why="${1//\"/\'}" r
   r="$(osascript -e "display dialog \"$NAME is ready to render on the home Mac, but $why.
 
-Mount the home Mac's Video share, then choose Check again.\" with title \"YouTube edit\" buttons {\"Later\", \"Render on this Mac\", \"Check again\"} default button \"Check again\" giving up after 14400" 2>/dev/null)" || { echo later; return; }
+Fix that (mount the share, or wake the home Mac), then choose Check again.\" with title \"YouTube edit\" buttons {\"Later\", \"Render on this Mac\", \"Check again\"} default button \"Check again\" giving up after 14400" 2>/dev/null)" || { echo later; return; }
   case "$r" in *"gave up:true"*) echo later ;; *"Check again"*) echo again ;; *"this Mac"*) echo here ;; *) echo later ;; esac
 }
 need() { for f in "$@"; do [ -e "$W/$f" ] || fail "missing $f after the $STAGE stage"; done; }
@@ -79,7 +79,8 @@ storyboard)
   notify "YouTube edit: $NAME" "Checkpoint B (storyboard + preview) is ready to review." "$ROOT/$W/REVIEW-B.html"
   ;;
 render)
-  # With RENDER_HOST_DIR set (the work Mac: the home Mac's Video folder, mounted), the render runs on the home Mac.
+  # With RENDER_HOST_DIR set (the work Mac: the home Mac's Video folder, mounted or user@host:/path over SSH), the render
+# runs on the home Mac.
   # When the home Mac isn't ready, ask: never fall back to rendering here on its own. `yt run NAME render --here` skips it.
   WHERE=here; [ -n "${RENDER_HOST_DIR:-}" ] && [ "$OPT" != --here ] && WHERE=home
   while [ "$WHERE" = home ]; do
@@ -99,7 +100,7 @@ render)
     rc=${PIPESTATUS[0]}
     if [ "$rc" -eq 3 ]; then
       state_set "$NAME" awaiting-host "the home Mac went away before the bundle was sent"
-      notify "YouTube edit: $NAME" "The home Mac went away before the render was sent. Mount it, then: yt run $NAME render (--here renders on this Mac)."
+      notify "YouTube edit: $NAME" "The home Mac went away before the render was sent. When it is back: yt run $NAME render (--here renders on this Mac)."
       exit 0
     fi
     [ "$rc" -eq 0 ] || fail "the render on the home Mac failed (see $W/render-remote.log)"

@@ -31,8 +31,9 @@ or "approve agents-3 with the face on the right". Then:
 4. "approve" (with or without small notes you apply first): start the next stage in the background and stop there:
    at A `bash .claude/skills/youtube-edit/pipeline/yt run <name> storyboard`, at B `bash .claude/skills/youtube-edit/pipeline/yt run <name> render`. Do not do the next stage's work in this thread.
    **Before a render on the work Mac** (the render host is set: `yt host` says so), run `bash .claude/skills/youtube-edit/pipeline/yt host` first. If
-   the home Mac isn't ready, don't start the render: tell him why and ask whether he'll mount it (then check again
-   and start with `yt run <name> render`) or wants it rendered on the work Mac (`yt run <name> render --here`). The
+   the home Mac isn't ready, don't start the render: tell him why and ask whether he'll fix it (wake the home Mac,
+   reconnect; then check again and start with `yt run <name> render`) or wants it rendered on the work Mac
+   (`yt run <name> render --here`). The
    same applies to "render <name>" for a video in awaiting-host.
 5. Keep replies short: what you changed, what starts next, and that a notification will come.
 
@@ -41,6 +42,6 @@ or "approve agents-3 with the face on the right". Then:
 This repo is cloned on two Macs: the home Mac and the HubSpot work Mac. `videos/` is not in git, so footage, edits and
 renders stay on the machine that made them. On the work Mac there are no Tella or Epidemic Sound connectors: take
 screen recordings as plain files (the "Two-file tutorials" route), use HubSpot-licensed music and the sound effects in
-`shared/sfx`, and default to the `hubspot` profile. The work Mac renders on the home Mac (its Video folder mounted as
-a share) and asks when the share isn't there; Devs:After Dark is edited and rendered on the home Mac only. When the
+`shared/sfx`, and default to the `hubspot` profile. The work Mac renders on the home Mac (its Video folder over SSH,
+`homemac`) and asks when the home Mac can't be reached; Devs:After Dark is edited and rendered on the home Mac only. When the
 skill changes ("save this to the skill"), commit it and push, so the other Mac gets it with `git pull`.

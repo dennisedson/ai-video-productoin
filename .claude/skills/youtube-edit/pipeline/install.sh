@@ -3,7 +3,8 @@
 #   bash .claude/skills/youtube-edit/pipeline/install.sh [--budget 20] [--model NAME] [--render-host DIR|none] [--serve-renders] [--priority background|normal]
 # Writes pipeline/config.sh, creates videos/_inbox/, and loads a launchd agent that runs inbox.sh when the inbox changes
 # (and every 2 minutes). Nothing here needs admin rights.
-#   --render-host DIR  (the work Mac) render on the home Mac: DIR is its Video folder as mounted here, e.g. /Volumes/Video.
+#   --render-host DIR  (the work Mac) render on the home Mac: DIR is its Video folder, either mounted here as a share
+#                      (/Volumes/Video) or over SSH (user@host:/Users/you/AI/claude-cowork/Video, with a key set up).
 #                      Kept on later runs; --render-host none goes back to rendering here.
 #   --serve-renders    (the home Mac) also load the render agent that renders bundles the work Mac sends (render-host.sh).
 #   --priority background  (the work Mac) run the cut and storyboard stages at background priority: quieter fans,
@@ -71,10 +72,11 @@ if [ "$SERVE" = 1 ]; then          # the home Mac: render what the work Mac send
 PL
   launchctl bootout "gui/$(id -u)/$RLABEL" >/dev/null 2>&1 || true
   launchctl bootstrap "gui/$(id -u)" "$RPLIST" && echo "render agent loaded: $RLABEL (watching $HIN)"
-  echo "Share this Video folder (System Settings > General > Sharing > File Sharing) and mount it on the work Mac."
+  echo "The work Mac reaches this folder by File Sharing (mount it there) or, when that is blocked, by Remote Login (SSH)."
+  echo "Both are in System Settings > General > Sharing."
 fi
 [ "$PRIO" = background ] && echo "cut and storyboard run at background priority (quieter, slower)"
-[ -n "$RHOST" ] && echo "renders go to the home Mac at $RHOST (asks first when it isn't mounted; check with: yt host)"
+[ -n "$RHOST" ] && echo "renders go to the home Mac at $RHOST (asks first when it can't be reached; check with: yt host)"
 command -v terminal-notifier >/dev/null || echo "tip: 'brew install terminal-notifier' makes a notification click open the review page"
 ln -sf "$PIPE/yt" "$HOME/.local/bin/yt" 2>/dev/null || { mkdir -p "$HOME/.local/bin" && ln -sf "$PIPE/yt" "$HOME/.local/bin/yt"; }
 notify "YouTube edit pipeline" "Installed. Drop recordings into videos/_inbox/<name>/ to start an edit."

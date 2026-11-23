@@ -278,10 +278,12 @@ size settles and moves the files to `videos/<name>/raw/`; `stage.sh` then runs e
   storyboard, the sheet, **a 1080p draft preview of the whole video** and, when a choice is close, **6 to 10 s variant
   clips** of each option, then `render.json` with `face_raw` and `grade`;
 - **render:** `render-mac.sh`, no AI. **On the work Mac it runs on the home Mac** when `pipeline/config.sh` has
-  `RENDER_HOST_DIR` (`install.sh --render-host /Volumes/Video`: the home Mac's Video folder, mounted as a share).
-  `remote-render.py` checks the share and the home agent's heartbeat (`videos/_render-inbox/.host-alive`), copies the
+  `RENDER_HOST_DIR`: the home Mac's Video folder over SSH (`install.sh --render-host homemac:/Users/<you>/.../Video`,
+  a key and an `~/.ssh/config` alias; the work Mac's company software blocks file sharing) or mounted as a share
+  (`--render-host /Volumes/Video`). `remote-render.py` checks the host and the home agent's heartbeat
+  (`videos/_render-inbox/.host-alive`), copies the
   render bundle (render.json, storyboard.json, cut-list.json, the face file named by `face_raw`, `public/` without the
-  flat cut, face crop and cache: about 1.5 GB of a 9.6 GB project) into the home Mac's `videos/_render-inbox/<name>/`,
+  flat cut, face crop and cache: about 1.5 GB of a 9.6 GB project) into the home Mac's `videos/_render-inbox/<name>/` (over SSH: one tar stream, then a rename),
   waits on its `status.json`, copies the finished video back, delivers it here and deletes the bundle there. On the
   home Mac, `install.sh --serve-renders` loads a second agent (`render-host.sh` → `render-host-job.sh`) that runs
   `render-mac.sh` on each bundle with delivery redirected into its `out/`. **When the home Mac isn't ready the render
