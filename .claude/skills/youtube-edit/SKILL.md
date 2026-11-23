@@ -57,7 +57,7 @@ runs the tests. Check again after updating HyperFrames or moving the skill.
 |---|---|---|
 | Node.js 22 or newer | `node -v` | nodejs.org, or `brew install node` |
 | HyperFrames CLI | `npx hyperframes --version`, then `npx hyperframes doctor` | comes through npx; `doctor` lists anything else it wants |
-| FFmpeg and ffprobe | `ffmpeg -version` | `brew install ffmpeg` (Mac), `winget install ffmpeg` (Windows), the package manager (Linux) |
+| FFmpeg and ffprobe, with `drawtext` | `ffmpeg -version`, then `ffmpeg -hide_banner -filters \| grep drawtext` | Mac: `brew install ffmpeg-full && brew unlink ffmpeg; brew link --force ffmpeg-full` (see the gotcha below); `winget install ffmpeg` (Windows), the package manager (Linux) |
 | Python 3 with numpy | `python3 -c "import numpy"` | `python3 -m pip install numpy` |
 | auto-editor | `auto-editor --version` | `pip install auto-editor` or `brew install auto-editor` |
 | Parakeet, the transcriber `npx hyperframes transcribe --engine parakeet` uses | transcribe a 5 s WAV with `--engine parakeet --json` | `npx hyperframes models install parakeet` |
@@ -75,6 +75,11 @@ synthetic media and must end with `OK` (the media tests skip themselves without 
   your Epidemic Sound account (its connector) or the free HyperFrames library (`npx hyperframes skills update media-use`
   puts 19 effects in the media-use skill's `audio/assets/sfx/`, Pixabay Content License, no attribution needed); logos
   from the brands' own press kits or sites (see "Sourcing assets").
+- **Gotcha: Homebrew's `ffmpeg` has no `drawtext`.** The plain formula is built without libfreetype, so
+  `camera-check.py --sheet` (and anything else that labels frames) fails with `No such filter: 'drawtext'` and the
+  pipeline's cut stage ends `failed`. `ffmpeg-full` has it but is keg-only: installing it is not enough while plain
+  `ffmpeg` owns `/opt/homebrew/bin/ffmpeg`. Unlink `ffmpeg` and `brew link --force ffmpeg-full`. A later `brew upgrade`
+  or reinstall of plain `ffmpeg` can take the link back, so rerun the `grep drawtext` check when the error returns.
 - **Optional connectors:** Tella (screen tutorials) and Epidemic Sound. Without Tella, record the screen with anything.
 - numpy scripts: `sync-tracks.py`, `tighten-cut.py`, `sliver.py`, `edge-audit.py`, `dead-air.py`. Node: `stutter-scan.py`
   (it runs `find-cut-candidates.mjs`) and the cut review page (`build-edl-review.mjs`).
