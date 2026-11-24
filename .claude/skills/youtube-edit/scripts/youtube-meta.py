@@ -29,6 +29,7 @@ ROOT = os.path.abspath(os.path.join(SK, "..", "..", ".."))
 ap = argparse.ArgumentParser()
 ap.add_argument("cmd", choices=["prep", "build", "check", "published", "shorten"])
 ap.add_argument("--url", help="published: the video's YouTube link")
+ap.add_argument("--scheduled", default="", help="published: YYYY-MM-DD it goes public (private or unlisted until then)")
 ap.add_argument("--auto", action="store_true", help="shorten: as the pipeline runs it (skips when the profile says auto false)")
 ap.add_argument("--confirm-profile", action="store_true", help="shorten: Dennis confirms the video is this profile's content")
 ap.add_argument("--project", required=True)
@@ -265,10 +266,13 @@ if a.cmd == "published":
     if not m:
         sys.exit("no catalog entry for %s yet (yt youtube %s writes it)" % (NAME, NAME))
     body = m.group(1)
-    for k, v in (("Status", "published"), ("YouTube", a.url), ("Published", dt.date.today().isoformat())):
+    if a.scheduled and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", a.scheduled):
+        sys.exit("--scheduled YYYY-MM-DD")
+    status = "scheduled (private until %s)" % a.scheduled if a.scheduled else "published"
+    for k, v in (("Status", status), ("YouTube", a.url), ("Published", a.scheduled or dt.date.today().isoformat())):
         body = re.sub(r"^- \*\*%s:\*\* .*$" % k, "- **%s:** %s" % (k, v), body, flags=re.M)
     open(CAT, "w").write(old[:m.start(1)] + body + old[m.end(1):])
-    print("catalog: %s published at %s" % (NAME, a.url))
+    print("catalog: %s %s at %s" % (NAME, status, a.url))
     sys.exit(0)
 
 # ---- prep ----------------------------------------------------------------------------------------------------------

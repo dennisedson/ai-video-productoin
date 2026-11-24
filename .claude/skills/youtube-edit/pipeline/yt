@@ -90,8 +90,8 @@ case "${1:-status}" in
     case "${3:-}" in ""|--hubspot) ;; *) echo "yt shorten NAME [--hubspot]"; exit 2 ;; esac
     python3 "$SK/scripts/youtube-meta.py" shorten --project "$ROOT/videos/$2" ${3:+--confirm-profile} ;;
   published)   # record the YouTube link and date in catalog/VIDEOS.md
-    [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt published NAME https://youtu.be/..."; exit 2; }
-    python3 "$SK/scripts/youtube-meta.py" published --project "$ROOT/videos/$2" --url "$3" ;;
+    [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt published NAME https://youtu.be/... [--scheduled YYYY-MM-DD]"; exit 2; }
+    python3 "$SK/scripts/youtube-meta.py" published --project "$ROOT/videos/$2" --url "$3" "${@:4}" ;;
   log) tail -n "${3:-40}" "$ROOT/videos/$2/pipeline/stage.log" ;;
   open) for f in REVIEW-B.html REVIEW-A.html; do [ -f "$ROOT/videos/$2/$f" ] && { open "$ROOT/videos/$2/$f"; exit 0; }; done; echo "no review page yet" ;;
   *) echo "yt status | yt watch [S] | yt run NAME STAGE [--here|--fast] | yt log NAME [LINES] | yt open NAME | yt host | yt bundle NAME | yt import NAME VIDEO | yt clean-renders | yt youtube NAME | yt thumb NAME [N|frames] | yt music NAME [samples|N|none] | yt shorten NAME | yt published NAME URL"; exit 2 ;;

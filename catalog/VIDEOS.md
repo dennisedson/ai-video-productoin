@@ -24,9 +24,9 @@ One entry per video: what it covers, where it lives, what it links to. Written b
 ### HubSpot Agent CLI: Find Stale Deals and Create Tasks in a Script
 
 - **Slug:** `agentcli` · **Channel:** HubSpot Developers · **Series:** HubSpot Is Going Headless
-- **Status:** drafted, not published
-- **YouTube:** (not published yet)
-- **Published:** -
+- **Status:** scheduled (private until 2026-12-01)
+- **YouTube:** https://youtu.be/AzR_jCgFKh8
+- **Published:** 2026-12-01
 - **Length:** 06:44
 - **Summary:** Shows why repeat agent runs burn credits, then sets up the HubSpot Agent CLI: clone Hannah's exercise, install the CLI, log in, install skills and create a service key. An agent then finds stale deals, shows a dry run, creates follow-up tasks and saves the work as a script, which is changed to 7 days and rerun without the agent.
 - **Audience:** HubSpot admins, RevOps and builders who already use AI agents and want repeatable CRM tasks without paying for an agent round trip every run
