@@ -5,7 +5,7 @@ with how to approve. Static HTML, relative paths, nothing leaves the Mac."""
 import html, os, sys
 W, which = sys.argv[1], sys.argv[2].upper()
 name = os.path.basename(os.path.normpath(W))
-rel = lambda p: p if os.path.exists(os.path.join(W, p)) else None
+rel = lambda p: "%s?v=%d" % (p, os.path.getmtime(os.path.join(W, p))) if os.path.exists(os.path.join(W, p)) else None
 if which == "A":
     title, video, doc = "Checkpoint A: the cut", rel("review/cut-review.mp4"), "PAPER-CUT.md"
     images = [("Camera grade options", rel("snaps/grade-options.png")), ("Screen windows", rel("snaps/screen-windows.png"))]
@@ -25,7 +25,7 @@ parts = ['<!doctype html><meta charset="utf-8"><title>%s · %s</title>' % (html.
 if video:
     parts.append('<h2>Watch</h2><video src="%s" controls preload="metadata"></video>' % video)
 for v in variants:
-    parts.append('<h2>Variant: %s</h2><video src="review/variants/%s" controls preload="metadata"></video>' % (html.escape(v), v))
+    parts.append('<h2>Variant: %s</h2><video src="review/variants/%s?v=%d" controls preload="metadata"></video>' % (html.escape(v), v, os.path.getmtime(os.path.join(W, "review", "variants", v))))
 for cap, img in images:
     if img:
         parts.append('<h2>%s</h2><img src="%s">' % (cap, img))
