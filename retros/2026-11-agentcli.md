@@ -174,6 +174,58 @@ person; this way the picking happens during it).
   ran on short stand-in clips in the foreground, with shims. Nothing there exercised launchd, Screen Sharing, the
   Keychain or Apple-silicon timings; those were first tried for real by Dennis.
 
+## Costs
+
+AI figures are API-equivalent: what the tokens would cost at list prices (Claude Opus 5.5: $4 per million input tokens,
+$5 cache writes, $0.20 cache reads, $20 output). Under a Claude subscription they count against the plan's usage,
+not a bill; they're a bill only where an account pays per token.
+
+### AI, measured
+
+| What | Where | Measured | API-equivalent |
+| --- | --- | --- | --- |
+| Cut stage (headless Claude, the rerun) | work Mac | Claude Code's own report | $2.85 |
+| Storyboard stage (rerun with notes) | work Mac | Claude Code's own report | $2.15 |
+| YouTube draft for agentcli, twice | work Mac | Claude Code's own report | $0.78 ($0.39 each) |
+| The home Mac's Claude thread: setup, hand-off, YouTube metadata, Bitly, thumbnails, music pass, this retro | cloud session linked to the home Mac | 145 requests since the thread was last summarised: 310 input, 310,742 cache-write, 43.5 M cache-read and 115,466 output tokens | $12.56 (cache reads $8.70, output $2.31, cache writes $1.55) |
+| **Measured total** | | | **$18.34** |
+
+### AI, not measured (fill in)
+
+| What | Why it's missing |
+| --- | --- |
+| The first cut run (11-23, 14:06-15:15) | Only the rerun's cost was noted |
+| Interactive Claude Code threads on the work Mac (setup fixes, B notes rounds 2 and 3, links) | Interactive threads don't write a cost file; `/cost` in each thread shows it |
+| YouTube drafts for the two inbox videos | Not listed in the work Mac's part (each about $0.39) |
+| The home Mac thread before its last summary (most of 11-22 and 11-23) | Usage is only on record from the summary on, so the $12.56 above is a floor; the whole thread cost more |
+
+Most of the home Mac thread's cost is the context it re-reads on every request (instructions, tools, files: about
+60% of its usage) rather than the replies; long threads cost more per step. Building features is a one-time cost; a
+video's own runs are the work Mac's rows.
+
+### Per video from now on (estimate)
+
+| Step | API-equivalent |
+| --- | --- |
+| Cut stage | about $3 |
+| Storyboard stage | about $2 |
+| YouTube draft (titles, description, thumbnails' words) | about $0.40 |
+| Music pass (a home Mac thread: five candidates, samples, the pick) | not measured yet; the next video sets it |
+| Rounds of notes at A and B, in a thread | varies with the notes; not measured on agentcli |
+| **Before notes and music** | **about $5.40** |
+
+### Services and other costs
+
+| What | Cost | Notes |
+| --- | --- | --- |
+| Claude plans | the subscriptions (personal on the home Mac, HubSpot's on the work Mac) | The AI rows above count against these |
+| Epidemic Sound | the existing subscription | Check that the plan covers videos on HubSpot's channel |
+| Bitly | HubSpot's account | A paid plan (the branded domain hsdev.fyi); about 5-6 links per video |
+| GitHub | free (private repos are free) | The repo is still public: make it private |
+| HyperFrames, FFmpeg, Parakeet, background removal | free, run locally | The background-removal runtime downloads once per Mac |
+| Machine time on the home Mac | electricity only | agentcli: about 11 min to copy the zip, 15 min for the 4K cut, about 45 min to render |
+| Dennis's time lost to problems | at least 3.5 h | Setup failures 1.5 h, one hung cut pass 45 min, the cache false alarm 30 min, enhanced audio 20 min, three B preview renders at 15 min each; the home Mac's debugging rounds not measured |
+
 ## What went wrong, and why
 
 | What | Cost | Root cause |
@@ -227,4 +279,5 @@ person; this way the picking happens during it).
 | First real thumbnail run on agentcli (frame and headshot), then adjust the templates | thumbnail templates | next |
 | Fix the repo name: rename the GitHub repo to `ai-video-production` (GitHub redirects the old URL), or correct the docs | GitHub, README | next |
 | Make the repo private (it's public, with HubSpot fonts in it) | GitHub settings | next |
+| Record every Claude run's cost per video (interactive threads too: paste `/cost` into the retro, or a `yt cost NAME` that totals the stage JSONs) | pipeline/yt, habit | idea |
 | Lint: drop the GSAP warning for `#tag-glass .pip.done` in the composition | compose / formats | idea |
