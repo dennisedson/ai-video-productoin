@@ -7,6 +7,8 @@ opened that day. Ids are what metadata.json uses (`{link:<id>}`). YouTube links 
 
 | Id | Label | URL | Use it for | Checked |
 | --- | --- | --- | --- | --- |
+| headless-landing | HubSpot MCP server: connect your AI tools | https://developers.hubspot.com/ai-tools/mcp | the HubSpot Is Going Headless series landing page (every video in the series) | opened 2026-11-24 |
+| headless-blog | HubSpot's CRM is going headless: choose your own adventure (blog, Brooke Bond) | https://developers.hubspot.com/blog/hubspots-crm-is-going-headless-now-choose-your-own-adventure | the written walkthrough of the series, agents and the Agent CLI (every video in the series) | **not live: 404 on 2026-11-24.** Open it again before use; leave it out while it does not resolve |
 | claude-connector | HubSpot connector for Claude | https://www.hubspot.com/claude/connector | any video that uses HubSpot in Claude | opened 2026-11-23 |
 | claude-directory | Install the HubSpot connector in Claude | https://claude.ai/directory/connectors/hubspot | a direct install link next to claude-connector | linked 2026-11-23 |
 | ai-connectors | HubSpot AI connectors (Claude, ChatGPT, Copilot, Gemini) | https://www.hubspot.com/ai-tools | videos that apply to more than one AI tool | linked 2026-11-23 |

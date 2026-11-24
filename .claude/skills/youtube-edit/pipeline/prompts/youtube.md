@@ -33,6 +33,8 @@ chapter titles and the captions are what they quote and link to. So:
   the task changes. Titles say what happens, with the words people search for ("Create HubSpot deals from a Claude
   prompt", not "Part 2" or "Demo"). Usually one per 30 to 60 s.
 - links: from LINKS.md first, by id. The standing links in youtube.json, the docs for what the video shows, the signup.
+  A video in a series also gets youtube.json's series_links for that series (by campaign), right after the first link;
+  one LINKS.md marks not live goes in only after you open it and it resolves, else name it in for_dennis.
   A link that isn't in LINKS.md only after you open the page and it resolves to what the label says: then "source":
   "verified", and add it to for_dennis so he can add it to LINKS.md. Never a link from memory, never a made-up path.
   A link the video mentions that you can't find (a repo, a colleague's exercise) goes in for_dennis, not the
