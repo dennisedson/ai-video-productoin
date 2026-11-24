@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/skills/youtube-edit/pipeline/yt *)",
+      "Bash(.claude/skills/youtube-edit/pipeline/yt *)",
+      "Bash(yt *)"
+    ]
+  }
+}
