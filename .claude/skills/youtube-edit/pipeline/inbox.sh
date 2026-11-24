@@ -52,3 +52,6 @@ PY
   notify "YouTube edit: $slug" "Started: cutting $( [ -n "$screen" ] && echo 'a two-file tutorial' || echo 'a camera file')."
   nohup bash "$PIPE/stage.sh" "$slug" cut >> "$W/pipeline/stage.log" 2>&1 &
 done
+
+# finished videos that need only the YouTube metadata (videos/_youtube-inbox): their own script, their own lock
+bash "$PIPE/youtube-inbox.sh"

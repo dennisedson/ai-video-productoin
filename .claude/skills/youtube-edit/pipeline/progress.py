@@ -127,14 +127,14 @@ def render_progress(W):
 
 def history_medians():
     """Median seconds of each Claude stage on this Mac: cutting -> awaiting-A, storyboarding -> awaiting-B."""
-    seen = {"cutting": [], "storyboarding": []}
+    seen = {"cutting": [], "storyboarding": [], "drafting": []}
     for p in glob.glob(os.path.join(ROOT, "videos", "*", "state.json")):
         try:
             h = json.load(open(p))["history"]
         except (OSError, ValueError, KeyError):
             continue
         for a, b in zip(h, h[1:]):
-            if (a["stage"], b["stage"]) in (("cutting", "awaiting-A"), ("storyboarding", "awaiting-B")):
+            if (a["stage"], b["stage"]) in (("cutting", "awaiting-A"), ("storyboarding", "awaiting-B"), ("drafting", "youtube-ready")):
                 try:
                     d = (dt.datetime.strptime(b["at"], "%Y-%m-%d %H:%M:%S") - dt.datetime.strptime(a["at"], "%Y-%m-%d %H:%M:%S")).total_seconds()
                 except ValueError:
@@ -148,7 +148,8 @@ MEDIANS = history_medians()
 CUT_STEPS = [("screenshare-vfr", "screen to 30 fps"), ("audio-raw.wav", "audio"), ("transcribe", "transcribing"),
              ("auto-editor", "speech map"), ("paper-cut", "paper cut"), ("camera-check", "camera check"),
              ("screen-activity", "screen activity"), ("screen-windows", "screen windows"),
-             ("checkpoint-a", "Claude: the cut"), ("checkpoint-b", "Claude: the storyboard")]
+             ("checkpoint-a", "Claude: the cut"), ("checkpoint-b", "Claude: the storyboard"),
+             ("youtube-meta.py prep", "timing"), ("youtube.md", "Claude: the YouTube metadata")]
 
 
 def claude_stage_progress(W, stage, since):
@@ -156,7 +157,7 @@ def claude_stage_progress(W, stage, since):
     step = None
     try:
         for ln in open(os.path.join(W, "pipeline", "stage.log"), errors="replace").read().splitlines()[-400:]:
-            if ln.startswith("==== ") and ln.endswith(" " + {"cutting": "cut", "storyboarding": "storyboard"}[stage]):
+            if ln.startswith("==== ") and ln.endswith(" " + {"cutting": "cut", "storyboarding": "storyboard", "drafting": "youtube-only"}[stage]):
                 step = None                                      # this run's start (stage.sh marks it)
             elif re.match(r"^== \d\d:\d\d:\d\d ", ln):
                 for key, words in CUT_STEPS:
@@ -174,7 +175,8 @@ def claude_stage_progress(W, stage, since):
 
 WAITING = {"awaiting-A": "ready to review (REVIEW-A)", "awaiting-B": "ready to review (REVIEW-B)",
            "awaiting-import": "zip on the Desktop; waiting for the video back (yt import)",
-           "awaiting-host": "waiting for the home Mac (yt host)", "queued": "queued"}
+           "awaiting-host": "waiting for the home Mac (yt host)", "queued": "queued",
+           "youtube-ready": "metadata ready: youtube/YOUTUBE.md (yt published NAME URL once it's live)"}
 
 
 def youtube_note(W):
@@ -209,7 +211,9 @@ for p in sorted(glob.glob(os.path.join(ROOT, "videos", "*", "state.json"))):
         row(name, stage, r[0] if r else None, r[1] if r else "starting · %s" % mins((NOW - since).total_seconds()))
     elif stage == "rendering":
         row(name, stage, None, "on the home Mac · %s so far" % mins((NOW - since).total_seconds()))
-    elif stage in ("cutting", "storyboarding"):
+    elif stage == "transcribing":
+        row(name, stage, None, "transcribing · %s so far" % mins((NOW - since).total_seconds()))
+    elif stage in ("cutting", "storyboarding", "drafting"):
         pct, detail = claude_stage_progress(W, stage, since)
         row(name, stage, pct, detail, est=True)
     elif stage in WAITING:

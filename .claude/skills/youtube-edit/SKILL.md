@@ -332,7 +332,10 @@ steps weighted by this Mac's earlier renders and HyperFrames' frame count inside
 (Bitly filled in by hand in `youtube/links.tsv`), checks YouTube's rules and writes `youtube/YOUTUBE.md` and the
 video's entry in `catalog/VIDEOS.md`. Links come from the profile's `LINKS.md` (and `youtube.json`) or are opened and
 verified. `yt youtube <name>` rebuilds, `yt published <name> <url>` records the link, `yt import` checks the times
-against the rendered file. Unattended runs never render 4K, never change the skill, and write only inside their
+against the rendered file. A finished video that needs only the metadata goes in `videos/_youtube-inbox/`
+(`pipeline/youtube-inbox.sh`, run by the inbox agent): moved to `videos/<name>/<name>.<ext>` with
+`youtube/source.json` (`"kind": "metadata-only"`), then the `youtube-only` stage: transcribe the finished file (already
+the published clock), prep, the same Claude run, build -> `youtube-ready`. Unattended runs never render 4K, never change the skill, and write only inside their
 video folder. Local compute is free, so previews and variants replace guessing from stills; tokens go only to the
 two judgment runs and to Dennis's notes.
 

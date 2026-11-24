@@ -14,6 +14,10 @@ its "Hands-off pipeline" section.
 Stages: queued -> cutting -> **awaiting-A** -> storyboarding -> **awaiting-B** -> rendering -> done (or failed).
 On the work Mac (hand-off) an approved render waits as **awaiting-import** until its video comes back.
 
+A finished video that needs only YouTube metadata (no edit) goes in `videos/_youtube-inbox/` (a file, or a folder
+with the video and `notes.txt`): it moves to `videos/<name>/` and runs queued -> transcribing -> drafting ->
+**youtube-ready** (`yt run <name> youtube-only` reruns it). Its transcript is on the published clock already.
+
 ## When Dennis approves or sends notes in this thread
 
 He writes things like "approve agents-3", "approve agents-3, grade blacks", "agents-3: cut the second retake at 2:10",

@@ -4,6 +4,11 @@ happens elsewhere. Nobody can answer questions during this run: decide, and put 
 captions, the tracked links and the catalog entry, and checks YouTube's rules. Do not write YOUTUBE.md yourself, do not
 render, and do not change anything outside {W}/youtube/.
 
+A metadata-only video ({W}/youtube/source.json says "metadata-only") is a finished video, not edited here: there is
+no storyboard, render.json or PAPER-CUT.md, its transcript is already on the published clock, and {W}/notes.txt (if
+any) says what it is (series, next video, names, links). Give it an end screen only if the last 20 s suit one, and say
+so in for_dennis.
+
 Read first:
 - {W}/youtube/timeline.json (how the flat cut's clock maps onto the published video: the intro sting, the end card)
 - {W}/transcript.json: word timings on the FLAT CUT's clock. Every time you write (chapters, cards) is on this clock;

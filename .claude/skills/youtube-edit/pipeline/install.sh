@@ -47,7 +47,7 @@ MODEL="$MOD"           # empty = Claude Code's default model
 RENDER_HOST_DIR="$RHOST"   # the home Mac's Video folder as mounted here; empty = render on this Mac
 PRIORITY="$PRIO"           # background = efficiency cores (quieter, much slower); utility = nearly full speed, other apps first
 CFG
-mkdir -p "$INBOX"
+mkdir -p "$INBOX" "$ROOT/videos/_youtube-inbox"
 LABEL="com.youtube-edit.inbox"; PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"; mkdir -p "$HOME/Library/LaunchAgents"
 cat > "$PLIST" <<PL
 <?xml version="1.0" encoding="UTF-8"?>
@@ -55,7 +55,7 @@ cat > "$PLIST" <<PL
 <plist version="1.0"><dict>
   <key>Label</key><string>$LABEL</string>
   <key>ProgramArguments</key><array><string>/bin/bash</string><string>$PIPE/inbox.sh</string></array>
-  <key>WatchPaths</key><array><string>$INBOX</string></array>
+  <key>WatchPaths</key><array><string>$INBOX</string><string>$ROOT/videos/_youtube-inbox</string></array>
   <key>StartInterval</key><integer>120</integer>
   <key>AbandonProcessGroup</key><true/>
   <key>StandardOutPath</key><string>$INBOX/launchd.log</string>
@@ -92,6 +92,7 @@ elif [ -n "$RHOST" ]; then echo "renders go to the home Mac at $RHOST (asks firs
 command -v terminal-notifier >/dev/null || echo "tip: 'brew install terminal-notifier' makes a notification click open the review page"
 ln -sf "$PIPE/yt" "$HOME/.local/bin/yt" 2>/dev/null || { mkdir -p "$HOME/.local/bin" && ln -sf "$PIPE/yt" "$HOME/.local/bin/yt"; }
 notify "YouTube edit pipeline" "Installed. Drop recordings into videos/_inbox/<name>/ to start an edit."
-echo "inbox:  $INBOX"
+echo "inbox:  $INBOX   (edits)"
+echo "        $ROOT/videos/_youtube-inbox   (finished videos: YouTube metadata only)"
 echo "status: yt status   (yt is linked into ~/.local/bin; add it to your PATH if 'yt' is not found)"
 echo "Test the unattended Claude step once: yt run <an existing video> cut   (then: yt log <name>)"

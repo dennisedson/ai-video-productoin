@@ -66,10 +66,11 @@ def template_duration(profile, kind):
 def timeline():
     render = load(os.path.join(W, "render.json"), {}) or {}
     story = load(os.path.join(W, "storyboard.json"), {}) or {}
-    profile = story.get("profile") or "hubspot"
+    source = load(os.path.join(Y, "source.json"), {}) or {}          # a metadata-only video: the finished file
+    profile = story.get("profile") or source.get("profile") or "hubspot"
     words = load(os.path.join(W, "transcript.json"), []) or []
     main = None
-    for f in ("public/input-video.mp4", "%s-4k.mp4" % render.get("name", NAME), "output-4k.mp4"):
+    for f in ([source["video"]] if source.get("video") else []) + ["public/input-video.mp4", "%s-4k.mp4" % render.get("name", NAME), "output-4k.mp4"]:
         if os.path.isfile(os.path.join(W, f)):
             main = ffdur(os.path.join(W, f)); break
     if not main:
@@ -365,9 +366,10 @@ es_len = min(20.0, total - es_start)
 pinned = fill(meta.get("pinned_comment", ""), rows, "pinned", problems)
 
 # ---- YOUTUBE.md ----
+SRCV = (load(os.path.join(Y, "source.json"), {}) or {}).get("video")
 L = ["# YouTube: %s" % NAME, "",
-     "Published length %s (flat cut %.1f s%s). Built %s from `youtube/metadata.json`; rebuild with `yt youtube %s` after"
-     " filling Bitly links in `youtube/links.tsv`." % (stamp(total, total), t["main"],
+     "Published length %s (%s %.1f s%s). Built %s from `youtube/metadata.json`; rebuild with `yt youtube %s` after"
+     " filling Bitly links in `youtube/links.tsv`." % (stamp(total, total), "the finished video %s," % SRCV if SRCV else "flat cut", t["main"],
          ", sting at %s" % stamp(t["intro"]["at"], total) if t["intro"] else "", dt.datetime.now().strftime("%Y-%m-%d %H:%M"), NAME), ""]
 if problems or notes or meta.get("for_dennis"):
     L += ["## Check before publishing", ""]

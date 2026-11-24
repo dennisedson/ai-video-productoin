@@ -219,6 +219,13 @@ Links come only from the profile's library (`profiles/hubspot/LINKS.md`, pages o
 opens and verifies; anything it can't confirm is listed for you. Ask a Claude Code thread for changes ("make the
 second title the first", "add the Agent CLI blog") and it edits `metadata.json` and rebuilds.
 
+**Finished videos that need only the metadata** (no edit): drop the video into `videos/_youtube-inbox/`, either the
+file itself (its name becomes the video's name) or a folder `<name>/` with the video and a `notes.txt` saying what it is
+("series: HubSpot Is Going Headless", "next: the Agent CLI", "Devs:After Dark", names to spell right, links to use).
+Once it stops growing it moves to `videos/<name>/`, is transcribed, and the same draft lands in `videos/<name>/youtube/`
+(`yt status`: transcribing -> drafting -> youtube-ready; a notification opens YOUTUBE.md). It works on either Mac;
+after a `git pull`, run `install.sh` once with your usual flags so the agent also watches this folder.
+
 When the video is live: `yt published <name> <url>`. The catalog, `catalog/VIDEOS.md`, keeps one entry per video
 (summary, topics, questions it answers, chapters, links, URL); the next videos' metadata uses it for cards and
 related links. Commit and push it when it changes; a copy lives in the Claude project.

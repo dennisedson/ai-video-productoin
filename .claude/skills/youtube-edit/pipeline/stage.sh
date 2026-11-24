@@ -5,6 +5,7 @@
 #   render     render-mac.sh (no AI) -> done, notification; on the home Mac when RENDER_HOST_DIR is set (asks first
 #              when the home Mac isn't mounted or ready: Check again / Render on this Mac / Later -> awaiting-host);
 #              RENDER_HOST_DIR=handoff makes a bundle zip to carry over by hand -> awaiting-import (yt import)
+#   youtube-only  a finished video from videos/_youtube-inbox: transcribe -> drafting -> youtube-ready (no edit)
 #   youtube    beside the render, after B: youtube-meta.py prep, headless Claude writes youtube/metadata.json, build ->
 #              youtube/YOUTUBE.md + captions.srt + links.tsv + the catalog entry; never changes the video's stage
 # Approvals come from Dennis in a Claude Code thread (see the project's CLAUDE.md), which starts the next stage with `yt run`.
@@ -77,6 +78,23 @@ cut)
   python3 "$PIPE/review-page.py" "$ROOT/$W" A
   state_set "$NAME" awaiting-A
   notify "YouTube edit: $NAME" "Checkpoint A (the cut) is ready to review." "$ROOT/$W/REVIEW-A.html"
+  ;;
+youtube-only)   # a finished video from videos/_youtube-inbox: transcribe it, then the youtube stage's work; no edit
+  SRC="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["video"])' "$W/youtube/source.json" 2>/dev/null)"
+  [ -n "$SRC" ] && [ -f "$W/$SRC" ] || fail "no youtube/source.json naming the video"
+  state_set "$NAME" transcribing
+  run ffmpeg -y -v error -i "$W/$SRC" -vn -acodec pcm_s16le -ar 16000 -ac 1 "$W/audio.wav"
+  run npx --yes hyperframes transcribe "$W/audio.wav" -d "$W" --engine parakeet --json      # transcript.json, published clock
+  need transcript.json
+  state_set "$NAME" drafting
+  echo "drafting $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
+  run python3 "$SK/scripts/youtube-meta.py" prep --project "$W"
+  claude_stage youtube.md
+  need youtube/metadata.json
+  if python3 "$SK/scripts/youtube-meta.py" build --project "$W"; then st="ready"; else st="ready, with problems"; fi
+  echo "$st $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
+  state_set "$NAME" youtube-ready "$st"
+  notify "YouTube metadata: $NAME" "Drafted$( [ "$st" = ready ] || echo ', with problems to fix (top of YOUTUBE.md)'): titles, description, chapters, cards, end screen, captions." "$ROOT/$W/youtube/YOUTUBE.md"
   ;;
 youtube)   # beside the render: never changes the video's stage; status in youtube/status
   mkdir -p "$W/youtube"
