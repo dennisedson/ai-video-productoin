@@ -89,7 +89,7 @@ def reviews(name):
 def detail(name):
     v = core.load_video(name); st = core.state(name)
     w = core.video_dir(name)
-    ph = core.derive_phase(v, st)
+    ph = core.current_phase(name, v, st)
     return {"video": v, "phase": ph, "stage": (st or {}).get("stage", ""),
             "history": (st or {}).get("history", [])[-8:],
             "phases": core.PHASES, "progress": v.get("phases", {}),
@@ -367,7 +367,7 @@ class Handler(BaseHTTPRequestHandler):
             if first:
                 v["chat_session"] = str(uuid.uuid4()); core.save_video(name, v)
             sid = v["chat_session"]
-            ph = core.phase(core.derive_phase(v, core.state(name)))
+            ph = core.phase(core.current_phase(name, v))
             prompt = fill(open(os.path.join(HERE, "prompts", "chat.md")).read(), {"name": name, "phase_title": ph["title"], "text": text}) if first else text
             argv = claude_argv(prompt, ["--session-id", sid] if first else ["--resume", sid])
             jid = core.start_job(name, "chat", argv, label="chat")

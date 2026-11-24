@@ -109,6 +109,27 @@ def derive_phase(video, st):
     return max(cands, key=PHASE_IDS.index)
 
 
+def catalog_status(name):
+    """'published' or 'scheduled' from catalog/VIDEOS.md (yt published writes it), else ''."""
+    try:
+        cat = open(os.path.join(ROOT, "catalog", "VIDEOS.md")).read()
+    except OSError:
+        return ""
+    m = re.search(r"<!-- video:%s -->(.*?)<!-- /video:%s -->" % (re.escape(name), re.escape(name)), cat, re.S)
+    st = re.search(r"^- \*\*Status:\*\* (\w+)", m.group(1), re.M) if m else None
+    return st.group(1) if st and st.group(1) in ("published", "scheduled") else ""
+
+
+def current_phase(name, v=None, st=None):
+    v = v if v is not None else load_video(name)
+    ph = derive_phase(v, st if st is not None else state(name))
+    cs = catalog_status(name)
+    want = "results" if cs == "published" else "publish" if cs == "scheduled" else ""
+    if want and PHASE_IDS.index(want) > PHASE_IDS.index(ph):
+        ph = want
+    return ph
+
+
 def phase(pid):
     for p in PHASES:
         if p["id"] == pid:
@@ -120,6 +141,8 @@ def waiting_on(video, st, open_q):
     stage = (st or {}).get("stage", "")
     if open_q:
         return "you: %d question%s" % (open_q, "" if open_q == 1 else "s")
+    if video.get("name") and catalog_status(video["name"]) == "scheduled":
+        return "its go-live date"
     return {"queued": "the cut stage", "cutting": "the cut stage", "storyboarding": "the storyboard stage",
             "rendering": "the render", "awaiting-import": "the home Mac", "awaiting-host": "the home Mac",
             "failed": "a fix (the stage failed)", "awaiting-A": "you: Checkpoint A", "awaiting-B": "you: Checkpoint B"}.get(stage, "you")
@@ -134,7 +157,7 @@ def list_videos():
             continue
         v, st = load_video(n), state(n)
         oq = sum(1 for q in questions(n) if not q.get("answer"))
-        ph = derive_phase(v, st)
+        ph = current_phase(n, v, st)
         rows.append({"name": n, "title": v.get("title") or n, "phase": ph, "origin": v.get("origin", ""),
                      "series": v.get("series", ""), "stage": (st or {}).get("stage", ""), "open_questions": oq,
                      "waiting_on": waiting_on(v, st, oq), "legacy": bool(v.get("legacy")),

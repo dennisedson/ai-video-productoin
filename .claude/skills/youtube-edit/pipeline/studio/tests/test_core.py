@@ -86,6 +86,14 @@ class CoreTest(unittest.TestCase):
         for p in self.core.PHASES:
             self.assertEqual(p["forms"][-1]["id"], "freeform", p["id"])
 
+    def test_catalog_status_moves_the_phase(self):
+        self.core.scaffold("pub", "problem")
+        os.makedirs(os.path.join(self.root, "catalog"))
+        open(os.path.join(self.root, "catalog", "VIDEOS.md"), "w").write(
+            "<!-- video:pub -->\n### T\n\n- **Status:** scheduled (private until 2026-12-01)\n<!-- /video:pub -->\n")
+        self.assertEqual(self.core.current_phase("pub"), "publish")
+        self.assertEqual(self.core.list_videos()[0]["waiting_on"], "its go-live date")
+
     def test_job_runs_and_records(self):
         self.core.scaffold("j", "problem")
         jid = self.core.start_job("j", "test", ["/bin/echo", "hello"])
