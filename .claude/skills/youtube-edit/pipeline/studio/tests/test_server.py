@@ -1,4 +1,4 @@
-import json, os, stat, tempfile, threading, unittest, urllib.request, urllib.error
+import json, os, stat, tempfile, threading, unittest, urllib.parse, urllib.request, urllib.error
 from helpers import temp_root, cleanup
 
 
@@ -46,6 +46,40 @@ class ServerTest(unittest.TestCase):
                 return e.code, json.loads(raw)
             except ValueError:
                 return e.code, raw
+
+    def upload(self, fn, data, header=True):
+        h = {"Content-Type": "application/octet-stream"}
+        if header:
+            h["X-Studio"] = "1"
+        req = urllib.request.Request("http://127.0.0.1:%d/api/videos/v1/materials?file=%s" % (self.port, urllib.parse.quote(fn)), data=data, method="POST", headers=h)
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read())
+
+    def test_materials_upload_link_note_remove(self):
+        st, b = self.upload("Brooke's draft.pdf", b"%PDF-1.4 hello")
+        self.assertEqual((st, b["saved"]), (200, "Brooke's draft.pdf"))
+        st, b = self.upload("Brooke's draft.pdf", b"again")
+        self.assertEqual(b["saved"], "Brooke's draft (2).pdf")
+        st, b = self.upload("../../escape.txt", b"x")
+        self.assertEqual(b["saved"], "escape.txt")
+        self.assertTrue(os.path.isfile(os.path.join(self.core.video_dir("v1"), "materials", "escape.txt")))
+        self.assertEqual(self.upload("x.txt", b"x", header=False)[0], 403)
+        st, b = self.call("POST", "/api/videos/v1/materials/link", {"url": "https://github.com/x/y", "label": "Exercise repo", "note": "the sample app"})
+        self.assertEqual(b["materials"]["links"][0]["label"], "Exercise repo")
+        self.assertIn("| Exercise repo | https://github.com/x/y | material: the sample app | unchecked |", open(os.path.join(self.core.video_dir("v1"), "references.md")).read())
+        self.assertEqual(self.call("POST", "/api/videos/v1/materials/link", {"url": "javascript:alert(1)"})[0], 400)
+        self.call("POST", "/api/videos/v1/materials/note", {"file": "escape.txt", "note": "ignore this"})
+        readme = open(os.path.join(self.core.video_dir("v1"), "materials", "README.md")).read()
+        self.assertIn("- escape.txt: ignore this", readme); self.assertIn("[Exercise repo](https://github.com/x/y): the sample app", readme)
+        st, b = self.call("POST", "/api/videos/v1/materials/remove", {"file": "escape.txt"})
+        self.assertNotIn("escape.txt", [f["file"] for f in b["materials"]["files"]])
+        st, b = self.call("GET", "/api/videos/v1")
+        self.assertEqual(sorted(f["file"] for f in b["materials"]["files"]), ["Brooke's draft (2).pdf", "Brooke's draft.pdf"])
+        st, raw = self.call("GET", "/media/v1/materials/Brooke's%20draft.pdf")
+        self.assertEqual(raw, b"%PDF-1.4 hello")
 
     def test_board(self):
         st, body = self.call("GET", "/api/videos")

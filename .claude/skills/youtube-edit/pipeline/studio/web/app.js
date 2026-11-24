@@ -153,6 +153,7 @@ async function videoPage(name, phaseId) {
           ${p.id !== d.phase ? `<button class="btn small" data-setphase>Move the video to this phase</button>` : ""}
         </div></div>
       ${p.docs.length ? `<div class="panel"><div class="tabs">${p.docs.map((doc, k) => `<button data-doc="${esc(doc)}" class="${k ? "" : "sel"}">${esc(doc)}${d.docs[doc] ? "" : " (new)"}</button>`).join("")}</div><div id="editor"></div></div>` : ""}
+      ${["ideation", "script"].includes(p.id) || d.materials.files.length || d.materials.links.length ? `<div class="panel" id="materials">${materialsHtml(name, d.materials)}</div>` : ""}
       <div class="panel forms"><h2>Ask Claude</h2>${p.forms.map(formHtml).join("")}</div>
       <div class="panel"><h2>Recent runs</h2><div id="jobs">${d.jobs.length ? "" : '<p class="muted small">Nothing yet.</p>'}</div></div>
     </section>
@@ -202,8 +203,56 @@ async function videoPage(name, phaseId) {
     tabs.forEach(t => t.onclick = () => { tabs.forEach(x => x.classList.remove("sel")); t.classList.add("sel"); openDoc(name, t.dataset.doc); });
     openDoc(name, p.docs[0]);
   }
+  wireMaterials(name);
   renderJobs(name, d.jobs);
   chat(name);
+}
+
+const fmtSize = n => n > 1 << 30 ? (n / (1 << 30)).toFixed(1) + " GB" : n > 1 << 20 ? (n / (1 << 20)).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+function materialsHtml(name, m) {
+  const item = (kind, key, label, href, extra, note) => `<li class="mat" data-${kind}="${esc(key)}"><a href="${esc(href)}" target="_blank" rel="noopener">${esc(label)}</a> <span class="small muted">${extra}</span>
+    <input class="mat-note" placeholder="What it is, what to use it for" value="${esc(note || "")}"><button class="btn small" data-mat-del title="Remove">×</button></li>`;
+  return `<h2>Materials</h2><p class="muted small">What a colleague (or anyone) already made: drafts, slides, PDFs, screenshots, a repo, a post.
+    Every Claude run on this video reads them first. Links also go into references.md.</p>
+    <div class="dropzone" id="mat-drop">Drop files here, or <label class="linklike">choose files<input type="file" multiple hidden id="mat-file"></label></div>
+    <div class="row" style="margin-top:8px;gap:6px"><input id="mat-url" placeholder="https://… (a repo, a post, a doc)" style="flex:2">
+      <input id="mat-label" placeholder="Label" style="flex:1"><input id="mat-lnote" placeholder="Note (optional)" style="flex:1"><button class="btn" id="mat-add" style="flex:0">Add link</button></div>
+    <ul class="mats">${m.files.map(f => item("file", f.file, f.file, media(name, f.path), fmtSize(f.size), f.note)).join("")}
+      ${m.links.map(l => item("url", l.url, l.label || l.url, l.url, "link", l.note)).join("")}</ul>
+    ${m.files.length || m.links.length ? "" : '<p class="muted small">Nothing yet.</p>'}
+    <p class="small muted">Google Docs: paste the text into research.md as well; runs from the studio may not be able to open them.</p>`;
+}
+function wireMaterials(name) {
+  const box = app.querySelector("#materials"); if (!box) return;
+  const base = `/api/videos/${encodeURIComponent(name)}/materials`;
+  const redraw = m => { box.innerHTML = materialsHtml(name, m); wireMaterials(name); };
+  const upload = async files => {
+    let m;
+    for (const f of files) {
+      toast(`Uploading ${f.name}…`);
+      const r = await fetch(`${base}?file=${encodeURIComponent(f.name)}`, { method: "POST", headers: { "X-Studio": "1", "Content-Type": "application/octet-stream" }, body: f });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { toast(`${f.name}: ${j.error || r.statusText}`); continue; }
+      m = j.materials;
+    }
+    if (m) { redraw(m); toast("Saved to materials/"); }
+  };
+  const dz = box.querySelector("#mat-drop");
+  dz.ondragover = e => { e.preventDefault(); dz.classList.add("over"); };
+  dz.ondragleave = () => dz.classList.remove("over");
+  dz.ondrop = e => { e.preventDefault(); dz.classList.remove("over"); if (e.dataTransfer.files.length) upload([...e.dataTransfer.files]);
+    else { const t = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain"); if (/^https?:\/\//.test(t)) box.querySelector("#mat-url").value = t.trim(); } };
+  box.querySelector("#mat-file").onchange = e => upload([...e.target.files]);
+  box.querySelector("#mat-add").onclick = async () => {
+    try { const j = await api(`${base}/link`, { method: "POST", body: { url: box.querySelector("#mat-url").value, label: box.querySelector("#mat-label").value, note: box.querySelector("#mat-lnote").value } });
+      redraw(j.materials); toast("Link added (and to references.md)"); } catch (e) { toast(e.message); } };
+  box.querySelectorAll("li.mat").forEach(li => {
+    const key = li.dataset.file ? { file: li.dataset.file } : { url: li.dataset.url };
+    li.querySelector(".mat-note").onchange = async ev => { try { await api(`${base}/note`, { method: "POST", body: { ...key, note: ev.target.value } }); toast("Note saved"); } catch (e) { toast(e.message); } };
+    li.querySelector("[data-mat-del]").onclick = async () => {
+      if (!confirm(`Remove ${li.dataset.file || li.dataset.url}?${li.dataset.file ? " The file is deleted." : ""}`)) return;
+      try { redraw((await api(`${base}/remove`, { method: "POST", body: key })).materials); } catch (e) { toast(e.message); } };
+  });
 }
 
 function partRow(p, k) {

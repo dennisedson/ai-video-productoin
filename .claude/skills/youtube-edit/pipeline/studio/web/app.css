@@ -102,3 +102,12 @@ a.pill { text-decoration: none; }
 .row > .pill, .row > .btn.small { flex: 0 0 auto; }
 .chat .m.claude { white-space: normal; } .chat .m.claude p, .chat .m.claude ul, .chat .m.claude ol { margin: 4px 0; }
 .btn.danger { border-color: #B91C1C; color: #B91C1C; } .btn.danger:hover { background: #B91C1C; color: #fff; }
+
+.dropzone { border: 2px dashed var(--line); border-radius: var(--radius); padding: 18px; text-align: center; color: var(--muted); }
+.dropzone.over { border-color: var(--orange); background: var(--orange-soft); color: inherit; }
+.linklike { color: var(--orange); cursor: pointer; text-decoration: underline; }
+ul.mats { list-style: none; padding: 0; margin: 10px 0 0; }
+li.mat { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+li.mat a { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40%; }
+li.mat .mat-note { flex: 1; }
+li.mat .btn { flex: 0; }

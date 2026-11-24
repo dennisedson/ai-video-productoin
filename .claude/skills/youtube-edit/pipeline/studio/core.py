@@ -10,7 +10,7 @@ video.json; it is read from state.json alone.
   python3 core.py ask NAME "question" [--options "a|b"]
   python3 core.py propose-split NAME --series "Title" --part "name::title::promise::minutes" ... [--why W]
 """
-import datetime as dt, json, os, re, subprocess, sys, threading, time, uuid
+import datetime as dt, json, os, re, shutil, subprocess, sys, threading, time, uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SK = os.path.normpath(os.path.join(HERE, "..", ".."))
@@ -407,6 +407,8 @@ def apply_split(name, parts=None, series_title=None):
                 src = os.path.join(video_dir(name), f)
                 if os.path.isfile(src):
                     open(os.path.join(w, f), "w").write(open(src).read())
+            if os.path.isdir(_mat_dir(name)) and not os.path.exists(os.path.join(w, "materials")):
+                shutil.copytree(_mat_dir(name), os.path.join(w, "materials"))
             open(os.path.join(w, "BRIEF.md"), "a").write(
                 "\n\n## Part %d of %s\n%s\n\nTarget length: %s min. From the original brief (videos/%s/BRIEF.md):\n\n%s\n"
                 % (i + 1, title, p.get("promise", ""), p.get("minutes") or "under 6", name, "\n".join("> " + l for l in brief.splitlines())))
@@ -422,6 +424,127 @@ def apply_split(name, parts=None, series_title=None):
     if prop:
         prop["status"] = "accepted"; prop["accepted"] = now(); prop["parts"] = parts; prop["series"] = title; _write(_split_path(name), prop)
     return {"series": slug(title), "made": made, "parts": order}
+
+
+# ---- materials: what a colleague (or anyone) already made --------------------------------------------------------
+MAX_UPLOAD = 2 << 30
+
+
+def _mat_dir(name):
+    return os.path.join(video_dir(name), "materials")
+
+
+def _mat_index(name):
+    return _read(os.path.join(_mat_dir(name), "materials.json"), None) or {"files": {}, "links": []}
+
+
+def _safe_filename(fn):
+    fn = os.path.basename(fn.replace("\\", "/")).strip()
+    fn = re.sub(r"[^\w .()+,'-]", "_", fn).lstrip(".")
+    if not fn or fn in ("materials.json", "README.md"):
+        raise ValueError("not a usable file name")
+    return fn[:150]
+
+
+def materials(name):
+    idx = _mat_index(name); d = _mat_dir(name); files = []
+    if os.path.isdir(d):
+        for fn in sorted(os.listdir(d)):
+            p = os.path.join(d, fn)
+            if fn in ("materials.json", "README.md") or fn.startswith(".") or not os.path.isfile(p):
+                continue
+            meta = idx["files"].get(fn, {})
+            files.append({"file": fn, "path": "materials/" + fn, "size": os.path.getsize(p), "note": meta.get("note", ""), "added": meta.get("added", "")})
+    return {"files": files, "links": idx["links"]}
+
+
+def _save_mat_index(name, idx):
+    os.makedirs(_mat_dir(name), exist_ok=True)
+    _write(os.path.join(_mat_dir(name), "materials.json"), idx)
+    m = materials(name)
+    out = ["# Materials for %s" % name, "",
+           "What others already made for this video. Read the files and open the links before writing anything that",
+           "draws on them; credit the colleague as BRIEF.md says.", ""]
+    if m["files"]:
+        out += ["## Files", ""] + ["- %s%s" % (f["file"], (": " + f["note"]) if f["note"] else "") for f in m["files"]] + [""]
+    if m["links"]:
+        out += ["## Links", ""] + ["- [%s](%s)%s" % (l.get("label") or l["url"], l["url"], (": " + l["note"]) if l.get("note") else "") for l in m["links"]] + [""]
+    open(os.path.join(_mat_dir(name), "README.md"), "w").write("\n".join(out))
+
+
+def save_material(name, filename, stream, length, note=""):
+    if length > MAX_UPLOAD:
+        raise ValueError("files over 2 GB go in the folder by hand (Finder)")
+    fn = _safe_filename(filename); d = _mat_dir(name); os.makedirs(d, exist_ok=True)
+    base, ext = os.path.splitext(fn); k = 2
+    while os.path.exists(os.path.join(d, fn)):
+        fn = "%s (%d)%s" % (base, k, ext); k += 1
+    tmp = os.path.join(d, ".upload-" + uuid.uuid4().hex)
+    try:
+        with open(tmp, "wb") as f:
+            left = length
+            while left > 0:
+                chunk = stream.read(min(1 << 20, left))
+                if not chunk:
+                    raise ValueError("the upload stopped part way")
+                f.write(chunk); left -= len(chunk)
+        os.replace(tmp, os.path.join(d, fn))
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+    with _lock:
+        idx = _mat_index(name); idx["files"][fn] = {"note": note, "added": now()}; _save_mat_index(name, idx)
+    return fn
+
+
+def add_material_link(name, url, label="", note=""):
+    url = url.strip()
+    if not re.match(r"^https?://\S+$", url):
+        raise ValueError("a link starts with http:// or https://")
+    with _lock:
+        idx = _mat_index(name)
+        if not any(l["url"] == url for l in idx["links"]):
+            idx["links"].append({"url": url, "label": label.strip(), "note": note.strip(), "added": now()})
+        _save_mat_index(name, idx)
+        ref = os.path.join(video_dir(name), "references.md")
+        text = open(ref).read() if os.path.isfile(ref) else "| Label | URL | Used for | Status | Checked |\n| --- | --- | --- | --- | --- |\n"
+        if url not in text:
+            cell = lambda x: x.replace("|", "/").replace("\n", " ")
+            row = "| %s | %s | %s | unchecked | |\n" % (cell(label or url), url, cell("material: " + note if note else "material"))
+            open(ref, "w").write(text if text.endswith("\n") else text + "\n")
+            open(ref, "a").write(row)
+    return materials(name)
+
+
+def set_material_note(name, note, file=None, url=None):
+    with _lock:
+        idx = _mat_index(name)
+        if file:
+            fn = _safe_filename(file)
+            if not os.path.isfile(os.path.join(_mat_dir(name), fn)):
+                raise KeyError(fn)
+            idx["files"].setdefault(fn, {"added": now()})["note"] = note
+        else:
+            hit = [l for l in idx["links"] if l["url"] == url]
+            if not hit:
+                raise KeyError(url)
+            hit[0]["note"] = note
+        _save_mat_index(name, idx)
+    return materials(name)
+
+
+def remove_material(name, file=None, url=None):
+    with _lock:
+        idx = _mat_index(name)
+        if file:
+            fn = _safe_filename(file); p = os.path.join(_mat_dir(name), fn)
+            if os.path.isfile(p):
+                os.remove(p)
+            idx["files"].pop(fn, None)
+        else:
+            idx["links"] = [l for l in idx["links"] if l["url"] != url]
+        _save_mat_index(name, idx)
+    return materials(name)
 
 
 # ---- questions -----------------------------------------------------------------------------------------------------

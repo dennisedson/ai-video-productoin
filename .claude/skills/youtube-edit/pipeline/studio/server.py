@@ -96,7 +96,7 @@ def detail(name):
             "docs": {d: os.path.exists(os.path.join(w, d)) for d in all_docs()},
             "questions": core.questions(name), "jobs": core.jobs(name, 12), "reviews": reviews(name),
             "raw": sorted(os.listdir(os.path.join(w, "raw"))) if os.path.isdir(os.path.join(w, "raw")) else [],
-            "split": core.split_proposal(name), "all_series": [x["title"] for x in core.all_series()],
+            "split": core.split_proposal(name), "materials": core.materials(name), "all_series": [x["title"] for x in core.all_series()],
             "length": dict(zip(("target", "max"), core.profile_length(v.get("profile"))), minutes=core.estimate_minutes(name))}
 
 
@@ -347,6 +347,22 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(200, {"trashed": core.delete_video(name)})
         if rest == "series" and method == "POST":
             return self.send(200, core.set_series(name, self.body().get("titles", [])))
+        if rest == "materials" and method == "POST":
+            fn = (qs.get("file") or [""])[0]
+            n = int(self.headers.get("Content-Length") or 0)
+            if not fn or not n:
+                raise ValueError("send a file")
+            saved = core.save_material(name, fn, self.rfile, n, (qs.get("note") or [""])[0])
+            return self.send(200, {"saved": saved, "materials": core.materials(name)})
+        if rest == "materials/link" and method == "POST":
+            b = self.body()
+            return self.send(200, {"materials": core.add_material_link(name, b.get("url", ""), b.get("label", ""), b.get("note", ""))})
+        if rest == "materials/note" and method == "POST":
+            b = self.body()
+            return self.send(200, {"materials": core.set_material_note(name, b.get("note", ""), b.get("file"), b.get("url"))})
+        if rest == "materials/remove" and method == "POST":
+            b = self.body()
+            return self.send(200, {"materials": core.remove_material(name, b.get("file"), b.get("url"))})
         if rest == "split" and method == "POST":
             b = self.body(); prop = core.split_proposal(name)
             if not prop:

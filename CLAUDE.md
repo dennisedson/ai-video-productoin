@@ -9,7 +9,10 @@ Each video is a project from the idea on: `bash .claude/skills/youtube-edit/pipe
 `videos/<name>/` with `video.json`, `BRIEF.md` (from the idea's origin: a colleague's work, a problem, a feature),
 `research.md`, `references.md` (every outside link), `SCRIPT.md` (read-aloud lines in `>` blockquotes for the
 teleprompter, `→ demo:` beats, ```` ```copy: ```` blocks for the recording sheet) and `results.md`. When Dennis asks for a
-new video without a name, ask for the name first (and the idea's origin), then run `yt new`.
+new video without a name, ask for the name first (and the idea's origin), then run `yt new`. What others already made for a
+video (a colleague's draft, slides, PDFs, a repo, a post) goes in its `materials/` folder, added from the studio's
+Materials panel; `materials/README.md` lists the files and links with notes: read it before drafting anything for that
+video, and credit the colleague as its BRIEF.md says.
 
 Dennis works in the studio, a page on `http://127.0.0.1:4040` (`yt app` opens it; launchd keeps it running): the
 board, each video's phases (ideation, script and direction, recording, cut, storyboard, render and music on the home

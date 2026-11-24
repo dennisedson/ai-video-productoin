@@ -14,7 +14,7 @@
     {
      "id": "origin",
      "title": "Start from where the idea came from",
-     "instructions": "A colleague's work: paste their material and links into research.md. A problem: write who has it and what they try today. A feature: add the changelog and docs links. The brief's template already matches the origin you picked."
+     "instructions": "A colleague's work: drop their files and add their links under Materials (Claude reads them on every run), and paste any Google Doc text into research.md. A problem: write who has it and what they try today. A feature: add the changelog and docs links. The brief's template already matches the origin you picked."
     },
     {
      "id": "research",
