@@ -29,6 +29,8 @@ ROOT = os.path.abspath(os.path.join(SK, "..", "..", ".."))
 ap = argparse.ArgumentParser()
 ap.add_argument("cmd", choices=["prep", "build", "check", "published", "shorten"])
 ap.add_argument("--url", help="published: the video's YouTube link")
+ap.add_argument("--auto", action="store_true", help="shorten: as the pipeline runs it (skips when the profile says auto false)")
+ap.add_argument("--confirm-profile", action="store_true", help="shorten: Dennis confirms the video is this profile's content")
 ap.add_argument("--project", required=True)
 ap.add_argument("--video", help="check: the rendered video")
 a = ap.parse_args()
@@ -283,11 +285,11 @@ if a.cmd == "check":
     sys.exit(0 if abs(off) <= 0.5 else 1)
 
 # ---- shorten: Bitly links for every link still long, then build again -------------------------------------------------
-def bitly_token():
-    tok = os.environ.get("BITLY_TOKEN", "").strip()
-    if not tok:                                             # the macOS Keychain: security add-generic-password -s bitly-api
+def bitly_token(service):
+    tok = os.environ.get("BITLY_TOKEN", "").strip()       # tests only
+    if not tok:                                             # the macOS Keychain item the profile names
         try:
-            tok = subprocess.run(["security", "find-generic-password", "-s", "bitly-api", "-w"],
+            tok = subprocess.run(["security", "find-generic-password", "-s", service, "-w"],
                                  capture_output=True, text=True, timeout=20).stdout.strip()
         except (OSError, subprocess.SubprocessError):
             tok = ""
@@ -311,15 +313,32 @@ def bitly(method, path, tok, body=None):
         return 0, {"message": str(e)}
 
 
+def bitly_skip(reason, code):
+    open(os.path.join(Y, "bitly-skipped.txt"), "w").write(reason + "\n")
+    print("Bitly skipped: " + reason)
+    sys.exit(code)
+
+
 if a.cmd == "shorten":
     if not meta:
         sys.exit("no youtube/metadata.json yet")
-    tok = bitly_token()
-    if not tok:
-        print("no Bitly token: add it once with  security add-generic-password -U -a \"$USER\" -s bitly-api -w")
-        sys.exit(3)
-    ycfg = load(os.path.join(SK, "profiles", t["profile"], "youtube.json"), {}) or {}
+    prof = t["profile"]
+    ycfg = load(os.path.join(SK, "profiles", prof, "youtube.json"), {}) or {}
     bcfg = ycfg.get("bitly") or {}
+    if not bcfg.get("keychain"):                            # an account belongs to one profile; others have none
+        bitly_skip("the %s profile has no Bitly account, so its links stay long" % prof, 3)
+    if a.auto and not bcfg.get("auto", False):
+        bitly_skip("the %s profile has Bitly auto off (yt shorten %s does it by hand)" % (prof, NAME), 3)
+    story = load(os.path.join(W, "storyboard.json"), {}) or {}
+    src = load(os.path.join(Y, "source.json"), {}) or {}
+    explicit = story.get("profile") == prof or (src.get("profile") == prof and src.get("profile_from") == "notes")
+    if not explicit and not a.confirm_profile:              # never spend a profile's account on content only assumed to be its
+        bitly_skip("%s isn't marked as %s content (an inbox video without \"HubSpot\" in notes.txt). If it is: yt shorten %s --%s"
+                   % (NAME, prof, NAME, prof), 4)
+    tok = bitly_token(bcfg["keychain"])
+    if not tok:
+        bitly_skip("no token in the Keychain as %s: add it once with  security add-generic-password -U -a \"$USER\" -s %s -w"
+                   % (bcfg["keychain"], bcfg["keychain"]), 3)
     rows = link_rows(meta, ycfg)
     todo = [r for r in rows if not r["bitly"] and not youtube_url(r["url"])]
     if not todo:
@@ -349,6 +368,8 @@ if a.cmd == "shorten":
         for r in rows:
             if not youtube_url(r["url"]):
                 w.writerow(r)
+    if os.path.isfile(os.path.join(Y, "bitly-skipped.txt")):
+        os.remove(os.path.join(Y, "bitly-skipped.txt"))
     left = sum(1 for r in rows if not r["bitly"] and not youtube_url(r["url"]))
     print("Bitly: %d new link%s, %d still long%s" % (made, "" if made == 1 else "s", left, "; " + stopped if stopped else ""))
     sys.stdout.flush()
@@ -447,6 +468,8 @@ L = ["# YouTube: %s" % NAME, "",
      "Published length %s (%s %.1f s%s). Built %s from `youtube/metadata.json`; rebuild with `yt youtube %s` after"
      " filling Bitly links in `youtube/links.tsv`." % (stamp(total, total), "the finished video %s," % SRCV if SRCV else "flat cut", t["main"],
          ", sting at %s" % stamp(t["intro"]["at"], total) if t["intro"] else "", dt.datetime.now().strftime("%Y-%m-%d %H:%M"), NAME), ""]
+if os.path.isfile(os.path.join(Y, "bitly-skipped.txt")) and any(not r["bitly"] and not youtube_url(r["url"]) for r in rows):
+    notes.append("links are long: Bitly skipped, " + open(os.path.join(Y, "bitly-skipped.txt")).read().strip())
 if problems or notes or meta.get("for_dennis"):
     L += ["## Check before publishing", ""]
     L += ["- **Fix:** %s" % p for p in problems] + ["- %s" % n for n in notes] + ["- **For you:** %s" % x for x in meta.get("for_dennis", [])] + [""]
@@ -456,7 +479,7 @@ for n, tt in enumerate(titles, 1):
 L += ["", "## Description", "", "%d characters with these links (limit 5,000; the first ~157 show above the fold)." % len(desc), "",
       "```", desc, "```", ""]
 L += ["## Links to shorten", "",
-      "`yt shorten %s` makes every missing Bitly link through the API (token in the Keychain as `bitly-api`) and rebuilds;"
+      "`yt shorten %s` makes every missing Bitly link through the profile's Bitly account and rebuilds;"
       " the pipeline runs it after each draft. By hand instead: shorten each long link, paste it into the `bitly` column"
       " of `youtube/links.tsv`, then `yt youtube %s`." % (NAME, NAME), "",
       "| Link | Where | Suggested back-half | Bitly | Long link (with UTM) |", "| --- | --- | --- | --- | --- |"]

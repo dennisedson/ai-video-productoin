@@ -42,9 +42,11 @@ case "${1:-status}" in
   youtube)   # rebuild youtube/YOUTUBE.md from metadata.json + the Bitly links in links.tsv (no AI)
     [ -n "${2:-}" ] || { echo "yt youtube NAME"; exit 2; }
     python3 "$SK/scripts/youtube-meta.py" build --project "$ROOT/videos/$2" ;;
-  shorten)   # Bitly links for every link still long in youtube/links.tsv (token in the Keychain as bitly-api), then rebuild
-    [ -n "${2:-}" ] || { echo "yt shorten NAME"; exit 2; }
-    python3 "$SK/scripts/youtube-meta.py" shorten --project "$ROOT/videos/$2" ;;
+  shorten)   # Bitly links through the video's profile account (HubSpot only), then rebuild. --hubspot confirms an inbox
+             # video whose profile was only assumed is HubSpot content.
+    [ -n "${2:-}" ] || { echo "yt shorten NAME [--hubspot]"; exit 2; }
+    case "${3:-}" in ""|--hubspot) ;; *) echo "yt shorten NAME [--hubspot]"; exit 2 ;; esac
+    python3 "$SK/scripts/youtube-meta.py" shorten --project "$ROOT/videos/$2" ${3:+--confirm-profile} ;;
   published)   # record the YouTube link and date in catalog/VIDEOS.md
     [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "yt published NAME https://youtu.be/..."; exit 2; }
     python3 "$SK/scripts/youtube-meta.py" published --project "$ROOT/videos/$2" --url "$3" ;;

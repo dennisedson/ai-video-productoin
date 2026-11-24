@@ -50,10 +50,8 @@ ask_host() {   # ask_host WHY: a dialog on this Mac; prints again|here|later (la
 Fix that (mount the share, or wake the home Mac), then choose Check again.\" with title \"YouTube edit\" buttons {\"Later\", \"Render on this Mac\", \"Check again\"} default button \"Check again\" giving up after 14400" 2>/dev/null)" || { echo later; return; }
   case "$r" in *"gave up:true"*) echo later ;; *"Check again"*) echo again ;; *"this Mac"*) echo here ;; *) echo later ;; esac
 }
-bitly_links() {   # Bitly links for the draft when the profile wants them and the token is in the Keychain; never fatal
-  python3 -c 'import json,sys; sys.exit(0 if (json.load(open(sys.argv[1])).get("bitly") or {}).get("auto", True) else 1)' \
-    "$SK/profiles/$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("profile","hubspot"))' "$W/youtube/timeline.json" 2>/dev/null || echo hubspot)/youtube.json" 2>/dev/null || return 0
-  python3 "$SK/scripts/youtube-meta.py" shorten --project "$W" | grep -E "^Bitly|^no Bitly" || true
+bitly_links() {   # the profile's Bitly account, when it has one, auto is on and the video is explicitly that profile's
+  python3 "$SK/scripts/youtube-meta.py" shorten --project "$W" --auto | grep -E "^Bitly" || true
 }
 need() { for f in "$@"; do [ -e "$W/$f" ] || fail "missing $f after the $STAGE stage"; done; }
 

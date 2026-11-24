@@ -1,7 +1,7 @@
 #!/bin/bash
 # youtube-inbox.sh: finished videos that need only the YouTube metadata treatment, no edit. Run by inbox.sh (the same
 # launchd agent watches videos/_youtube-inbox). Drop either a video file (its name becomes the video's name) or a folder
-# <name>/ holding the video and an optional notes.txt ("Devs:After Dark", "series: HubSpot Is Going Headless",
+# <name>/ holding the video and an optional notes.txt ("HubSpot", "Devs:After Dark", "series: HubSpot Is Going Headless",
 # "next: the Agent CLI", links or names to use). Once it has stopped growing for 20 s it moves to videos/<name>/, and
 # the youtube-only stage transcribes it and drafts youtube/YOUTUBE.md, captions.srt, links.tsv and the catalog entry.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
@@ -39,8 +39,12 @@ for p in "$YTIN"/*; do
   else
     mv "$p" "$W/$slug.$ext"
   fi
-  profile=hubspot; grep -qiE 'after ?dark|devs-after-dark|\bDAD\b' "$W/notes.txt" 2>/dev/null && profile=devs-after-dark
-  printf '{"kind": "metadata-only", "video": "%s", "profile": "%s", "from": "%s"}\n' "$slug.$ext" "$profile" "$base" > "$W/youtube/source.json"
+  # the profile: stated in notes.txt, or assumed (hubspot). An assumed profile never uses the profile's Bitly account.
+  profile=hubspot; from=assumed
+  if grep -qiE 'after ?dark|devs-after-dark|\bDAD\b' "$W/notes.txt" 2>/dev/null; then profile=devs-after-dark; from=notes
+  elif grep -qiE 'hubspot' "$W/notes.txt" 2>/dev/null; then from=notes; fi
+  printf '{"kind": "metadata-only", "video": "%s", "profile": "%s", "profile_from": "%s", "from": "%s"}\n' \
+    "$slug.$ext" "$profile" "$from" "$base" > "$W/youtube/source.json"
   state_set "$slug" queued "metadata only: $base"
   notify "YouTube metadata: $slug" "Started: transcribing $base for its YouTube metadata."
   nohup bash "$PIPE/stage.sh" "$slug" youtube-only >> "$W/pipeline/stage.log" 2>&1 &

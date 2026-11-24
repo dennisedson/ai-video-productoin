@@ -329,8 +329,10 @@ steps weighted by this Mac's earlier renders and HyperFrames' frame count inside
 `scripts/youtube-meta.py prep` maps the flat cut's clock onto the published video (the intro sting cut in at
 `bookends.intro.at`, the end card after) and writes `youtube/captions.srt`; a headless Claude run
 (`prompts/youtube.md`, example `prompts/youtube-example.json`) writes `youtube/metadata.json`; `build` adds UTM links
-(`shorten`, run after each draft and by `yt shorten`, makes the Bitly links through the API: token in the Keychain as
-`bitly-api`, settings under `bitly` in the profile's youtube.json; kept per long link in `youtube/links.tsv`), checks YouTube's rules and writes `youtube/YOUTUBE.md` and the
+(`shorten`, run after each draft and by `yt shorten`, makes the Bitly links through the API with the profile's own account (`bitly.keychain` in its youtube.json; only
+`hubspot` has one, `bitly-hubspot`, for HubSpot content only), and only for a video explicitly on that profile (its
+storyboard, or an inbox video's notes.txt; `--confirm-profile`, `yt shorten <name> --hubspot`, otherwise); kept per
+long link in `youtube/links.tsv`, skips noted in `youtube/bitly-skipped.txt` and YOUTUBE.md), checks YouTube's rules and writes `youtube/YOUTUBE.md` and the
 video's entry in `catalog/VIDEOS.md`. Links come from the profile's `LINKS.md` (and `youtube.json`) or are opened and
 verified. `yt youtube <name>` rebuilds, `yt published <name> <url>` records the link, `yt import` checks the times
 against the rendered file. A finished video that needs only the metadata goes in `videos/_youtube-inbox/`

@@ -217,14 +217,21 @@ status` shows "YouTube: ready"). It writes `videos/<name>/youtube/`:
   rebuilds YOUTUBE.md with them. A short link is reused on every rebuild and replaced only if its long link changes
   (a renamed campaign). Without a token, or past the plan's monthly cap, the rest stay long and YOUTUBE.md says so.
 
-**Bitly setup, once per Mac:** create a token in Bitly (Settings → API) and store it in the Keychain (it asks for the
-token; nothing goes in the repo or your shell history):
+**The Bitly account is HubSpot's and is used only for HubSpot content.** It belongs to the `hubspot` profile; other
+profiles (Devs:After Dark) have none, so their links stay long. It's used only when a video is explicitly HubSpot: an
+edited video on the `hubspot` profile, or an inbox video whose `notes.txt` says HubSpot. An inbox video with no notes is
+only assumed to be HubSpot, so it's skipped, and YOUTUBE.md says so; if it is HubSpot content, `yt shorten <name>
+--hubspot` confirms it.
 
-    security add-generic-password -U -a "$USER" -s bitly-api -w
+**Bitly setup, once per Mac:** create a token in the HubSpot Bitly account (Settings → API) and store it in the
+Keychain as `bitly-hubspot` (it asks for the token; nothing goes in the repo or your shell history):
 
-Settings are in `profiles/hubspot/youtube.json` under `bitly`: `auto` (shorten after each draft), `domain` (`bit.ly`, or
-a branded domain your plan has), `group_guid` (empty = your default group), `per_placement` (`false` = the description
-and pinned comment share one link per destination, about one fewer link per video, for a plan's monthly cap).
+    security add-generic-password -U -a "$USER" -s bitly-hubspot -w
+
+Settings are in `profiles/hubspot/youtube.json` under `bitly`: `keychain` (the Keychain item), `auto` (shorten after
+each draft), `domain` (`bit.ly`, or a branded domain the plan has), `group_guid` (empty = the default group),
+`per_placement` (`false` = the description and pinned comment share one link per destination, about one fewer link
+per video, for a plan's monthly cap).
 
 Links come only from the profile's library (`profiles/hubspot/LINKS.md`, pages opened and checked) or pages the run
 opens and verifies; anything it can't confirm is listed for you. Ask a Claude Code thread for changes ("make the

@@ -23,6 +23,7 @@
   "domain": "bit.ly",
   "group_guid": "",
   "per_placement": true,
-  "note": "per_placement false = one short link per link id (description and pinned comment share it): half the links, for a plan's monthly cap. group_guid empty = the account's default group. domain: a branded domain if the plan has one."
+  "note": "HubSpot's Bitly account: HubSpot content only. Used only for videos explicitly on the hubspot profile (an edited video's storyboard, or notes.txt saying HubSpot for an inbox video, or yt shorten NAME --hubspot). Token in the Keychain as bitly-hubspot. per_placement false = one short link per link id (description and pinned comment share it), for a plan's monthly cap. group_guid empty = the account's default group. domain: a branded domain if the plan has one.",
+  "keychain": "bitly-hubspot"
  }
 }

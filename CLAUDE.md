@@ -54,8 +54,10 @@ and links to shorten; `captions.srt` the captions. It is built from `youtube/met
 stage; `pipeline/prompts/youtube.md` has the rules: search-first, links only from the profile's `LINKS.md` or opened
 and verified, times on the flat cut's clock). When he asks for changes ("shorter title", "add the docs link"), edit
 metadata.json and run `bash .claude/skills/youtube-edit/pipeline/yt youtube <name>`; never edit YOUTUBE.md by hand. Links are shortened
-through Bitly's API (`yt shorten <name>`; the token is in his Keychain as `bitly-api`, never ask for it or print it);
-after a Bitly limit or error the rest stay long, so say how many are left. He can still paste a link into
+through Bitly's API (`yt shorten <name>`; the token is in his Keychain as `bitly-hubspot`, never ask for it or print
+it). That Bitly account is HubSpot's and is for HubSpot content only: never use it for another profile or outside
+content, and pass `--hubspot` only when he says the video is HubSpot content. After a Bitly limit or error the rest stay
+long, so say how many are left. He can still paste a link into
 `youtube/links.tsv` by hand; `yt youtube <name>` then uses it. When he says a video is
 live, `yt published <name> <url>`. `catalog/VIDEOS.md` is the channel's catalog (one entry per video, written by
 those commands): read it for what earlier videos covered; after it changes, commit and push it.
