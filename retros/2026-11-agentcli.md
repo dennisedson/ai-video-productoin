@@ -176,49 +176,54 @@ person; this way the picking happens during it).
 
 ## Costs
 
-AI figures are API-equivalent: what the tokens would cost at list prices (Claude Opus 5.5: $4 per million input tokens,
-$5 cache writes, $0.20 cache reads, $20 output). Under a Claude subscription they count against the plan's usage,
-not a bill; they're a bill only where an account pays per token.
+How each Mac pays for AI:
+- **Work Mac: usage-based.** Every Claude run there is billed by the token, so its rows below are real dollars.
+- **Home Mac: Dennis's subscription.** Its Claude thread counts against the plan's usage limits, not a bill; its
+  figure is shown at list prices only to compare the size of the work.
+
+List prices (Claude Opus 5.5, per million tokens): $4 input, $5 cache writes, $0.20 cache reads, $20 output.
 
 ### AI, measured
 
-| What | Where | Measured | API-equivalent |
+| What | Where | Measured | Cost |
 | --- | --- | --- | --- |
-| Cut stage (headless Claude, the rerun) | work Mac | Claude Code's own report | $2.85 |
-| Storyboard stage (rerun with notes) | work Mac | Claude Code's own report | $2.15 |
-| YouTube draft for agentcli, twice | work Mac | Claude Code's own report | $0.78 ($0.39 each) |
-| The home Mac's Claude thread: setup, hand-off, YouTube metadata, Bitly, thumbnails, music pass, this retro | cloud session linked to the home Mac | 145 requests since the thread was last summarised: 310 input, 310,742 cache-write, 43.5 M cache-read and 115,466 output tokens | $12.56 (cache reads $8.70, output $2.31, cache writes $1.55) |
-| **Measured total** | | | **$18.34** |
+| Cut stage (headless Claude, the rerun) | work Mac, billed | Claude Code's own report | $2.85 |
+| Storyboard stage (rerun with notes) | work Mac, billed | Claude Code's own report | $2.15 |
+| YouTube draft for agentcli, twice | work Mac, billed | Claude Code's own report | $0.78 ($0.39 each) |
+| **Billed so far (measured)** | | | **$5.78** |
+| The home Mac's Claude thread: setup, hand-off, YouTube metadata, Bitly, thumbnails, music pass, this retro | home Mac, subscription | 145 requests since the thread was last summarised: 310 input, 310,742 cache-write, 43.5 M cache-read and 115,466 output tokens | not billed; $12.56 at list prices |
 
 ### AI, not measured (fill in)
 
 | What | Why it's missing |
 | --- | --- |
-| The first cut run (11-23, 14:06-15:15) | Only the rerun's cost was noted |
-| Interactive Claude Code threads on the work Mac (setup fixes, B notes rounds 2 and 3, links) | Interactive threads don't write a cost file; `/cost` in each thread shows it |
-| YouTube drafts for the two inbox videos | Not listed in the work Mac's part (each about $0.39) |
-| The home Mac thread before its last summary (most of 11-22 and 11-23) | Usage is only on record from the summary on, so the $12.56 above is a floor; the whole thread cost more |
+| The first cut run (11-23, 14:06-15:15): billed | Only the rerun's cost was noted |
+| Interactive Claude Code threads on the work Mac (setup fixes, B notes rounds 2 and 3, links): billed | Interactive threads don't write a cost file; `/cost` in each thread shows it |
+| YouTube drafts for the two inbox videos: billed | Not listed in the work Mac's part (each about $0.39) |
+| The home Mac thread before its last summary (most of 11-22 and 11-23): subscription | Usage is only on record from the summary on; it used more of the plan than the figure above |
 
-Most of the home Mac thread's cost is the context it re-reads on every request (instructions, tools, files: about
-60% of its usage) rather than the replies; long threads cost more per step. Building features is a one-time cost; a
-video's own runs are the work Mac's rows.
+Most of the home Mac thread's usage is the context it re-reads on every request (instructions, tools, files: about
+60%) rather than the replies; long threads use more per step. That matters for the work Mac, where it's billed: start
+a fresh thread for each video's notes rather than carrying one long thread from video to video.
 
-### Per video from now on (estimate)
+### Per HubSpot video from now on (estimate, billed on the work Mac)
 
-| Step | API-equivalent |
-| --- | --- |
-| Cut stage | about $3 |
-| Storyboard stage | about $2 |
-| YouTube draft (titles, description, thumbnails' words) | about $0.40 |
-| Music pass (a home Mac thread: five candidates, samples, the pick) | not measured yet; the next video sets it |
-| Rounds of notes at A and B, in a thread | varies with the notes; not measured on agentcli |
-| **Before notes and music** | **about $5.40** |
+| Step | Where | Cost |
+| --- | --- | --- |
+| Cut stage | work Mac, billed | about $3 |
+| Storyboard stage | work Mac, billed | about $2 |
+| YouTube draft (titles, description, thumbnails' words) | work Mac, billed | about $0.40 |
+| Rounds of notes at A and B, in a thread | work Mac, billed | varies with the notes; not measured on agentcli |
+| Music pass (five candidates, samples, the pick) | home Mac, subscription | not billed |
+| **Billed, before notes** | | **about $5.40** |
+
+Devs:After Dark is edited on the home Mac, so all of its AI runs on the subscription.
 
 ### Services and other costs
 
 | What | Cost | Notes |
 | --- | --- | --- |
-| Claude plans | the subscriptions (personal on the home Mac, HubSpot's on the work Mac) | The AI rows above count against these |
+| Claude | home Mac: Dennis's subscription; work Mac: HubSpot's usage-based account | The work Mac rows above are what HubSpot is billed |
 | Epidemic Sound | the existing subscription | Check that the plan covers videos on HubSpot's channel |
 | Bitly | HubSpot's account | A paid plan (the branded domain hsdev.fyi); about 5-6 links per video |
 | GitHub | free (private repos are free) | The repo is still public: make it private |
