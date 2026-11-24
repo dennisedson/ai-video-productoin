@@ -50,6 +50,11 @@ ask_host() {   # ask_host WHY: a dialog on this Mac; prints again|here|later (la
 Fix that (mount the share, or wake the home Mac), then choose Check again.\" with title \"YouTube edit\" buttons {\"Later\", \"Render on this Mac\", \"Check again\"} default button \"Check again\" giving up after 14400" 2>/dev/null)" || { echo later; return; }
   case "$r" in *"gave up:true"*) echo later ;; *"Check again"*) echo again ;; *"this Mac"*) echo here ;; *) echo later ;; esac
 }
+bitly_links() {   # Bitly links for the draft when the profile wants them and the token is in the Keychain; never fatal
+  python3 -c 'import json,sys; sys.exit(0 if (json.load(open(sys.argv[1])).get("bitly") or {}).get("auto", True) else 1)' \
+    "$SK/profiles/$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("profile","hubspot"))' "$W/youtube/timeline.json" 2>/dev/null || echo hubspot)/youtube.json" 2>/dev/null || return 0
+  python3 "$SK/scripts/youtube-meta.py" shorten --project "$W" | grep -E "^Bitly|^no Bitly" || true
+}
 need() { for f in "$@"; do [ -e "$W/$f" ] || fail "missing $f after the $STAGE stage"; done; }
 
 case "$STAGE" in
@@ -91,6 +96,7 @@ youtube-only)   # a finished video from videos/_youtube-inbox: transcribe it, th
   run python3 "$SK/scripts/youtube-meta.py" prep --project "$W"
   claude_stage youtube.md
   need youtube/metadata.json
+  bitly_links
   if python3 "$SK/scripts/youtube-meta.py" build --project "$W"; then st="ready"; else st="ready, with problems"; fi
   echo "$st $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
   state_set "$NAME" youtube-ready "$st"
@@ -103,6 +109,7 @@ youtube)   # beside the render: never changes the video's stage; status in youtu
   run python3 "$SK/scripts/youtube-meta.py" prep --project "$W"
   claude_stage youtube.md
   need youtube/metadata.json
+  bitly_links
   if python3 "$SK/scripts/youtube-meta.py" build --project "$W"; then
     echo "ready $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
     notify "YouTube metadata: $NAME" "Drafted: titles, description, chapters, cards, end screen, captions." "$ROOT/$W/youtube/YOUTUBE.md"

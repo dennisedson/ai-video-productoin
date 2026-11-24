@@ -27,7 +27,7 @@ from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 SK = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 ROOT = os.path.abspath(os.path.join(SK, "..", "..", ".."))
 ap = argparse.ArgumentParser()
-ap.add_argument("cmd", choices=["prep", "build", "check", "published"])
+ap.add_argument("cmd", choices=["prep", "build", "check", "published", "shorten"])
 ap.add_argument("--url", help="published: the video's YouTube link")
 ap.add_argument("--project", required=True)
 ap.add_argument("--video", help="check: the rendered video")
@@ -168,8 +168,9 @@ def link_rows(meta, ycfg):
     if os.path.isfile(p):
         for r in csv.DictReader(open(p), delimiter="\t"):
             if (r.get("bitly") or "").strip():
-                old[r["key"]] = r["bitly"].strip()
+                old[r["key"]] = (r["bitly"].strip(), r.get("long", ""))
     campaign = meta.get("campaign") or ycfg.get("campaign") or NAME
+    per_placement = (ycfg.get("bitly") or {}).get("per_placement", True)   # False: one link per id, fewer to shorten
     rows = []
     for L in meta.get("links", []):
         for pl in L.get("placements", ["desc"]):
@@ -177,9 +178,11 @@ def link_rows(meta, ycfg):
             if youtube_url(L["url"]):
                 rows.append({"key": key, "id": L["id"], "placement": pl, "label": L.get("label", ""), "url": L["url"],
                              "long": L["url"], "bitly": "", "back_half": ""}); continue
-            content = "%s_%s_%s" % (NAME, pl, L["id"])
+            content = "%s_%s_%s" % (NAME, pl, L["id"]) if per_placement else "%s_%s" % (NAME, L["id"])
+            long_url = utm(L["url"], campaign, content, ycfg.get("utm", {}))
+            kept = old.get(key)                             # a short link made for a different long link is dropped
             rows.append({"key": key, "id": L["id"], "placement": pl, "label": L.get("label", ""), "url": L["url"],
-                         "long": utm(L["url"], campaign, content, ycfg.get("utm", {})), "bitly": old.get(key, ""),
+                         "long": long_url, "bitly": kept[0] if kept and kept[1] == long_url else "",
                          "back_half": ("%s-%s%s" % (NAME, L["id"], "" if pl == "desc" else "-" + pl))[:50]})
     with open(p, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["key", "label", "back_half", "bitly", "long"], delimiter="\t", extrasaction="ignore")
@@ -278,6 +281,79 @@ if a.cmd == "check":
     off = d - t["total"]
     print("rendered %.2f s vs expected %.2f s (%+.2f s)" % (d, t["total"], off))
     sys.exit(0 if abs(off) <= 0.5 else 1)
+
+# ---- shorten: Bitly links for every link still long, then build again -------------------------------------------------
+def bitly_token():
+    tok = os.environ.get("BITLY_TOKEN", "").strip()
+    if not tok:                                             # the macOS Keychain: security add-generic-password -s bitly-api
+        try:
+            tok = subprocess.run(["security", "find-generic-password", "-s", "bitly-api", "-w"],
+                                 capture_output=True, text=True, timeout=20).stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            tok = ""
+    return tok
+
+
+def bitly(method, path, tok, body=None):
+    import urllib.request, urllib.error
+    req = urllib.request.Request(os.environ.get("BITLY_API", "https://api-ssl.bitly.com/v4") + path, method=method,
+                                 data=json.dumps(body).encode() if body is not None else None,
+                                 headers={"Authorization": "Bearer " + tok, "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.status, json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read() or b"{}")
+        except ValueError:
+            return e.code, {}
+    except (urllib.error.URLError, OSError) as e:
+        return 0, {"message": str(e)}
+
+
+if a.cmd == "shorten":
+    if not meta:
+        sys.exit("no youtube/metadata.json yet")
+    tok = bitly_token()
+    if not tok:
+        print("no Bitly token: add it once with  security add-generic-password -U -a \"$USER\" -s bitly-api -w")
+        sys.exit(3)
+    ycfg = load(os.path.join(SK, "profiles", t["profile"], "youtube.json"), {}) or {}
+    bcfg = ycfg.get("bitly") or {}
+    rows = link_rows(meta, ycfg)
+    todo = [r for r in rows if not r["bitly"] and not youtube_url(r["url"])]
+    if not todo:
+        print("every link is already shortened"); os.execv(sys.executable, [sys.executable, __file__, "build", "--project", W])
+    group = bcfg.get("group_guid") or ""
+    if not group:
+        st, j = bitly("GET", "/user", tok)
+        if st != 200:
+            sys.exit("Bitly: can't read the account (%s %s)" % (st, j.get("message") or j.get("description", "")))
+        group = j.get("default_group_guid", "")
+    made, stopped, cache = 0, None, {r["long"]: r["bitly"] for r in rows if r["bitly"]}
+    for r in todo:
+        if r["long"] in cache:                              # one Bitly link per long link (per_placement false)
+            r["bitly"] = cache[r["long"]]; continue
+        st, j = bitly("POST", "/shorten", tok, {"long_url": r["long"], "domain": bcfg.get("domain", "bit.ly"), "group_guid": group})
+        if st not in (200, 201) or not j.get("link"):
+            msg = j.get("message") or j.get("description") or "no answer"
+            stopped = "Bitly said %s (%s): %s" % (st, msg, "the monthly link limit, most likely; the rest stay long" if st in (403, 429) or "LIMIT" in str(msg).upper() else "stopping here")
+            break
+        r["bitly"] = cache[r["long"]] = j["link"]; made += 1
+        title = "%s · %s · %s" % (NAME, r["label"] or r["id"], r["placement"])
+        tags = [x for x in (NAME, meta.get("campaign") or ycfg.get("campaign"), "youtube") if x]
+        bitly("PATCH", "/bitlinks/%s" % j.get("id", ""), tok, {"title": title, "tags": tags})   # best effort: a label in Bitly
+    with open(os.path.join(Y, "links.tsv"), "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["key", "label", "back_half", "bitly", "long"], delimiter="\t", extrasaction="ignore")
+        w.writeheader()
+        for r in rows:
+            if not youtube_url(r["url"]):
+                w.writerow(r)
+    left = sum(1 for r in rows if not r["bitly"] and not youtube_url(r["url"]))
+    print("Bitly: %d new link%s, %d still long%s" % (made, "" if made == 1 else "s", left, "; " + stopped if stopped else ""))
+    sys.stdout.flush()
+    rc = subprocess.run([sys.executable, __file__, "build", "--project", W]).returncode
+    sys.exit(2 if stopped else rc)
 
 # ---- build ---------------------------------------------------------------------------------------------------------
 if not meta:
@@ -380,8 +456,9 @@ for n, tt in enumerate(titles, 1):
 L += ["", "## Description", "", "%d characters with these links (limit 5,000; the first ~157 show above the fold)." % len(desc), "",
       "```", desc, "```", ""]
 L += ["## Links to shorten", "",
-      "Shorten each long link in Bitly with the suggested back-half, paste the short link into the `bitly` column of"
-      " `youtube/links.tsv`, then `yt youtube %s` puts them in the description and the pinned comment." % NAME, "",
+      "`yt shorten %s` makes every missing Bitly link through the API (token in the Keychain as `bitly-api`) and rebuilds;"
+      " the pipeline runs it after each draft. By hand instead: shorten each long link, paste it into the `bitly` column"
+      " of `youtube/links.tsv`, then `yt youtube %s`." % (NAME, NAME), "",
       "| Link | Where | Suggested back-half | Bitly | Long link (with UTM) |", "| --- | --- | --- | --- | --- |"]
 for r in rows:
     if not youtube_url(r["url"]):

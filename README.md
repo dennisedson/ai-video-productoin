@@ -212,8 +212,19 @@ status` shows "YouTube: ready"). It writes `videos/<name>/youtube/`:
 - `captions.srt`: your own captions with transcription fixes; upload it in Studio (Subtitles → Upload file → With
   timing). AI search reads captions, chapter titles and descriptions, not the video.
 - `links.tsv`: every tracked link with its full UTM URL (`utm_source=youtube&utm_medium=video&utm_campaign=<series>&
-  utm_content=<video>_<placement>_<link>`) and a suggested Bitly back-half. Shorten them in Bitly, paste each short
-  link into the `bitly` column, then `yt youtube <name>` rebuilds YOUTUBE.md with them.
+  utm_content=<video>_<placement>_<link>`) and its Bitly link. The pipeline shortens them through Bitly's API after
+  each draft (`yt shorten <name>` does it by hand), titled "video · link · placement" and tagged in Bitly, then
+  rebuilds YOUTUBE.md with them. A short link is reused on every rebuild and replaced only if its long link changes
+  (a renamed campaign). Without a token, or past the plan's monthly cap, the rest stay long and YOUTUBE.md says so.
+
+**Bitly setup, once per Mac:** create a token in Bitly (Settings → API) and store it in the Keychain (it asks for the
+token; nothing goes in the repo or your shell history):
+
+    security add-generic-password -U -a "$USER" -s bitly-api -w
+
+Settings are in `profiles/hubspot/youtube.json` under `bitly`: `auto` (shorten after each draft), `domain` (`bit.ly`, or
+a branded domain your plan has), `group_guid` (empty = your default group), `per_placement` (`false` = the description
+and pinned comment share one link per destination, about one fewer link per video, for a plan's monthly cap).
 
 Links come only from the profile's library (`profiles/hubspot/LINKS.md`, pages opened and checked) or pages the run
 opens and verifies; anything it can't confirm is listed for you. Ask a Claude Code thread for changes ("make the
