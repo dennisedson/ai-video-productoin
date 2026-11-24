@@ -185,6 +185,11 @@ async function videoPage(name, phaseId) {
       catch (e) { toast(e.message); }
     };
   };
+  const partsBody = app.querySelector("[data-parts]");
+  const renumber = () => partsBody.querySelectorAll("[data-num]").forEach((c, k) => c.textContent = k + 1);
+  partsBody?.addEventListener("click", ev => { if (ev.target.matches("[data-part-del]")) { ev.target.closest("tr").remove(); renumber(); } });
+  app.querySelector("[data-part-add]")?.addEventListener("click", () => {
+    partsBody.insertAdjacentHTML("beforeend", partRow({}, partsBody.children.length)); partsBody.lastElementChild.querySelector("[name=t]").focus(); });
   app.querySelector("[data-split-accept]")?.addEventListener("click", async () => {
     const parts = [...app.querySelectorAll("[data-part]")].map(r => ({ name: r.querySelector("[name=n]").value, title: r.querySelector("[name=t]").value,
       promise: r.querySelector("[name=p]").value, minutes: r.querySelector("[name=m]").value }));
@@ -201,14 +206,19 @@ async function videoPage(name, phaseId) {
   chat(name);
 }
 
+function partRow(p, k) {
+  return `<tr data-part><td data-num>${k + 1}</td><td><input name="n" value="${esc(p.name || "")}" ${k ? "" : "readonly"}></td><td><input name="t" value="${esc(p.title || "")}"></td>
+    <td><input name="p" value="${esc(p.promise || "")}"></td><td style="width:70px"><input name="m" value="${esc(p.minutes || "")}"></td>
+    <td style="width:36px">${k ? `<button class="btn" data-part-del title="Remove this part">×</button>` : ""}</td></tr>`;
+}
 function splitHtml(sp) {
   return `<div class="panel" style="border:2px solid var(--orange)"><h2>Make this a series?</h2>
     ${sp.why ? `<p class="muted">${esc(sp.why)}</p>` : ""}
     <label>Series</label><input name="split-series" value="${esc(sp.series)}">
     <table style="width:100%;margin-top:10px;border-collapse:collapse"><tr class="small muted"><th align="left">#</th><th align="left">Folder</th><th align="left">Title</th><th align="left">Promise</th><th align="left">Min</th></tr>
-    ${sp.parts.map((p, k) => `<tr data-part><td>${k + 1}</td><td><input name="n" value="${esc(p.name)}" ${k ? "" : "readonly"}></td><td><input name="t" value="${esc(p.title)}"></td>
-      <td><input name="p" value="${esc(p.promise)}"></td><td style="width:70px"><input name="m" value="${esc(p.minutes)}"></td></tr>`).join("")}</table>
-    <p class="small muted">Part 1 is this video. The others are created as studio projects with this video's research and links, and every part is linked to the others.</p>
+    <tbody data-parts>${sp.parts.map((p, k) => partRow(p, k)).join("")}</tbody></table>
+    <button class="btn" data-part-add style="margin-top:8px">+ Add a part</button>
+    <p class="small muted">Part 1 is this video. The others are created as studio projects with this video's research and links, and every part is linked to the others. Leave a folder blank to name it from the title.</p>
     <div class="actions"><button class="btn primary" data-split-accept>Make it a series</button><button class="btn" data-split-dismiss>Keep one video</button></div></div>`;
 }
 function editSeries(name, mine, known) {

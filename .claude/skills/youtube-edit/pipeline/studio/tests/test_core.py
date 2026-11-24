@@ -126,6 +126,16 @@ class CoreTest(unittest.TestCase):
         self.assertEqual(self.core.get_series("agent-auth")["parts"], ["auth", "auth-devs"])
         self.assertEqual(self.core.split_proposal("auth")["status"], "accepted")
 
+    def test_split_with_an_added_part_named_from_its_title(self):
+        self.core.scaffold("auth", "problem", title="Authenticating")
+        self.core.propose_split("auth", "Agent auth", [{"name": "auth"}, {"name": "auth-devs", "title": "Builders"}])
+        r = self.core.apply_split("auth", [{"name": "auth"}, {"name": "auth-devs"}, {"name": "", "title": "Re-auth and expiry"}, {"name": "", "title": ""}])
+        self.assertEqual(r["parts"], ["auth", "auth-devs", "re-auth-and-expiry"])
+        self.assertEqual(self.core.load_video("re-auth-and-expiry")["part"], 3)
+        self.assertEqual(len(self.core.split_proposal("auth")["parts"]), 3)
+        with self.assertRaises(ValueError):
+            self.core.apply_split("auth", [{"name": "auth"}, {"name": "x"}, {"name": "x"}])
+
     def test_length_estimate(self):
         script = "> " + " ".join(["word"] * 150) + "\n→ demo: log in\n→ demo: run it (~30s)\n→ demo: long one (~2m)\n"
         self.assertEqual(self.core.estimate_seconds(script), 60 + 45 + 30 + 120)

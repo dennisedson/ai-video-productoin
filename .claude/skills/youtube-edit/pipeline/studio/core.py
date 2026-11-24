@@ -371,6 +371,22 @@ def split_proposal(name):
     return _read(_split_path(name), None)
 
 
+def _clean_parts(name, parts):
+    out, seen = [], set()
+    for p in parts:
+        n = slug(p.get("name") or p.get("title") or "")
+        if not n:
+            continue
+        if n in seen:
+            raise ValueError("two parts share the folder %s" % n)
+        seen.add(n); out.append(dict(p, name=n))
+    if not out or out[0]["name"] != name:
+        raise ValueError("part 1 must be this video (%s)" % name)
+    if len(out) < 2:
+        raise ValueError("a series needs at least two parts")
+    return out
+
+
 def apply_split(name, parts=None, series_title=None):
     """Make the video part 1 of a series and create the other parts as studio projects (origin and profile copied)."""
     prop = split_proposal(name) or {}
@@ -378,6 +394,7 @@ def apply_split(name, parts=None, series_title=None):
     title = series_title or prop.get("series")
     if not title or not parts:
         raise ValueError("no split proposal")
+    parts = _clean_parts(name, parts)
     v = load_video(name)
     brief = open(os.path.join(video_dir(name), "BRIEF.md")).read() if os.path.isfile(os.path.join(video_dir(name), "BRIEF.md")) else ""
     made = []
@@ -403,7 +420,7 @@ def apply_split(name, parts=None, series_title=None):
     s["parts"] = order + [x for x in s.get("parts", []) if x not in order]
     save_series(s)
     if prop:
-        prop["status"] = "accepted"; prop["accepted"] = now(); _write(_split_path(name), prop)
+        prop["status"] = "accepted"; prop["accepted"] = now(); prop["parts"] = parts; prop["series"] = title; _write(_split_path(name), prop)
     return {"series": slug(title), "made": made, "parts": order}
 
 
