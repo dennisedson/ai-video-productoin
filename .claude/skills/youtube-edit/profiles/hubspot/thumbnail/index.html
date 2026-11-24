@@ -21,7 +21,8 @@
   /* the face: a cutout standing in the right half, in front of an Orange ring; or the photo, fading into the wash */
   #ring { position:absolute; left:1130px; top:120px; width:760px; height:760px; border-radius:50%; border:18px solid #FF4800; }
   #face { position:absolute; display:block; }
-  .cutout #face { right:-30px; bottom:0; height:1040px; max-width:980px; object-fit:cover; object-position:50% 0; }
+  .cutout #face { right:-30px; bottom:0; height:1040px; width:auto; max-width:1240px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 16%); mask-image: linear-gradient(90deg, transparent 0%, #000 16%); }
   .photo #ring, .none #ring { display:none; }
   .photo #face { right:0; top:0; height:1080px; width:1240px; object-fit:cover; object-position:60% 30%;
     -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 34%); mask-image: linear-gradient(90deg, transparent 0%, #000 34%); }
