@@ -1,0 +1,8 @@
+{
+ "pass": true,
+ "hook_db": -16,
+ "body_db": -19,
+ "card_db": -14,
+ "brief": "instrumental, no vocals; modern and confident (electronic, lo-fi, light synth or guitar), 95-125 BPM; tension that resolves under the hook, steady and unbusy under talk; a clear drop or hit that can land on the sting",
+ "note": "The music pass: five candidates under the same 30 s, picked while the render runs, mixed at its end. Levels in dB below full scale before ducking; the voice ducks the music, the sting and end card don't."
+}

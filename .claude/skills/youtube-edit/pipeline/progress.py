@@ -17,12 +17,12 @@ import datetime as dt, glob, json, os, re, statistics, sys, time
 ROOT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else ".")
 NOW = dt.datetime.strptime(os.environ["PROGRESS_NOW"], "%Y-%m-%d %H:%M:%S") if os.environ.get("PROGRESS_NOW") else dt.datetime.now()   # tests set it
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
-STEPS = ["flatcut", "facecrop", "compose", "check", "render", "tags", "loudness", "verify", "card", "bookends", "deliver"]
+STEPS = ["flatcut", "facecrop", "compose", "check", "render", "tags", "loudness", "verify", "card", "bookends", "music", "deliver"]
 DEFAULT_S = {"flatcut": 510, "facecrop": 60, "compose": 5, "check": 15, "render": 930, "tags": 2, "loudness": 150,
-             "verify": 25, "card": 20, "bookends": 200, "deliver": 15}   # the home Mac's agents-2 render, 2026-11-22
+             "verify": 25, "card": 20, "bookends": 200, "music": 30, "deliver": 15}   # the home Mac's agents-2 render, 2026-11-22
 STEP_WORDS = {"flatcut": "4K flat cut", "facecrop": "face crop", "compose": "compose", "check": "checks",
               "render": "4K render", "tags": "colour tags", "loudness": "loudness", "verify": "verify",
-              "card": "face-card check", "bookends": "intro and end card", "deliver": "delivering"}
+              "card": "face-card check", "bookends": "intro and end card", "music": "music", "deliver": "delivering"}
 HF = re.compile(r"(\d{1,3})%\s+(Extracting video frames|Streaming frame (\d+)/(\d+)|Encoding frame (\d+)/(\d+)|"
                 r"Assembling final video|Render complete)")
 
@@ -176,6 +176,7 @@ def claude_stage_progress(W, stage, since):
 WAITING = {"awaiting-A": "ready to review (REVIEW-A)", "awaiting-B": "ready to review (REVIEW-B)",
            "awaiting-import": "zip on the Desktop; waiting for the video back (yt import)",
            "awaiting-host": "waiting for the home Mac (yt host)", "queued": "queued",
+           "awaiting-music": "rendered; pick the music (MUSIC-REVIEW.html, \"music N for NAME\")",
            "youtube-ready": "metadata ready: youtube/YOUTUBE.md (yt published NAME URL once it's live)"}
 
 
@@ -242,6 +243,8 @@ for j in jobs:
     if st.get("stage") == "rendering":
         r = render_progress(j)
         row("  " + base, "rendering", r[0] if r else None, r[1] if r else st.get("step", ""))
+    elif st.get("stage") == "awaiting-music":
+        row("  " + base, "music", None, "rendered; pick the music (MUSIC-REVIEW.html, \"music N for %s\")" % base)
     elif st.get("stage") == "done":
         row("  " + base, "done", 100.0, "video in out/; drag it back, then yt clean-renders")
     elif st.get("stage") == "failed":

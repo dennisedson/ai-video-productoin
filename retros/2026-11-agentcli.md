@@ -154,7 +154,10 @@ attached to the home Mac's Video folder. The agentcli render itself is the last 
     YouTube metadata and thumbnail, `yt published`, `yt clean-renders` on the home Mac.
 
 Background music was skipped for agentcli: it's part of the home Mac's job, but the hand-off went straight to the
-render and the music step (step 11) only runs when asked, after it. Next time the music pass runs before the render.
+render and the music step (step 11) only runs when asked, after it. Now built in: a notification at the start of each
+render on the home Mac to pick the music, five 30 s samples synced to the sting, and the render waits for the pick at
+its end, so it can't be skipped by accident (a separate pass before the render would hold the 45 min render for a
+person; this way the picking happens during it).
 
 ### 7. Thumbnails (11-24, during the render)
 23. Thumbnails were missed in the YouTube packaging and added now: a one-frame template per profile in its brand,
@@ -220,7 +223,7 @@ render and the music step (step 11) only runs when asked, after it. Next time th
 | Show on the work Mac how far the home render is: the home Mac writes `status.json` into `out/`, visible over Screen Sharing; or `yt status` on the home Mac lists `_render-inbox` jobs (it does; say so in the runbook) | README, render-host-job.sh | idea |
 | Preflight prints a clear one-line reason and the fix before `install.sh` exits | install.sh, lib.sh | idea |
 | Keep a short real 4K sample (20 s talking head, git-ignored, on each Mac) and a `yt selftest` that runs cut, thumbnail and metadata on it | pipeline, tests | idea |
-| Background music pass before the render on the home Mac: pick and cut the tracks (Epidemic Sound) when the zip lands, then render with the music mixed in (ducked, limiter, a no-music twin) | render-host.sh, render-mac.sh, skill Music rules, CLAUDE.md | next |
+| Background music pass on the home Mac, picked while the render runs: five Epidemic candidates, each edited so its drop lands on the sting's hit, compared as 30 s samples under the video; the render waits for the pick at its end and mixes it in (Dennis's spec, 11-24) | music.py, prompts/music.md, render-mac.sh (music step), render-host-job.sh, stage.sh, yt music | done (built and tested on stand-in tracks; first real run next video) |
 | First real thumbnail run on agentcli (frame and headshot), then adjust the templates | thumbnail templates | next |
 | Fix the repo name: rename the GitHub repo to `ai-video-production` (GitHub redirects the old URL), or correct the docs | GitHub, README | next |
 | Make the repo private (it's public, with HubSpot fonts in it) | GitHub settings | next |

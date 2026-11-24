@@ -71,10 +71,13 @@ those commands): read it for what earlier videos covered; after it changes, comm
 This repo is cloned on two Macs: the home Mac and the HubSpot work Mac. `videos/` is not in git, so footage, edits and
 renders stay on the machine that made them. On the work Mac there are no Tella or Epidemic Sound connectors: take
 screen recordings as plain files (the "Two-file tutorials" route), use the sound effects in `shared/sfx`, and default
-to the `hubspot` profile. Music for a work video goes on at the home Mac, which has the Epidemic Sound connector: when
-asked there to "add music to <name> in the render inbox", work on `videos/_render-inbox/<name>/out/` by the skill's
-Music rules (two or three tracks under the same 12 s, cut to length, ducked, limiter, a no-music twin, `MUSIC.md`),
-writing next to the video in `out/`; never in the work Mac's thread. Company software on the work Mac blocks file sharing and SSH to the home
+to the `hubspot` profile. Music is picked on the home Mac, which has the Epidemic Sound connector, while the 4K render
+runs there (a notification says when): when he says "music for <name>", follow
+`.claude/skills/youtube-edit/pipeline/prompts/music.md` (five Epidemic candidates, each edited so its drop lands on the
+sting's hit, 30 s samples under the video, `MUSIC-REVIEW.html`) and wait for his pick. "music 3 for <name>" -> `bash
+.claude/skills/youtube-edit/pipeline/yt music <name> 3` (make edit B first when the plan has one); "no music for <name>"
+-> `yt music <name> none`. The render waits for the pick at its end (awaiting-music), then mixes it in and delivers
+the music version, the no-music twin and `MUSIC.md`. Never in the work Mac's thread (its renders don't wait for music). Company software on the work Mac blocks file sharing and SSH to the home
 network, so its renders are handed off by hand: a bundle zip carried over Screen Sharing, rendered on the home Mac,
 the video carried back and imported (`yt import`). Devs:After Dark is edited and rendered on the home Mac only. When the
 skill changes ("save this to the skill"), commit it and push, so the other Mac gets it with `git pull`.

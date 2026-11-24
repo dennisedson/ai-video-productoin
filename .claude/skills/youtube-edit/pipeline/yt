@@ -3,7 +3,7 @@
 #   yt status | yt watch [SECONDS] | yt run NAME cut|storyboard|render [--here|--fast] | yt log NAME | yt open NAME | yt host
 #   --fast: ignore PRIORITY=background for this run (all cores, louder); a stage already running can't be moved off it
 #   hand-off (work Mac): yt bundle NAME [DIR] | yt import NAME VIDEO [CHAPTERS]     home Mac: yt clean-renders
-#   YouTube: yt run NAME youtube (draft, beside the render) | yt youtube NAME (rebuild) | yt thumb NAME [N|frames] | yt shorten NAME (Bitly) | yt published NAME URL
+#   YouTube: yt run NAME youtube (draft, beside the render) | yt youtube NAME (rebuild) | yt thumb NAME [N|frames] | yt music NAME [samples|N|none] | yt shorten NAME (Bitly) | yt published NAME URL
 s="$0"   # follow the ~/.local/bin/yt link (install.sh) back to this folder, where lib.sh is
 while [ -L "$s" ]; do t="$(readlink "$s")"; case "$t" in /*) s="$t" ;; *) s="$(dirname "$s")/$t" ;; esac; done
 . "$(cd "$(dirname "$s")" && pwd)/lib.sh"
@@ -44,6 +44,33 @@ case "${1:-status}" in
   youtube)   # rebuild youtube/YOUTUBE.md from metadata.json + the Bitly links in links.tsv (no AI)
     [ -n "${2:-}" ] || { echo "yt youtube NAME"; exit 2; }
     python3 "$SK/scripts/youtube-meta.py" build --project "$ROOT/videos/$2" ;;
+  music)   # the music pass: "yt music NAME" (where it stands, opens MUSIC-REVIEW.html), "yt music NAME samples" (rebuild
+           # the samples from music/cand-N.wav), "yt music NAME N" / "yt music NAME none" (the pick; resumes a render
+           # that is waiting for it). NAME is a video here or a job in videos/_render-inbox/.
+    [ -n "${2:-}" ] || { echo "yt music NAME [samples|N|none]"; exit 2; }
+    if [ -f "$ROOT/videos/_render-inbox/$2/job.json" ]; then D="$ROOT/videos/_render-inbox/$2"; else D="$ROOT/videos/$2"; fi
+    [ -d "$D" ] || { echo "no video or render job named $2"; exit 2; }
+    case "${3:-}" in
+      "") python3 "$SK/scripts/music.py" status --project "$D"
+          [ -f "$D/MUSIC-REVIEW.html" ] && command -v open >/dev/null && open "$D/MUSIC-REVIEW.html"; exit 0 ;;
+      samples) python3 "$SK/scripts/music.py" samples --project "$D"; exit $? ;;
+      none) python3 "$SK/scripts/music.py" none --project "$D" || exit 1 ;;
+      *[!0-9]*) echo "yt music NAME [samples|N|none]"; exit 2 ;;
+      *) python3 "$SK/scripts/music.py" choose --project "$D" --pick "$3" || exit 1 ;;
+    esac
+    if [ "$D" = "$ROOT/videos/_render-inbox/$2" ]; then
+      if grep -q '"awaiting-music"' "$D/status.json" 2>/dev/null; then
+        nohup bash "$PIPE/render-host-job.sh" "$2" --from music >> "$D/render-host.log" 2>&1 &
+        echo "mixing and delivering $2 (a notification comes when it's in out/)"
+      else
+        echo "recorded; the render mixes it in at its music step"
+      fi
+    elif grep -q '"awaiting-music"' "$D/state.json" 2>/dev/null; then
+      MUSIC_FROM=1 nohup bash "$PIPE/stage.sh" "$2" render >> "$D/pipeline/stage.log" 2>&1 &
+      echo "mixing and delivering $2 (a notification comes when it's done)"
+    else
+      echo "recorded; the render mixes it in at its music step"
+    fi ;;
   thumb)   # (re)render the thumbnail options in metadata.json in the profile's brand, then rebuild YOUTUBE.md;
            # "yt thumb NAME 2" only option 2, "yt thumb NAME frames" a fresh candidate sheet (youtube/frames.jpg)
     [ -n "${2:-}" ] || { echo "yt thumb NAME [N|frames]"; exit 2; }
@@ -64,5 +91,5 @@ case "${1:-status}" in
     python3 "$SK/scripts/youtube-meta.py" published --project "$ROOT/videos/$2" --url "$3" ;;
   log) tail -n "${3:-40}" "$ROOT/videos/$2/pipeline/stage.log" ;;
   open) for f in REVIEW-B.html REVIEW-A.html; do [ -f "$ROOT/videos/$2/$f" ] && { open "$ROOT/videos/$2/$f"; exit 0; }; done; echo "no review page yet" ;;
-  *) echo "yt status | yt watch [S] | yt run NAME STAGE [--here|--fast] | yt log NAME [LINES] | yt open NAME | yt host | yt bundle NAME | yt import NAME VIDEO | yt clean-renders | yt youtube NAME | yt thumb NAME [N|frames] | yt shorten NAME | yt published NAME URL"; exit 2 ;;
+  *) echo "yt status | yt watch [S] | yt run NAME STAGE [--here|--fast] | yt log NAME [LINES] | yt open NAME | yt host | yt bundle NAME | yt import NAME VIDEO | yt clean-renders | yt youtube NAME | yt thumb NAME [N|frames] | yt music NAME [samples|N|none] | yt shorten NAME | yt published NAME URL"; exit 2 ;;
 esac

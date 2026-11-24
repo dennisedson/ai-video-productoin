@@ -11,7 +11,9 @@
 #    "card": "48,48,1232,2112", "face_windows": "0-34.9,64.4-78.4,228-",   # tutorial layout: blank face-card check (optional)
 #    "bookends": {"intro": {"at": 7.5, "resume": 7.6, "eyebrow": "...", "title": "..."}, "outro": {"next": "..."}},   # optional
 #    "deliver": "~/Movies/YouTube Renders/agents"}
-# Steps (resume any with --from): flatcut facecrop compose check render tags loudness verify card bookends deliver
+# Steps (resume any with --from): flatcut facecrop compose check render tags loudness verify card bookends music deliver
+# music: the bed picked from the music pass (music.py), mixed onto the finished video, the no-music twin kept;
+# with the pass on and nothing picked yet it stops with exit 10 (awaiting music): resume with --from music.
 # With "bookends" (a profile with intro/outro templates), the delivered file is <name>-full-4k.mp4: the sting cut in,
 # the end card on the end (bookends.py); verify and card run on the main video before that.
 # Stops at the first failure; every step's output and timing goes to videos/<project>/render.log.
@@ -39,7 +41,7 @@ WORKERS="$(cfg workers 1)"; BITRATE="$(cfg bitrate 45M)"; MIN_MBPS="$(cfg min_mb
 CARD="$(cfg card)"; WINDOWS="$(cfg face_windows)"; DELIVER="$(cfg deliver "$HOME/Movies/YouTube Renders/$NAME")"
 DELIVER="${DELIVER/#\~/$HOME}"
 LOG="$W/render.log"
-STEPS="flatcut facecrop compose check render tags loudness verify card bookends deliver"
+STEPS="flatcut facecrop compose check render tags loudness verify card bookends music deliver"
 if [ -n "$FROM" ]; then
   case " $STEPS " in *" $FROM "*) ;; *) echo "--from must be one of: $STEPS"; exit 2 ;; esac
 fi
@@ -107,8 +109,27 @@ if python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("
 else
   [ "$started" = 0 ] && [ "$FROM" = bookends ] && started=1
 fi
+MSTATE="$(python3 "$SK/scripts/music.py" status --project "$W" 2>/dev/null || echo off)"
+MUSIC_OUT=""
+case "$MSTATE" in
+  chosen*)
+    step music "music: candidate ${MSTATE#chosen }, ducked under the voice (music.py mix)" -- \
+      python3 "$SK/scripts/music.py" mix --project "$W" --pick "${MSTATE#chosen }"
+    MUSIC_OUT="${FINAL%.mp4}-music.mp4" ;;
+  pending)
+    if [ "$started" = 0 ] && [ "$FROM" = music ]; then started=1; fi
+    if [ "${MUSIC_PASS:-on}" = off ]; then
+      echo "-- music: the pass is off on this Mac (MUSIC_PASS=off); no music"
+    elif [ "$started" = 1 ] && [ "$DRY" = 0 ]; then
+      echo "== music: waiting for a pick (MUSIC-REVIEW.html; \"music N for $NAME\" or \"no music for $NAME\"), then: render-mac.sh $W --from music"
+      echo "== music waiting $(date '+%H:%M:%S')" >>"$LOG"
+      exit 10
+    fi ;;
+  *) [ "$started" = 0 ] && [ "$FROM" = music ] && started=1 ;;
+esac
 step deliver "copy to $DELIVER" -- \
-  bash -c 'mkdir -p "$1" && cp "$2" "$1/" && { [ ! -f "$3" ] || cp "$3" "$1/"; }' _ "$DELIVER" "$FINAL" "$W/chapters.txt"
+  bash -c 'mkdir -p "$1" && cp "$2" "$1/" && { [ ! -f "$3" ] || cp "$3" "$1/"; } && { [ -z "$4" ] || cp "$4" "$1/"; } && { [ -z "$4" ] || [ ! -f "$5" ] || cp "$5" "$1/"; }' \
+    _ "$DELIVER" "$FINAL" "$W/chapters.txt" "$MUSIC_OUT" "$W/MUSIC.md"
 
 if [ "$DRY" = 0 ] && [ "$KEEP_CACHE" = 0 ]; then   # the frame cache can fill the temp folder (16 GB in a day)
   rm -rf "${TMPDIR:-/tmp}"/hyperframes-extract-cache-* 2>/dev/null

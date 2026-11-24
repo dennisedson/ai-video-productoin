@@ -872,6 +872,15 @@ speech window, subtract, and read the RMS of the difference in each sound's wind
 against two control windows (a pop shows ~650 against ~30). Never compare against a previous render: two AAC encodes
 differ enough to hide a quiet effect.
 
+**The music pass (the pipeline):** `scripts/music.py` and `pipeline/prompts/music.md`. Picked while the render runs:
+`plan` (the published timeline, the sting's hit, the 30 s window, edits A/B for over 5 min), five Epidemic candidates,
+`analyze` (beats from `hyperframes beats`, drops = bar-aligned energy jumps, 30 ms early windows; prints the
+EditRecording input with `requiredRegionsAtOffsets` putting the drop on the hit), `check`, `samples` (the window,
+rendered in a symlinked copy of public/ so the 4K render isn't disturbed, or cut from the finished video) ->
+`MUSIC-REVIEW.html`; `render-mac.sh`'s `music` step mixes the pick after bookends (exit 10 = waiting for it): every
+track to -10 LUFS first, then hook/body/card levels from the profile's `music.json` (`music/levels.json` per video),
+ducked by a key that is the voice with the sting and end card muted, -1 dB limiter, the no-music twin kept, `MUSIC.md`.
+
 **Music:** a track with some tension under the hook (~18 s), then a calm lo-fi bed under the rest, ducked about 16 dB
 (hook) and 19 dB (body) under your voice, then a -1 dB limiter, after the voice is at -14 LUFS (`assemble.py` levels it).
 The simplest bed is `assemble.py`'s `music` key; for a ducked bed on a finished master (keep a no-music twin):

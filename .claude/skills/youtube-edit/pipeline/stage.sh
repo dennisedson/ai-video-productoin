@@ -172,7 +172,15 @@ render)
     state_set "$NAME" done "rendered on the home Mac"
   else
     state_set "$NAME" rendering "on this Mac"
-    bash "$SK/scripts/render-mac.sh" "$W" || fail "render-mac.sh failed (see $W/render.log; resume with --from)"
+    [ "${MUSIC_PASS:-on}" = on ] && [ -z "${MUSIC_FROM:-}" ] && [ "$(python3 "$SK/scripts/music.py" status --project "$W" 2>/dev/null)" = pending ] &&
+      notify "Music for $NAME" "Rendering now. Pick the music meanwhile: in a Claude thread on this Mac, \"music for $NAME\"."
+    MUSIC_PASS="${MUSIC_PASS:-on}" bash "$SK/scripts/render-mac.sh" "$W" ${MUSIC_FROM:+--from music}; rc=$?
+    if [ "$rc" -eq 10 ]; then
+      state_set "$NAME" awaiting-music "rendered; pick the music"
+      notify "Music for $NAME" "Rendered. It waits for the music: \"music for $NAME\" in a Claude thread on this Mac (or \"no music for $NAME\")." "$ROOT/$W"
+      exit 0
+    fi
+    [ "$rc" -eq 0 ] || fail "render-mac.sh failed (see $W/render.log; resume with --from)"
     OUT="$(python3 -c 'import json,sys,os; c=json.load(open(sys.argv[1])); print(os.path.expanduser(c.get("deliver","~/Movies/YouTube Renders/"+c.get("name",""))))' "$W/render.json")"
     state_set "$NAME" done
   fi

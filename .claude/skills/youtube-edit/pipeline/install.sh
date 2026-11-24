@@ -9,18 +9,21 @@
 #                      Sharing) into the home Mac's videos/_render-inbox; yt import brings the video back.
 #                      Kept on later runs; --render-host none goes back to rendering here.
 #   --serve-renders    (the home Mac) also load the render agent that renders bundles the work Mac sends (render-host.sh).
+#   --music on|off     whether renders on this Mac wait for the music pass (default: on, off with --render-host).
 #   --priority background  (the work Mac) run the cut and storyboard stages at background priority: quieter fans,
 #                      slower stages (~13x on the video steps). --priority utility: nearly full speed, other apps
 #                      first, fans about as at normal. Kept on later runs; --priority normal goes back.
 USER_PY="$(command -v python3 || true)"
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
-BUDGET=20; MOD=""; RHOST="${RENDER_HOST_DIR:-}"; SERVE=0; PRIO="${PRIORITY:-normal}"
+BUDGET=20; MOD=""; RHOST="${RENDER_HOST_DIR:-}"; SERVE=0; PRIO="${PRIORITY:-normal}"; MUS="${MUSIC_PASS:-}"
 while [ $# -gt 0 ]; do case "$1" in
   --budget) BUDGET="$2"; shift ;; --model) MOD="$2"; shift ;;
   --render-host) RHOST="$2"; [ "$RHOST" = none ] && RHOST=""; shift ;; --serve-renders) SERVE=1 ;;
   --priority) PRIO="$2"; shift; case "$PRIO" in background|utility|normal) ;; *) echo "--priority background|utility|normal"; exit 2 ;; esac ;;
+  --music) MUS="$2"; shift; case "$MUS" in on|off) ;; *) echo "--music on|off"; exit 2 ;; esac ;;
   *) echo "unknown option $1"; exit 2 ;;
 esac; shift; done
+[ -n "$MUS" ] || { [ -n "$RHOST" ] && MUS=off || MUS=on; }   # a Mac that hands its renders on doesn't pick music
 [ "$(uname)" = Darwin ] || { echo "install.sh sets up launchd on the Mac; run it there."; exit 1; }
 export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.claude/local:$PATH"
 miss=""
@@ -46,6 +49,7 @@ BUDGET_USD="$BUDGET"   # cap per Claude stage (claude -p --max-budget-usd)
 MODEL="$MOD"           # empty = Claude Code's default model
 RENDER_HOST_DIR="$RHOST"   # the home Mac's Video folder as mounted here; empty = render on this Mac
 PRIORITY="$PRIO"           # background = efficiency cores (quieter, much slower); utility = nearly full speed, other apps first
+MUSIC_PASS="$MUS"          # on = a render here waits for a music pick (Epidemic Sound, a Claude thread on this Mac); off = no music
 CFG
 mkdir -p "$INBOX" "$ROOT/videos/_youtube-inbox"
 LABEL="com.youtube-edit.inbox"; PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"; mkdir -p "$HOME/Library/LaunchAgents"

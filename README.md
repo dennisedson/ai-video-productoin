@@ -264,12 +264,23 @@ related links. Commit and push it when it changes; a copy lives in the Claude pr
 
 ## Music and sound
 - Sound effects inside the edit: `shared/sfx` (the free HyperFrames library), on both Macs.
-- Music: the skill mixes it onto the finished master (ducked under the voice, a no-music twin kept, `MUSIC.md`).
-  The Epidemic Sound connector is allowed only on the home Mac, so for a work video music goes on there, after the
-  4K render and before the video goes back: in a Claude Code thread on the home Mac's Video folder, "add music to
-  <name> in the render inbox" (the files land next to the video in `out/`); then drag the music version back and
-  `yt import` it. Check that your Epidemic Sound plan covers videos on HubSpot's channel; a personal or creator
-  licence may not.
+- **Music: picked while the render runs, mixed in at its end** (the home Mac only: the Epidemic Sound connector isn't
+  allowed on the work Mac).
+  1. When a render starts on the home Mac (a hand-off zip, or a local render), a notification says to pick the music.
+  2. In a Claude Code thread on the home Mac's Video folder: "music for <name>". Claude picks five Epidemic Sound
+     tracks in different directions, has Epidemic edit each one so its drop lands on the sting's hit and it ends with
+     the video, and puts each under the same 30 s (the end of the hook, the sting, the start of the body) at the final
+     levels. `MUSIC-REVIEW.html` opens with the five side by side.
+  3. Pick: "music 3 for <name>" (or "no music for <name>"; "3, but quieter" reruns the samples). `yt music <name> N`
+     does the same in Terminal.
+  4. The render waits for the pick at its end (`yt status`: "pick the music"), then mixes it: every track levelled to the
+     same loudness, under the hook and on the sting at -16 dB, the body at -19 dB, the end card at -14 dB, ducked under
+     your voice but not under the sting or end card, -1 dB limiter. `out/` gets `<name>-full-4k-music.mp4`, the no-music
+     twin and `MUSIC.md`; drag the music version back and `yt import` it.
+  - Levels and the brief for picking are in `profiles/<profile>/music.json`; Devs:After Dark has the pass off (its intro
+    carries the theme). A Mac that hands its renders on doesn't wait for music (`install.sh --music on|off`).
+  - Videos over 5 minutes take two Epidemic edits, joined on a beat at a pause in the talk.
+  - Check that your Epidemic Sound plan covers videos on HubSpot's channel; a personal or creator licence may not.
 
 ## Licences
 The skill started as WeAreNoCode's starter kit (MIT, see `WeAreNoCode-YouTube-Editor/LICENSES/`). The HubSpot fonts in
