@@ -41,9 +41,9 @@ One entry per video: what it covers, where it lives, what it links to. Written b
 ### HubSpot Is Going Headless: Run Your CRM From Claude
 
 - **Slug:** `final-agents-2-full-4k` · **Channel:** HubSpot Developers · **Series:** HubSpot Is Going Headless
-- **Status:** drafted, not published
-- **YouTube:** (not published yet)
-- **Published:** -
+- **Status:** scheduled (private until 2026-12-01)
+- **YouTube:** https://youtu.be/NYf49WmdGAI
+- **Published:** 2026-12-01
 - **Length:** 04:26
 - **Summary:** Connects Claude to HubSpot with the HubSpot connector, choosing scopes, and has an agent create three example deals, find the stale ones and add follow-up tasks, then schedules the stale-deal check as a daily Claude task. Uses an exercise by a colleague builder advocate.
 - **Audience:** HubSpot admins, RevOps and builders who already use Claude and want agents to do routine CRM work
