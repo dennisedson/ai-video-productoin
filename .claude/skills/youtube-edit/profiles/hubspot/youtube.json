@@ -1,0 +1,12 @@
+{
+ "channel": "HubSpot Developers",
+ "channel_url": "https://www.youtube.com/@HubSpotDevelopers",
+ "subscribe_url": "https://www.youtube.com/@HubSpotDevelopers?sub_confirmation=1",
+ "utm": {"source": "youtube", "medium": "video"},
+ "campaign": "",
+ "campaign_note": "utm_campaign: the series slug (metadata.json campaign), else this, else the video's folder name. utm_content = <video>_<placement>_<link id>, so each spot reports on its own.",
+ "short_links": "Bitly, shortened by hand; the HubSpot Developers channel's existing short links use hsdev.fyi",
+ "hashtag_pool": ["#HubSpot", "#HubSpotDevelopers"],
+ "standing_links": ["dev-signup", "community"],
+ "link_library": "LINKS.md"
+}

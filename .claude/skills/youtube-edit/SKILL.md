@@ -325,7 +325,14 @@ that thread records them (`approvals/A.md`, `B.md`), applies notes, and starts t
 `yt status` lists every edit with its progress (`pipeline/progress.py`: a render's percentage from its `render.log`, its
 steps weighted by this Mac's earlier renders and HyperFrames' frame count inside the render step; cut and storyboard as
 `~` elapsed against this Mac's median for that stage, from `state.json` histories; hand-off jobs in `_render-inbox/`);
-`yt watch [s]` refreshes it. Unattended runs never render 4K, never change the skill, and write only inside their
+`yt watch [s]` refreshes it. **YouTube metadata** (`yt run <name> youtube`, started with the render at B, beside it):
+`scripts/youtube-meta.py prep` maps the flat cut's clock onto the published video (the intro sting cut in at
+`bookends.intro.at`, the end card after) and writes `youtube/captions.srt`; a headless Claude run
+(`prompts/youtube.md`, example `prompts/youtube-example.json`) writes `youtube/metadata.json`; `build` adds UTM links
+(Bitly filled in by hand in `youtube/links.tsv`), checks YouTube's rules and writes `youtube/YOUTUBE.md` and the
+video's entry in `catalog/VIDEOS.md`. Links come from the profile's `LINKS.md` (and `youtube.json`) or are opened and
+verified. `yt youtube <name>` rebuilds, `yt published <name> <url>` records the link, `yt import` checks the times
+against the rendered file. Unattended runs never render 4K, never change the skill, and write only inside their
 video folder. Local compute is free, so previews and variants replace guessing from stills; tokens go only to the
 two judgment runs and to Dennis's notes.
 

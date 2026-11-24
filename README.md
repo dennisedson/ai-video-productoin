@@ -201,6 +201,28 @@ as they are.
 - Before an edit on the other Mac: `git pull`. Threads load the skill when they start, so pull before opening one.
 - If both Macs changed the skill, `git pull` merges; `SKILL.md` is long, so commit small and often to avoid conflicts.
 
+## YouTube metadata
+
+Approving Checkpoint B also starts `yt run <name> youtube` beside the render (a notification when it's ready; `yt
+status` shows "YouTube: ready"). It writes `videos/<name>/youtube/`:
+
+- `YOUTUBE.md`: three title options, the description (search-first opening, CTA links, "In this video" questions,
+  chapters, key terms, hashtags), cards with timestamps, the end screen, tags, the pinned comment, and what to check.
+  Times are on the published video's clock (the intro sting and end card accounted for).
+- `captions.srt`: your own captions with transcription fixes; upload it in Studio (Subtitles → Upload file → With
+  timing). AI search reads captions, chapter titles and descriptions, not the video.
+- `links.tsv`: every tracked link with its full UTM URL (`utm_source=youtube&utm_medium=video&utm_campaign=<series>&
+  utm_content=<video>_<placement>_<link>`) and a suggested Bitly back-half. Shorten them in Bitly, paste each short
+  link into the `bitly` column, then `yt youtube <name>` rebuilds YOUTUBE.md with them.
+
+Links come only from the profile's library (`profiles/hubspot/LINKS.md`, pages opened and checked) or pages the run
+opens and verifies; anything it can't confirm is listed for you. Ask a Claude Code thread for changes ("make the
+second title the first", "add the Agent CLI blog") and it edits `metadata.json` and rebuilds.
+
+When the video is live: `yt published <name> <url>`. The catalog, `catalog/VIDEOS.md`, keeps one entry per video
+(summary, topics, questions it answers, chapters, links, URL); the next videos' metadata uses it for cards and
+related links. Commit and push it when it changes; a copy lives in the Claude project.
+
 ## Music and sound
 - Sound effects inside the edit: `shared/sfx` (the free HyperFrames library), on both Macs.
 - Music: the skill mixes it onto the finished master (ducked under the voice, a no-music twin kept, `MUSIC.md`).

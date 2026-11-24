@@ -5,6 +5,8 @@
 #   render     render-mac.sh (no AI) -> done, notification; on the home Mac when RENDER_HOST_DIR is set (asks first
 #              when the home Mac isn't mounted or ready: Check again / Render on this Mac / Later -> awaiting-host);
 #              RENDER_HOST_DIR=handoff makes a bundle zip to carry over by hand -> awaiting-import (yt import)
+#   youtube    beside the render, after B: youtube-meta.py prep, headless Claude writes youtube/metadata.json, build ->
+#              youtube/YOUTUBE.md + captions.srt + links.tsv + the catalog entry; never changes the video's stage
 # Approvals come from Dennis in a Claude Code thread (see the project's CLAUDE.md), which starts the next stage with `yt run`.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 NAME="${1:?usage: stage.sh NAME cut|storyboard|render [--here|--fast]}"; STAGE="${2:?stage}"; OPT="${3:-}"
@@ -75,6 +77,21 @@ cut)
   python3 "$PIPE/review-page.py" "$ROOT/$W" A
   state_set "$NAME" awaiting-A
   notify "YouTube edit: $NAME" "Checkpoint A (the cut) is ready to review." "$ROOT/$W/REVIEW-A.html"
+  ;;
+youtube)   # beside the render: never changes the video's stage; status in youtube/status
+  mkdir -p "$W/youtube"
+  fail() { echo "failed $(date '+%Y-%m-%d %H:%M:%S'): $1" > "$W/youtube/status"; notify "YouTube metadata: $NAME" "Stopped: $1" "$ROOT/$W/pipeline/stage.log"; exit 1; }
+  echo "drafting $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
+  run python3 "$SK/scripts/youtube-meta.py" prep --project "$W"
+  claude_stage youtube.md
+  need youtube/metadata.json
+  if python3 "$SK/scripts/youtube-meta.py" build --project "$W"; then
+    echo "ready $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
+    notify "YouTube metadata: $NAME" "Drafted: titles, description, chapters, cards, end screen, captions." "$ROOT/$W/youtube/YOUTUBE.md"
+  else
+    echo "ready, with problems $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
+    notify "YouTube metadata: $NAME" "Drafted, with problems to fix (top of YOUTUBE.md)." "$ROOT/$W/youtube/YOUTUBE.md"
+  fi
   ;;
 storyboard)
   state_set "$NAME" storyboarding

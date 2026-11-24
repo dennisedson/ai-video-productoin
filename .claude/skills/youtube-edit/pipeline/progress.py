@@ -177,9 +177,21 @@ WAITING = {"awaiting-A": "ready to review (REVIEW-A)", "awaiting-B": "ready to r
            "awaiting-host": "waiting for the home Mac (yt host)", "queued": "queued"}
 
 
+def youtube_note(W):
+    try:
+        st = open(os.path.join(W, "youtube", "status")).read().split()
+    except OSError:
+        return ""
+    word = {"drafting": "drafting", "ready": "ready", "failed": "failed"}.get(st[0].rstrip(","), st[0])
+    return " · YouTube: %s%s" % (word, " (problems)" if "problems" in st else "")
+
+
+SUFFIX = ""      # set per video: its YouTube metadata note
+
+
 def row(name, stage, pct, detail, est=False):
     p = "" if pct is None else ("~%d%%" if est else "%d%%") % round(pct)
-    print("%-24s %-15s %5s  %s" % (name[:24], stage, p, detail))
+    print("%-24s %-15s %5s  %s%s" % (name[:24], stage, p, detail, SUFFIX))
 
 
 print("%-24s %-15s %5s  %s" % ("VIDEO", "STAGE", "", "PROGRESS / LAST CHANGE"))
@@ -191,6 +203,7 @@ for p in sorted(glob.glob(os.path.join(ROOT, "videos", "*", "state.json"))):
     except (OSError, ValueError, KeyError):
         continue
     note = h.get("note", "")
+    SUFFIX = youtube_note(W)
     if stage == "rendering" and "home Mac" not in note:
         r = render_progress(W)
         row(name, stage, r[0] if r else None, r[1] if r else "starting · %s" % mins((NOW - since).total_seconds()))
@@ -206,6 +219,7 @@ for p in sorted(glob.glob(os.path.join(ROOT, "videos", "*", "state.json"))):
     else:
         row(name, stage, None, "%s · %s" % (h["at"][5:16], note or stage))
 
+SUFFIX = ""
 # the home Mac: renders other Macs handed over (videos/_render-inbox)
 HIN = os.path.join(ROOT, "videos", "_render-inbox")
 jobs = sorted(glob.glob(os.path.join(HIN, "*-render.zip"))) + sorted(d for d in glob.glob(os.path.join(HIN, "*")) if os.path.isdir(d))

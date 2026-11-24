@@ -1,0 +1,235 @@
+{
+ "video": "agents-2",
+ "campaign": "hubspot-headless",
+ "primary_keyword": "connect Claude to HubSpot",
+ "audience": "HubSpot admins, RevOps and builders who already use Claude and want agents to do routine CRM work",
+ "titles": [
+  {
+   "title": "Connect Claude to HubSpot: Manage Deals Without Opening HubSpot",
+   "why": "the search phrase first, the outcome second; fits the 70 shown in search"
+  },
+  {
+   "title": "How to Use the HubSpot Connector for Claude (Deals, Tasks, Scheduling)",
+   "why": "how-to phrasing matches question searches; names all three things it shows"
+  },
+  {
+   "title": "HubSpot Is Going Headless: Run Your CRM From Claude",
+   "why": "the series hook; weaker for search, stronger for the series and subscribers"
+  }
+ ],
+ "description": {
+  "opening": "Connect Claude to HubSpot with the HubSpot connector, then let an agent create deals, find stale deals and add follow-up tasks, without opening HubSpot.",
+  "learn": [
+   "How do I connect Claude to HubSpot?",
+   "Which scopes should the HubSpot connector get?",
+   "Can Claude create deals in HubSpot?",
+   "How do I find stale deals in HubSpot with an AI agent?",
+   "Can I schedule a recurring HubSpot task in Claude?"
+  ],
+  "terms": [
+   {
+    "term": "HubSpot connector for Claude",
+    "definition": "HubSpot's MCP (Model Context Protocol) integration that lets Claude read and update your HubSpot CRM."
+   },
+   {
+    "term": "HubSpot MCP server",
+    "definition": "the hosted endpoint behind HubSpot's AI connectors; AI tools use it to read and update CRM records after you authorize them over OAuth."
+   },
+   {
+    "term": "Stale deal",
+    "definition": "an open deal with no logged activity for a set time (14 days in this video)."
+   },
+   {
+    "term": "Headless HubSpot",
+    "definition": "working in HubSpot through agents and APIs instead of its interface."
+   }
+  ],
+  "extra": [
+   "Part of the HubSpot Is Going Headless series. Next up: the HubSpot Agent CLI ({link:agent-cli-docs})."
+  ]
+ },
+ "links": [
+  {
+   "id": "claude-connector",
+   "label": "Get the HubSpot connector for Claude",
+   "url": "https://www.hubspot.com/claude/connector",
+   "source": "library",
+   "placements": [
+    "desc",
+    "pinned"
+   ]
+  },
+  {
+   "id": "mcp-server-docs",
+   "label": "How the HubSpot MCP server works (docs)",
+   "url": "https://developers.hubspot.com/docs/build-with-ai/remote-mcp-server",
+   "source": "library",
+   "placements": [
+    "desc"
+   ]
+  },
+  {
+   "id": "dev-signup",
+   "label": "Create a free HubSpot developer account",
+   "url": "https://app.hubspot.com/signup-hubspot/developers",
+   "source": "library",
+   "placements": [
+    "desc"
+   ]
+  },
+  {
+   "id": "community",
+   "label": "Join the HubSpot builder and developer community",
+   "url": "https://developers.hubspot.com/community",
+   "source": "library",
+   "placements": [
+    "desc"
+   ]
+  },
+  {
+   "id": "agent-cli-docs",
+   "label": "HubSpot Agent CLI guide",
+   "url": "https://developers.hubspot.com/docs/developer-tooling/local-development/agent-cli/guide",
+   "source": "library",
+   "placements": [
+    "extra"
+   ]
+  },
+  {
+   "id": "subscribe",
+   "label": "Subscribe to HubSpot Developers",
+   "url": "https://www.youtube.com/@HubSpotDevelopers?sub_confirmation=1",
+   "source": "library",
+   "placements": [
+    "desc"
+   ]
+  }
+ ],
+ "chapters": [
+  {
+   "t": 0,
+   "title": "HubSpot is going headless: agents in Claude"
+  },
+  {
+   "t": 22.9,
+   "title": "Connect Claude to HubSpot with the connector"
+  },
+  {
+   "t": 57.2,
+   "title": "Choose the connector's scopes"
+  },
+  {
+   "t": 86.8,
+   "title": "Create HubSpot deals from a Claude prompt"
+  },
+  {
+   "t": 137.8,
+   "title": "Find stale deals and add follow-up tasks"
+  },
+  {
+   "t": 196.5,
+   "title": "Schedule the stale-deal check in Claude"
+  },
+  {
+   "t": 236.9,
+   "title": "Next: the HubSpot Agent CLI"
+  }
+ ],
+ "cards": [
+  {
+   "t": 236.9,
+   "target": "The agent CLI (add once it's published)",
+   "teaser": "Next: the HubSpot Agent CLI",
+   "why": "he names the next video here"
+  }
+ ],
+ "end_screen": [
+  {
+   "type": "video",
+   "target": "The agent CLI (until it's published: Best for viewer)",
+   "label": "on the end card's outlined box"
+  },
+  {
+   "type": "subscribe",
+   "label": "on the end card's circle"
+  },
+  {
+   "type": "playlist",
+   "target": "HubSpot Is Going Headless (if the playlist exists)"
+  }
+ ],
+ "hashtags": [
+  "#HubSpot",
+  "#ClaudeAI",
+  "#AIAgents"
+ ],
+ "tags": [
+  "connect claude to hubspot",
+  "hubspot claude connector",
+  "hubspot mcp server",
+  "hubspot ai agents",
+  "claude hubspot integration",
+  "headless hubspot",
+  "hubspot stale deals",
+  "hubspot task automation",
+  "claude scheduled tasks",
+  "model context protocol",
+  "hubspot crm ai",
+  "hubspot developers"
+ ],
+ "pinned_comment": "What would you hand off to an agent first? The connector from the video: {link:claude-connector}. Next in the series: the HubSpot Agent CLI.",
+ "caption_fixes": [
+  [
+   "EOHSpot",
+   "HubSpot"
+  ],
+  [
+   "hub spot",
+   "HubSpot"
+  ],
+  [
+   "no lock activity",
+   "no logged activity"
+  ],
+  [
+   "ch choose",
+   "choose"
+  ],
+  [
+   "wan copy",
+   "copy"
+  ],
+  [
+   "Making the connection",
+   "making the connection"
+  ],
+  [
+   "Task to those",
+   "task to those"
+  ]
+ ],
+ "for_dennis": [
+  "Hannah's surname: the transcript says \"Hannah Selection\". The captions keep it until you add a fix to caption_fixes.",
+  "The exercise and prompts you mention are on GitHub, but hubspotdev/builder-exercises is an internal repo, so viewers can't open it. Send the public link and it goes into the description as {link:exercise}.",
+  "utm_campaign is hubspot-headless (the series). Change campaign in metadata.json if you use another name.",
+  "The card and end screen point at The agent CLI, not published yet: until it is, use Best for viewer and leave the card out."
+ ],
+ "catalog": {
+  "channel": "HubSpot Developers",
+  "series": "HubSpot Is Going Headless",
+  "summary": "Connects Claude to HubSpot with the HubSpot connector and has an agent create three example deals, find the stale ones and add follow-up tasks, then schedules the stale-deal check as a daily Claude task. Uses an exercise by Hannah, a HubSpot builder advocate.",
+  "topics": [
+   "HubSpot connector for Claude",
+   "HubSpot MCP server",
+   "connector scopes",
+   "deals",
+   "stale deals",
+   "tasks",
+   "scheduled tasks in Claude",
+   "headless HubSpot"
+  ],
+  "related": [
+   "the-agent-cli (next, not published yet)"
+  ]
+ }
+}

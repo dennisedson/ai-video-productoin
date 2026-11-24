@@ -29,7 +29,8 @@ or "approve agents-3 with the face on the right". Then:
    render-mac.sh builds 4K), rebuild the review page (`python3 .claude/skills/youtube-edit/pipeline/review-page.py videos/<name> A|B`),
    tell him what changed, and wait for his approval. The state stays where it is.
 4. "approve" (with or without small notes you apply first): start the next stage in the background and stop there:
-   at A `bash .claude/skills/youtube-edit/pipeline/yt run <name> storyboard`, at B `bash .claude/skills/youtube-edit/pipeline/yt run <name> render`. Do not do the next stage's work in this thread.
+   at A `bash .claude/skills/youtube-edit/pipeline/yt run <name> storyboard`, at B `bash .claude/skills/youtube-edit/pipeline/yt run <name> render` AND
+   `bash .claude/skills/youtube-edit/pipeline/yt run <name> youtube` (the YouTube metadata, drafted beside the render). Do not do the next stage's work in this thread.
    When he says "rush", "fast" or "I need it soon" ("approve agents-3, rush"), add `--fast` (`yt run <name> storyboard
    --fast`, or `yt run <name> cut --fast` when he asks for a cut rerun): that stage runs on all cores despite
    `PRIORITY=background` or `utility`, louder and quicker. The render already runs at normal priority, so `--fast` changes nothing
@@ -41,6 +42,17 @@ or "approve agents-3 with the face on the right". Then:
    if it refuses, say why. With an automatic render host (SSH or a share) instead, run `yt host` first and, when the
    home Mac isn't ready, ask whether he'll fix it or wants `yt run <name> render --here`.
 5. Keep replies short: what you changed, what starts next, and that a notification will come.
+
+## YouTube metadata
+
+`videos/<name>/youtube/YOUTUBE.md` holds the titles, description, chapters, cards, end screen, tags, pinned comment
+and links to shorten; `captions.srt` the captions. It is built from `youtube/metadata.json` (written by the youtube
+stage; `pipeline/prompts/youtube.md` has the rules: search-first, links only from the profile's `LINKS.md` or opened
+and verified, times on the flat cut's clock). When he asks for changes ("shorter title", "add the docs link"), edit
+metadata.json and run `bash .claude/skills/youtube-edit/pipeline/yt youtube <name>`; never edit YOUTUBE.md by hand. He shortens links in
+Bitly himself and pastes them into `youtube/links.tsv`; `yt youtube <name>` then uses them. When he says a video is
+live, `yt published <name> <url>`. `catalog/VIDEOS.md` is the channel's catalog (one entry per video, written by
+those commands): read it for what earlier videos covered; after it changes, commit and push it.
 
 ## Machines
 
