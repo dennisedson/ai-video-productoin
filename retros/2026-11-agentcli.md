@@ -12,7 +12,7 @@ wrong, what it cost and what to change. Each machine adds its own part; times ar
 | --- | --- | --- | --- | --- | --- | --- |
 | agents-2: "HubSpot Is Going Headless: Run Your CRM From Claude" (4:26) | from scratch | home Mac, in a Claude thread (before the pipeline) | home Mac | the finished file through the YouTube inbox (`final-agents-2-full-4k`) | none | scheduled, private until 12-01 |
 | agentcli: "HubSpot Is Going Headless: Stop Burning Credits on Repeat Agent Tasks" (6:44) | from scratch | work Mac, hands-off pipeline, checkpoints A and B | home Mac, by hand-off | youtube stage beside the render | skipped | scheduled, private until 12-01 |
-| whose-permissions: "HubSpot App Permissions: Whose Access Do Apps and Agents Use?" | submission (finished video) | n/a | n/a | the YouTube inbox, metadata only | n/a | metadata final, not published yet |
+| whose-permissions: "HubSpot App Permissions: Whose Access Do Apps and Agents Use?" (3:25) | submission (finished video) | n/a | n/a | the YouTube inbox, metadata only | n/a | metadata final, not published yet |
 
 What the test proved:
 - **Both routes work end to end:** a from-scratch edit (cut, two checkpoints, render, packaging) and a finished video
