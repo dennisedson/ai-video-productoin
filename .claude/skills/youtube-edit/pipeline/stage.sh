@@ -6,7 +6,8 @@
 #              when the home Mac isn't mounted or ready: Check again / Render on this Mac / Later -> awaiting-host);
 #              RENDER_HOST_DIR=handoff makes a bundle zip to carry over by hand -> awaiting-import (yt import)
 #   youtube-only  a finished video from videos/_youtube-inbox: transcribe -> drafting -> youtube-ready (no edit)
-#   youtube    beside the render, after B: youtube-meta.py prep, headless Claude writes youtube/metadata.json, build ->
+#   youtube    beside the render, after B: youtube-meta.py prep, thumbnail frames, headless Claude writes youtube/metadata.json,
+#              the thumbnails (thumbnail.py), build ->
 #              youtube/YOUTUBE.md + captions.srt + links.tsv + the catalog entry; never changes the video's stage
 # Approvals come from Dennis in a Claude Code thread (see the project's CLAUDE.md), which starts the next stage with `yt run`.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
@@ -50,6 +51,10 @@ ask_host() {   # ask_host WHY: a dialog on this Mac; prints again|here|later (la
 Fix that (mount the share, or wake the home Mac), then choose Check again.\" with title \"YouTube edit\" buttons {\"Later\", \"Render on this Mac\", \"Check again\"} default button \"Check again\" giving up after 14400" 2>/dev/null)" || { echo later; return; }
   case "$r" in *"gave up:true"*) echo later ;; *"Check again"*) echo again ;; *"this Mac"*) echo here ;; *) echo later ;; esac
 }
+thumbnails() {    # the thumbnail options in the profile's brand; a failure leaves a note in YOUTUBE.md, never stops the stage
+  echo "== $(date '+%H:%M:%S') thumbnails"
+  python3 "$SK/scripts/thumbnail.py" render --project "$W" 2>&1 | grep -E "^thumbnail|^the |^no |^metadata" || true
+}
 bitly_links() {   # the profile's Bitly account, when it has one, auto is on and the video is explicitly that profile's
   python3 "$SK/scripts/youtube-meta.py" shorten --project "$W" --auto | grep -E "^Bitly" || true
 }
@@ -92,25 +97,29 @@ youtube-only)   # a finished video from videos/_youtube-inbox: transcribe it, th
   state_set "$NAME" drafting
   echo "drafting $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
   run python3 "$SK/scripts/youtube-meta.py" prep --project "$W"
+  python3 "$SK/scripts/thumbnail.py" frames --project "$W" || echo "thumbnail frames: none (the writer picks a time from the transcript)"
   claude_stage youtube.md
   need youtube/metadata.json
   bitly_links
+  thumbnails
   if python3 "$SK/scripts/youtube-meta.py" build --project "$W"; then st="ready"; else st="ready, with problems"; fi
   echo "$st $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
   state_set "$NAME" youtube-ready "$st"
-  notify "YouTube metadata: $NAME" "Drafted$( [ "$st" = ready ] || echo ', with problems to fix (top of YOUTUBE.md)'): titles, description, chapters, cards, end screen, captions." "$ROOT/$W/youtube/YOUTUBE.md"
+  notify "YouTube metadata: $NAME" "Drafted$( [ "$st" = ready ] || echo ', with problems to fix (top of YOUTUBE.md)'): titles, thumbnails, description, chapters, cards, end screen, captions." "$ROOT/$W/youtube/YOUTUBE.md"
   ;;
 youtube)   # beside the render: never changes the video's stage; status in youtube/status
   mkdir -p "$W/youtube"
   fail() { echo "failed $(date '+%Y-%m-%d %H:%M:%S'): $1" > "$W/youtube/status"; notify "YouTube metadata: $NAME" "Stopped: $1" "$ROOT/$W/pipeline/stage.log"; exit 1; }
   echo "drafting $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
   run python3 "$SK/scripts/youtube-meta.py" prep --project "$W"
+  python3 "$SK/scripts/thumbnail.py" frames --project "$W" || echo "thumbnail frames: none (the writer picks a time from the transcript)"
   claude_stage youtube.md
   need youtube/metadata.json
   bitly_links
+  thumbnails
   if python3 "$SK/scripts/youtube-meta.py" build --project "$W"; then
     echo "ready $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
-    notify "YouTube metadata: $NAME" "Drafted: titles, description, chapters, cards, end screen, captions." "$ROOT/$W/youtube/YOUTUBE.md"
+    notify "YouTube metadata: $NAME" "Drafted: titles, thumbnails, description, chapters, cards, end screen, captions." "$ROOT/$W/youtube/YOUTUBE.md"
   else
     echo "ready, with problems $(date '+%Y-%m-%d %H:%M:%S')" > "$W/youtube/status"
     notify "YouTube metadata: $NAME" "Drafted, with problems to fix (top of YOUTUBE.md)." "$ROOT/$W/youtube/YOUTUBE.md"

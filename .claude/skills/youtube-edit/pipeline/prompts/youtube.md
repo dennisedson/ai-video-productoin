@@ -10,6 +10,7 @@ any) says what it is (series, next video, names, links). Give it an end screen o
 so in for_dennis.
 
 Read first:
+- {W}/youtube/frames.jpg (candidate thumbnail frames from the camera)
 - {W}/youtube/timeline.json (how the flat cut's clock maps onto the published video: the intro sting, the end card)
 - {W}/transcript.json: word timings on the FLAT CUT's clock. Every time you write (chapters, cards) is on this clock;
   the script moves them onto the published video.
@@ -50,6 +51,16 @@ chapter titles and the captions are what they quote and link to. So:
   words), exact phrases from the transcript. Names you aren't sure of go to for_dennis, never guessed.
 - campaign: the series slug for utm_campaign (lowercase, hyphens), else the video's folder name.
 - catalog: channel, series, a two-to-three-sentence summary of what the video actually shows, topics, related videos.
+- thumbnail: {"options": [2 or 3 of {"headline", "key", "eyebrow", "t", "why"}]}. The script renders each in the
+  profile's brand (profiles/<profile>/thumbnail/: the colours, fonts and logo are fixed; you choose only the words and
+  the frame). headline: 2 to 5 words, in sentence case, "|" where the line breaks (two lines, the second no longer than
+  about 14 characters); it adds to the title rather than repeating it: the outcome, the tension or the surprise
+  ("Claude runs|my CRM now", not the title again). key: the one word in the accent colour, a word in the headline.
+  eyebrow: the series line (render.json's bookends.intro.eyebrow) or, for Devs:After Dark, the episode and guest.
+  t: the frame, from {W}/youtube/frames.jpg (each tile is stamped with its time; frames.json lists them): his face
+  turned towards the camera, mouth closed or mid-word, eyes open, an expression that fits the headline; a time on the
+  flat cut's clock, any time works, not only the tiles. why: one line on what the option is for. If no frame works
+  (eyes shut in all of them, no camera), say so in for_dennis.
 - for_dennis: short, specific items he must check or supply.
 Every claim about a product must match its docs or the video; when unsure, leave it out.
 

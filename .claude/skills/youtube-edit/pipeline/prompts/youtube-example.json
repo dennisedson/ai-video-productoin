@@ -208,6 +208,24 @@
    "task to those"
   ]
  ],
+ "thumbnail": {
+  "options": [
+   {
+    "headline": "Claude runs|my CRM now",
+    "key": "Claude",
+    "eyebrow": "HubSpot is going headless",
+    "t": 30.7,
+    "why": "the outcome as a claim; the title carries the search phrase"
+   },
+   {
+    "headline": "Skip the|HubSpot UI",
+    "key": "Skip",
+    "eyebrow": "HubSpot is going headless",
+    "t": 91.1,
+    "why": "the headless angle, for the series"
+   }
+  ]
+ },
  "for_dennis": [
   "Hannah's surname: the transcript says \"Hannah Selection\". The captions keep it until you add a fix to caption_fixes.",
   "The exercise and prompts you mention are on GitHub, but hubspotdev/builder-exercises is an internal repo, so viewers can't open it. Send the public link and it goes into the description as {link:exercise}.",

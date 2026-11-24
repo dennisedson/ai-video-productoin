@@ -209,6 +209,16 @@ status` shows "YouTube: ready"). It writes `videos/<name>/youtube/`:
 - `YOUTUBE.md`: three title options, the description (search-first opening, CTA links, "In this video" questions,
   chapters, key terms, hashtags), cards with timestamps, the end screen, tags, the pinned comment, and what to check.
   Times are on the published video's clock (the intro sting and end card accounted for).
+- `thumbnail-N.jpg`: two or three thumbnail options in the profile's brand (3840x2160; `-mobile.jpg` is a 1280x720
+  copy under the YouTube app's 2 MB limit), side by side in `thumbnails.jpg`. The draft picks the words (2 to 5, one
+  key word in the accent colour) and a camera frame from `frames.jpg`; `scripts/thumbnail.py` takes that frame from
+  the 4K camera file with the video's grade, cuts you out (`hyperframes remove-background`; if that fails, the photo
+  fades into the background instead and YOUTUBE.md says so) and lays it out from `profiles/<profile>/thumbnail/`:
+  HubSpot's Deep Teal, HubSpot Serif headline in Cream with the key word in Orange, Sage series line, Orange ring and
+  rule, sprocket lockup; Devs:After Dark's Night and amber glow, Playfair headline with the key word in amber italic,
+  JetBrains Mono label, the logo. Change the words or frame ("thumbnail 2: 'Skip the HubSpot UI', the frame at 1:40")
+  and a thread edits `metadata.json` and runs `yt thumb <name> [N]`; `yt thumb <name> frames` makes a fresh frame sheet.
+  The first cutout on a Mac downloads the background-removal runtime once.
 - `captions.srt`: your own captions with transcription fixes; upload it in Studio (Subtitles → Upload file → With
   timing). AI search reads captions, chapter titles and descriptions, not the video.
 - `links.tsv`: every tracked link with its full UTM URL (`utm_source=youtube&utm_medium=video&utm_campaign=<series>&

@@ -58,7 +58,10 @@ through Bitly's API (`yt shorten <name>`; the token is in his Keychain as `bitly
 it). That Bitly account is HubSpot's and is for HubSpot content only: never use it for another profile or outside
 content, and pass `--hubspot` only when he says the video is HubSpot content. After a Bitly limit or error the rest stay
 long, so say how many are left. He can still paste a link into
-`youtube/links.tsv` by hand; `yt youtube <name>` then uses it. When he says a video is
+`youtube/links.tsv` by hand; `yt youtube <name>` then uses it. Thumbnails (`youtube/thumbnail-N.jpg`, in the profile's brand from
+`profiles/<profile>/thumbnail/`): for a new headline, key word or frame ("thumbnail 1: the frame at 2:10"), edit
+`thumbnail.options` in metadata.json and run `bash .claude/skills/youtube-edit/pipeline/yt thumb <name> [N]`; never restyle one video's thumbnail
+by hand (brand changes go in the template, for every video). When he says a video is
 live, `yt published <name> <url>`. `catalog/VIDEOS.md` is the channel's catalog (one entry per video, written by
 those commands): read it for what earlier videos covered; after it changes, commit and push it.
 

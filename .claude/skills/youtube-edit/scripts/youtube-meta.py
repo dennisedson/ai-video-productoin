@@ -461,6 +461,17 @@ if es and not any(e.get("type") in ("video", "playlist") for e in es):
 es_len = min(20.0, total - es_start)
 
 pinned = fill(meta.get("pinned_comment", ""), rows, "pinned", problems)
+thumbs = (meta.get("thumbnail") or {}).get("options") or []
+if not thumbs:
+    problems.append("no thumbnail options (metadata.json \"thumbnail\": {\"options\": [...]})")
+for k, o in enumerate(thumbs, 1):
+    words = (o.get("headline") or "").replace("|", " ").split()
+    if not 2 <= len(words) <= 5:
+        problems.append("thumbnail %d: the headline has %d words; 2 to 5 read at phone size" % (k, len(words)))
+    if o.get("key") and o["key"].lower() not in [re.sub(r"[^\w'-]", "", w).lower() for w in words]:
+        problems.append("thumbnail %d: the key word \"%s\" isn't in the headline" % (k, o["key"]))
+    if not isinstance(o.get("t"), (int, float)):
+        problems.append("thumbnail %d: no frame time \"t\"" % k)
 
 # ---- YOUTUBE.md ----
 SRCV = (load(os.path.join(Y, "source.json"), {}) or {}).get("video")
@@ -501,6 +512,25 @@ L += ["", "## End screen", "",
 for e in es:
     L.append("- **%s**%s%s" % (e.get("type", "?").capitalize(), ": " + e["target"] if e.get("target") else "", " · " + e["label"] if e.get("label") else ""))
 L += ["", "## Tags", "", "%d characters (limit 500):" % tags_len, "", "```", ", ".join(tags), "```", ""]
+tj = load(os.path.join(Y, "thumbnails.json"), {}) or {}
+L += ["## Thumbnail", ""]
+if thumbs:
+    L += ["Studio → Details → Thumbnail → Upload file: `thumbnail-N.jpg` (3840x2160). From the YouTube app the limit is"
+          " 2 MB: use `thumbnail-N-mobile.jpg` (1280x720) there. Side by side: `youtube/thumbnails.jpg`."
+          " Rerun with `yt thumb %s` after changing the options in metadata.json." % NAME, "",
+          "| # | Headline | Frame | File | Note |", "|---|---|---|---|---|"]
+    for k, o in enumerate(thumbs, 1):
+        r = tj.get(str(k)) or {}
+        if r and r.get("headline") == o.get("headline") and r.get("t") == o.get("t"):
+            f = "`%s` (%s MB) · `%s`" % (r["file"], r.get("mb"), r["mobile"])
+            note = "" if r.get("mode") == "cutout" else "the cutout failed: the photo fades in instead"
+        else:
+            f, note = "not rendered", "run `yt thumb %s`" % NAME
+        L.append("| %d | %s | %s | %s | %s |" % (k, (o.get("headline") or "").replace("|", " / "),
+                 "%d:%02d" % (int(o.get("t", 0)) // 60, int(o.get("t", 0)) % 60), f, note or o.get("why", "")))
+else:
+    L.append("No thumbnail options in metadata.json.")
+L.append("")
 L += ["## Pinned comment", "", "```", pinned, "```", ""]
 L += ["## Captions", "", "Upload `youtube/captions.srt` (Studio → Subtitles → Add → Upload file → With timing): %d cues on the"
       " published video's clock%s. Your own captions replace YouTube's automatic ones, and AI search reads them." % (
