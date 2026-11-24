@@ -18,6 +18,30 @@ The repo is the Claude Code project folder. Clone it, open Claude Code on it, an
 Connectors are optional. Tella and Epidemic Sound help when they're there; without them you record the screen with
 anything and use `shared/sfx` and music you're licensed to use.
 
+## The studio
+
+Every video is a project from the idea to the results, followed on one page at `http://127.0.0.1:4040`.
+
+```sh
+yt new agents-3            # a new video (asks for the name and where the idea comes from when you leave them out)
+yt app                     # open the studio (install.sh keeps it running with launchd)
+yt start agents-3          # recordings are in raw/: start the cut (the studio's "Start the cut")
+```
+
+- **Board:** every video by phase (ideation, script and direction, recording, cut, storyboard, render and music,
+  packaging, publish, results) and what it waits on.
+- **A video's page:** the phase's steps and templates, the documents (brief, research, references, script,
+  teleprompter, recording sheet) in an editor with a preview, requests to Claude (each with a free-form option), a
+  chat with Claude for that video only, and its questions.
+- **Reviews (Checkpoint A, Checkpoint B, packaging):** press C to note the moment you're watching (the frame is kept),
+  drag on the frame to box what you mean, drag a still onto a note; "Send notes" hands them to Claude. Approve and the
+  title and thumbnail picks are buttons.
+
+Code: `.claude/skills/youtube-edit/pipeline/studio/` (Python standard library and plain HTML/JS; no npm). Tests:
+`cd .claude/skills/youtube-edit/pipeline/studio/tests && python3 -m unittest discover`. Design:
+`docs/superpowers/specs/2026-11-24-video-studio-design.md`. Load or reload the agent on its own with
+`bash .claude/skills/youtube-edit/pipeline/studio/install-agent.sh`.
+
 ---
 
 ## Set up a new Mac (the work Mac)

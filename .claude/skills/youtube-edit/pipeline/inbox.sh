@@ -17,6 +17,20 @@ for d in "$INBOX"/*/; do
   s1=$(size "$d"); sleep 20; s2=$(size "$d")
   if [ "$s1" != "$s2" ]; then log "$name: still copying"; continue; fi
   slug="$(echo "$name" | tr '[:upper:] ' '[:lower:]-' | tr -cd 'a-z0-9._-')"
+  if [ -f "$ROOT/videos/$slug/video.json" ] && [ ! -e "$ROOT/videos/$slug/state.json" ]; then   # a video set up with yt new, waiting for its recordings
+    W="$ROOT/videos/$slug"; mkdir -p "$W/raw"
+    for f in "$d"*; do [ -f "$f" ] && mv "$f" "$W/raw/"; done
+    [ -f "$W/raw/notes.txt" ] && { cat "$W/raw/notes.txt" >> "$W/notes.txt"; rm "$W/raw/notes.txt"; }
+    touch "$d/.claimed"; rmdir "$d" 2>/dev/null || true
+    if out="$(python3 "$PIPE/studio/start_cut.py" "$slug" 2>&1)"; then
+      state_set "$slug" queued "from the inbox into the studio project: $out"
+      notify "YouTube edit: $slug" "Started: cutting ($out)."
+      nohup bash "$PIPE/stage.sh" "$slug" cut >> "$W/pipeline/stage.log" 2>&1 &
+    else
+      notify "YouTube edit: $slug" "$out"; log "$name: $out"
+    fi
+    continue
+  fi
   if [ -e "$ROOT/videos/$slug" ]; then
     notify "YouTube edit: $name" "videos/$slug already exists. Rename the inbox folder to start a new edit."
     touch "$d/.claimed"; log "$name: videos/$slug exists, skipped"; continue

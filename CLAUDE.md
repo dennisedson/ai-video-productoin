@@ -3,9 +3,30 @@
 Edits use the youtube-edit skill (`.claude/skills/youtube-edit/SKILL.md`). Renders run on this Mac with
 `render-mac.sh`; a session working from anywhere else stops at Checkpoint B.
 
+## The studio: every video from idea to results
+
+Each video is a project from the idea on: `bash .claude/skills/youtube-edit/pipeline/yt new <name>` makes
+`videos/<name>/` with `video.json`, `BRIEF.md` (from the idea's origin: a colleague's work, a problem, a feature),
+`research.md`, `references.md` (every outside link), `SCRIPT.md` (read-aloud lines in `>` blockquotes for the
+teleprompter, `→ demo:` beats, ```` ```copy: ```` blocks for the recording sheet) and `results.md`. When Dennis asks for a
+new video without a name, ask for the name first (and the idea's origin), then run `yt new`.
+
+Dennis works in the studio, a page on `http://127.0.0.1:4040` (`yt app` opens it; launchd keeps it running): the
+board, each video's phases (ideation, script and direction, recording, cut, storyboard, render and music on the home
+Mac, packaging, publish, results) with steps and templates, document editors, requests to Claude, a chat per video,
+reviews with notes pinned to a moment and a box, and questions. Claude runs started there work on one video; they ask
+Dennis with `yt ask <name> "question" --options "a|b"`, and the answers are in `videos/<name>/questions.json`. Its
+code is `.claude/skills/youtube-edit/pipeline/studio/` (tests: `python3 -m unittest discover` in its `tests/`).
+Scripts are written in his voice: `profiles/<profile>/VOICE.md`.
+
+In a thread, work on one video at a time; when a request names a video, read its `BRIEF.md`, `references.md` and
+answered questions first. A long thread that carries several videos costs far more on the work Mac: suggest a fresh
+thread, or the studio's chat for that video, when the subject moves to another video.
+
 ## The hands-off pipeline
 
-Dropping recordings into `videos/_inbox/<name>/` (the camera file with the mic, the screen file for a tutorial, an
+Recordings for a studio video go in its `raw/` and start with `yt start <name>` (the studio's "Start the cut"), or
+drop them into `videos/_inbox/<name>/` under the same name. Dropping recordings into `videos/_inbox/<name>/` (the camera file with the mic, the screen file for a tutorial, an
 optional `notes.txt`) starts an edit on its own: a launchd agent claims the folder, the cut runs (scripts, then an
 unattended Claude Code run for the judgment calls), and a Mac notification opens `videos/<name>/REVIEW-A.html`.
 `yt status` lists every edit and its stage; `yt log <name>` shows its log. Details: the skill's `pipeline/` folder and

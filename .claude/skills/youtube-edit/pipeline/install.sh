@@ -68,6 +68,7 @@ cat > "$PLIST" <<PL
 PL
 launchctl bootout "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true
 launchctl bootstrap "gui/$(id -u)" "$PLIST" && echo "launchd agent loaded: $LABEL"
+bash "$PIPE/studio/install-agent.sh"   # the studio page, kept running
 if [ "$SERVE" = 1 ]; then          # the home Mac: render what the work Mac sends
   HIN="$ROOT/videos/_render-inbox"; mkdir -p "$HIN"
   RLABEL="com.youtube-edit.render-host"; RPLIST="$HOME/Library/LaunchAgents/$RLABEL.plist"

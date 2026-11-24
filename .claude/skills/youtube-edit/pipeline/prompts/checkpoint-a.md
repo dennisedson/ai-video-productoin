@@ -31,3 +31,9 @@ Do:
 Rules: never render 4K, never encode a 4K flat cut (every apply-cut.py run here gets --vf scale=-2:1080) and never run
 render-mac.sh; look at images sparingly (contact sheets over single frames); write
 only inside {W}; do not change the skill. End with a three-line summary.
+
+The studio (when the video has one): read {W}/BRIEF.md, {W}/references.md and {W}/SCRIPT.md / recording-sheet.md when
+they exist (the plan, the links and what Dennis meant to show), and the answered questions in {W}/questions.json. For
+anything that is Dennis's to decide, besides listing it in your write-up, ask it so it reaches him in the studio:
+bash .claude/skills/youtube-edit/pipeline/yt ask <name> "the question" --options "choice a|choice b"
+(one question per decision; carry on with your default and say which you chose).

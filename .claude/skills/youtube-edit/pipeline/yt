@@ -3,6 +3,7 @@
 #   yt status | yt watch [SECONDS] | yt run NAME cut|storyboard|render [--here|--fast] | yt log NAME | yt open NAME | yt host
 #   --fast: ignore PRIORITY=background for this run (all cores, louder); a stage already running can't be moved off it
 #   hand-off (work Mac): yt bundle NAME [DIR] | yt import NAME VIDEO [CHAPTERS]     home Mac: yt clean-renders
+#   studio: yt new [NAME] | yt app [NAME] | yt ask NAME "q" [--options "a|b"] | yt start NAME [--fast]
 #   YouTube: yt run NAME youtube (draft, beside the render) | yt youtube NAME (rebuild) | yt thumb NAME [N|frames] | yt music NAME [samples|N|none] | yt shorten NAME (Bitly) | yt published NAME URL | yt drive NAME
 s="$0"   # follow the ~/.local/bin/yt link (install.sh) back to this folder, where lib.sh is
 while [ -L "$s" ]; do t="$(readlink "$s")"; case "$t" in /*) s="$t" ;; *) s="$(dirname "$s")/$t" ;; esac; done
@@ -41,6 +42,35 @@ case "${1:-status}" in
       st="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("stage",""))' "$d/status.json")"
       case "$st" in done|failed) rm -rf "$d" && echo "removed $(basename "$d") ($st)" ;; *) echo "kept $(basename "$d") ($st)" ;; esac
     done ;;
+  new)   # a new video project from idea to results (the studio shows it): yt new [NAME] [--origin colleague|problem|feature|finished] [--title T] [--series S]
+    n="${2:-}"; shift $(( $# > 1 ? 2 : $# ))
+    case "$n" in --*) set -- "$n" "$@"; n="" ;; esac
+    if [ -z "$n" ]; then
+      [ -t 0 ] || { echo "yt new NAME: which name? (a short folder name, like agents-3)"; exit 2; }
+      read -r -p "Name for the new video (a short folder name, like agents-3): " n; [ -n "$n" ] || exit 2
+    fi
+    case " $* " in *" --origin "*) ;; *)
+      if [ -t 0 ]; then read -r -p "Where does the idea come from? colleague / problem / feature / finished [problem]: " o; set -- "$@" --origin "${o:-problem}"
+      else set -- "$@" --origin problem; fi ;; esac
+    python3 "$PIPE/studio/core.py" new "$n" "$@" && echo "open it in the studio: http://127.0.0.1:${STUDIO_PORT:-4040}/#/v/$(python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); import core; print(core.slug(sys.argv[2]))' "$PIPE/studio" "$n")" ;;
+  app)   # the studio: start it if it isn't running, then open the page
+    P="${STUDIO_PORT:-4040}"
+    if ! curl -s -o /dev/null "http://127.0.0.1:$P/api/videos"; then
+      nohup python3 "$PIPE/studio/server.py" --port "$P" >> "$ROOT/videos/.studio.log" 2>&1 &
+      for i in 1 2 3 4 5 6 7 8 9 10; do curl -s -o /dev/null "http://127.0.0.1:$P/api/videos" && break; sleep 0.3; done
+    fi
+    echo "studio: http://127.0.0.1:$P"; command -v open >/dev/null && open "http://127.0.0.1:$P/${2:+#/v/$2}" ;;
+  ask)   # a question for Dennis, answered in the studio: yt ask NAME "question" [--options "a|b"]
+    [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo 'yt ask NAME "question" [--options "a|b"]'; exit 2; }
+    python3 "$PIPE/studio/core.py" ask "$2" "$3" "${@:4}"
+    notify "YouTube edit: $2" "A question for you in the studio: $3" "http://127.0.0.1:${STUDIO_PORT:-4040}/#/v/$2" ;;
+  start)   # a scaffolded video's recordings are in raw/: name them and start the cut (yt start NAME [--fast])
+    [ -n "${2:-}" ] || { echo "yt start NAME [--fast]"; exit 2; }
+    python3 "$PIPE/studio/start_cut.py" "$2" || exit 1
+    state_set "$2" queued "recordings in raw/ (studio)"
+    mkdir -p "$ROOT/videos/$2/pipeline"
+    nohup bash "$PIPE/stage.sh" "$2" cut "${3:-}" >> "$ROOT/videos/$2/pipeline/stage.log" 2>&1 &
+    echo "started the cut for $2${3:+ ($3)}" ;;
   drive)   # the finished video, thumbnails, captions and YOUTUBE.md to the team's Drive folder (year/month/series)
     [ -n "${2:-}" ] || { echo "yt drive NAME [--dry-run] [--month YYYY-MM] [--no-video]"; exit 2; }
     DRIVE_ROOT="${DRIVE_ROOT:-}" python3 "$PIPE/drive.py" "$ROOT/videos/$2" "${@:3}" ;;
