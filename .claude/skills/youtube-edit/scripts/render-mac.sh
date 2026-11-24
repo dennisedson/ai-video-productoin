@@ -7,7 +7,7 @@
 #   {"name": "agents-2", "shared": "shared",
 #    "face_raw": "raw/talking-head.mp4", "grade": "blacks",          # rebuild the 4K flat cut (skipped when absent)
 #    "face_crop": "1110:1936:1505:0",                                  # tutorial layout: the face card's region (optional)
-#    "workers": 1, "bitrate": "45M", "min_mbps": 40,                   # min_mbps ~25 for screen-heavy videos (still screens undershoot)
+#    "workers": 1, "bitrate": "45M", "min_mbps": 40,                   # min_mbps 15 for screen-heavy videos (still screens undershoot)
 #    "card": "48,48,1232,2112", "face_windows": "0-34.9,64.4-78.4,228-",   # tutorial layout: blank face-card check (optional)
 #    "bookends": {"intro": {"at": 7.5, "resume": 7.6, "eyebrow": "...", "title": "..."}, "outro": {"next": "..."}},   # optional
 #    "deliver": "~/Movies/YouTube Renders/agents"}

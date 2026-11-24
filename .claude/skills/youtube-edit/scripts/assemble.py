@@ -24,11 +24,15 @@ Every segment is conformed to the master spec with one libx264 CRF 16 pass (or -
 45 Mbit/s, ~4x faster, same setting the render step uses), loudness-normalised in two passes, then the
 pieces are joined with the concat demuxer and stream copy. Mixed sources (a 45 Mbit/s HyperFrames render,
 a 9 Mbit/s Tella export, a 720p cutaway) come out as one clean file with no level jumps between them.
+A manifest with ONE segment already at the master spec (H.264, the master size, constant master fps, yuv420p, SDR,
+no trim) keeps its video stream as it is and redoes only the audio: render-mac.sh's loudness pass. Re-encoding it was
+a second lossy generation, and VideoToolbox undershoots on still screens (agentcli: 20 -> 17 Mb/s, verify FAIL).
 
 Usage:
   python3 assemble.py --manifest videos/<project>/assembly.json --out "$HOME/Movies/YouTube Renders/<project>/<project>-full-4k.mp4" [--gpu] [--keep-work]
 """
 import argparse, hashlib, json, os, shutil, subprocess, sys, tempfile
+from fractions import Fraction
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--manifest", required=True)
@@ -51,13 +55,22 @@ def resolve(p):
 
 def probe(path):
     j = json.loads(subprocess.run(["ffprobe", "-v", "error", "-show_entries",
-        "stream=codec_type,codec_name,width,height,r_frame_rate,pix_fmt,sample_rate,channels,color_transfer:format=duration",
+        "stream=codec_type,codec_name,width,height,r_frame_rate,avg_frame_rate,pix_fmt,sample_rate,channels,color_transfer:format=duration",
         "-of", "json", path], capture_output=True, text=True, check=True).stdout)
     v = next((s for s in j["streams"] if s["codec_type"] == "video"), {})
     a = next((s for s in j["streams"] if s["codec_type"] == "audio"), None)
     return {"dur": float(j["format"]["duration"]), "w": v.get("width"), "h": v.get("height"),
-            "fps": v.get("r_frame_rate"), "codec": v.get("codec_name"), "audio": a is not None,
+            "fps": v.get("r_frame_rate"), "avg_fps": v.get("avg_frame_rate"), "codec": v.get("codec_name"),
+            "pix_fmt": v.get("pix_fmt"), "trc": v.get("color_transfer"), "audio": a is not None,
             "sr": a and int(a.get("sample_rate", 0)), "ch": a and a.get("channels")}
+
+def rate(r):
+    try: return Fraction(r)
+    except (TypeError, ValueError, ZeroDivisionError): return None
+
+def at_master_spec(p):   # the video stream can be copied as it is: nothing for the conform pass to change
+    return (p["codec"] == "h264" and p["w"] == W and p["h"] == H and p["pix_fmt"] == "yuv420p"
+            and rate(p["fps"]) == FPS and rate(p["avg_fps"]) == FPS and p["trc"] in (None, "bt709"))
 
 def measure_loudness(path, ss, to):
     cmd = ["ffmpeg", "-hide_banner", "-nostats", "-i", path]
@@ -91,15 +104,20 @@ for n, seg in enumerate(M["segments"]):
     cmd += ["-i", src]
     if not p["audio"]:
         cmd += ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-shortest"]
-    cmd += ["-map", "0:v:0", "-map", ("1:a:0" if not p["audio"] else "0:a:0"), "-vf", vf]
-    if args.gpu: cmd += ["-c:v", "h264_videotoolbox", "-b:v", "45M", "-profile:v", "high", "-allow_sw", "1"]
-    else: cmd += ["-c:v", "libx264", "-crf", "16", "-preset", "fast", "-profile:v", "high", "-level", "5.1"]
-    cmd += ["-g", str(FPS), "-keyint_min", str(FPS), "-r", str(FPS), "-pix_fmt", "yuv420p",
-            "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709", "-color_range", "tv",
+    cmd += ["-map", "0:v:0", "-map", ("1:a:0" if not p["audio"] else "0:a:0")]
+    copy_video = len(M["segments"]) == 1 and not ss and not to and at_master_spec(p)
+    if copy_video:
+        cmd += ["-c:v", "copy"]
+    else:
+        cmd += ["-vf", vf]
+        if args.gpu: cmd += ["-c:v", "h264_videotoolbox", "-b:v", "45M", "-profile:v", "high", "-allow_sw", "1"]
+        else: cmd += ["-c:v", "libx264", "-crf", "16", "-preset", "fast", "-profile:v", "high", "-level", "5.1"]
+        cmd += ["-g", str(FPS), "-keyint_min", str(FPS), "-r", str(FPS), "-pix_fmt", "yuv420p"]
+    cmd += ["-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709", "-color_range", "tv",
             "-af", ",".join(af_parts), "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-ac", "2",
             "-video_track_timescale", "90000", "-movflags", "+faststart", dst]
-    print("conform %d/%d  %s  (%sx%s %s, %.1fs%s)" % (n + 1, len(M["segments"]), seg["name"], p["w"], p["h"], p["fps"], p["dur"],
-          "" if lin is None else ", %.1f LUFS -> %s" % (lin, LUFS)))
+    print("conform %d/%d  %s  (%sx%s %s, %.1fs%s%s)" % (n + 1, len(M["segments"]), seg["name"], p["w"], p["h"], p["fps"], p["dur"],
+          "" if lin is None else ", %.1f LUFS -> %s" % (lin, LUFS), ", video copied" if copy_video else ""))
     subprocess.run(cmd, check=True)
     d = probe(dst)["dur"]
     rows.append({"name": seg["name"], "start": t, "dur": d, "src": src, "lufs_in": lin, "chapter": seg.get("chapter", True)})

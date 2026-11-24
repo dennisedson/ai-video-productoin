@@ -926,10 +926,11 @@ fades are fine without backdrop-filter (lower lines). Glass that has not arrived
 - **`--gpu` ignores CRF** (`--quality high --gpu` gave 14 Mb/s at 4K): always `--video-bitrate 45M`.
 - **The render drops two colour tags:** always the BT.709 remux, or faces look redder than the camera original.
 - **Skipping `assemble.py`:** the render keeps the camera level (~-25 LUFS). Level the voice to -14 first (a one-segment
-  `assembly.json` does it), then add music; measure the file with `ebur128`.
+  `assembly.json` does it, copying the video and redoing only the audio), then add music; measure the file with `ebur128`.
 - **The render finishes; the file can still be wrong** (black footage, a missing tag, audio a frame short):
   `verify-render.py` catches these, the pre-render sheet cannot. Its 40 Mb/s floor fails on mostly still screens
-  (hardware encoders undershoot); if every other line passes, that is not a quality problem.
+  (hardware encoders undershoot: agentcli, mostly terminal, rendered at 20 Mb/s from a 45M target); give screen-heavy
+  videos `min_mbps` 15. If every other line passes and the text is sharp in a full-4K frame, that is not a quality problem.
 
 **Composition**
 - **Every timed element needs `class="clip"`** or it shows for the whole video. Keep `data-has-audio="true"` on the
@@ -1180,7 +1181,7 @@ ffmpeg -i "$W/public/input-video.mp4" -vf "crop=1110:1936:<x>:0" -c:v libx264 -p
   with its `rect` (full-frame px), never when a page first appears.
 - **The hand-off is `render.json` + `render-mac.sh`:** it rebuilds the 4K files in order (`apply-cut.py --grade` on the
   raw face file; a legacy `face_crop` in render.json still builds a separate crop file), then compose, check, render, tags, loudness, `verify-render.py`
-  (`min_mbps` ~25: mostly still screens undershoot the 40 floor) and `card-check.py` over the split stretches
+  (`min_mbps` 15: mostly still screens undershoot the 40 floor) and `card-check.py` over the split stretches
   (`card` 48,48,1232,2112 with the face on the left, 2608,48,3792,2112 on the right).
 - **Render it with one worker** (`--workers 1`): with two, Chrome caught the face card before its frame was ready and it
   flashed empty ~80 times in 67 s. Check the face card for blank frames after the render (`verify-render.py` misses

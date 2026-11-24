@@ -26,7 +26,7 @@ Do:
    (window-patch.py, draft quality) and name them.
 6. Write {W}/render.json for render-mac.sh: name, shared "shared", face_raw (the raw camera file, relative to {W}, e.g.
    "raw/talking-head.mp4") and grade (the approved one), so render-mac.sh builds the 4K flat cut, no face_crop,
-   workers 1, bitrate "45M", min_mbps 25 for screen-heavy videos, card and face_windows for the tutorial layout (starting where each face_full stretch ends), deliver
+   workers 1, bitrate "45M", min_mbps 15 for screen-heavy videos (still screens undershoot the 40 floor), card and face_windows for the tutorial layout (starting where each face_full stretch ends), deliver
    "~/Movies/YouTube Renders/<name>".
 6b. When the profile has bookends (profiles/<profile>/intro, outro): choose the sting point and the end card's "next"
    by the skill ("Bookends"), add "bookends" to render.json, and run bookends.py --project {W} --preview (the two
