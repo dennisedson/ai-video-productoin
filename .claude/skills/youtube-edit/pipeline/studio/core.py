@@ -296,6 +296,50 @@ def set_series(name, titles):
     return v
 
 
+def delete_series(sslug):
+    """Remove a series page and take the series off its videos; the videos stay."""
+    sr = get_series(sslug)
+    for n in sr["parts"]:
+        v = load_video(n); v["series"] = [t for t in v.get("series", []) if t != sr["title"]]; save_video(n, v)
+    for ext in (".json", ".md"):
+        p = os.path.join(series_dir(), sr["slug"] + ext)
+        if os.path.exists(p):
+            os.remove(p)
+    return sr["slug"]
+
+
+# ---- delete a video: to the Trash, never removed outright --------------------------------------------------------------
+BUSY = ("queued", "cutting", "storyboarding", "rendering", "transcribing", "drafting")
+
+
+def trash_dir():
+    return os.environ.get("STUDIO_TRASH") or os.path.expanduser("~/.Trash")
+
+
+def delete_video(name):
+    """Move videos/<name>/ to the Trash (recoverable there) and take it out of its series. Refuses while a stage runs."""
+    w = video_dir(name)
+    if not os.path.isdir(w):
+        raise KeyError(name)
+    stage = (state(name) or {}).get("stage", "")
+    if stage in BUSY:
+        raise ValueError("%s is %s right now; wait for the stage to finish, then delete it" % (name, stage))
+    for sr in all_series():
+        if name in sr.get("parts", []) and os.path.exists(os.path.join(series_dir(), sr["slug"] + ".json")):
+            s = _read(os.path.join(series_dir(), sr["slug"] + ".json"), {})
+            s["parts"] = [x for x in s.get("parts", []) if x != name]
+            save_series(s)
+    for other in os.listdir(videos_dir()):                 # links from its sibling parts
+        if other != name and _NAME.match(other) and os.path.isfile(os.path.join(videos_dir(), other, "video.json")):
+            v = load_video(other)
+            if name in v.get("related", []):
+                v["related"] = [x for x in v["related"] if x != name]; save_video(other, v)
+    os.makedirs(trash_dir(), exist_ok=True)
+    dest = os.path.join(trash_dir(), "%s %s" % (name, dt.datetime.now().strftime("%Y-%m-%d %H.%M.%S")))
+    os.rename(w, dest) if os.stat(w).st_dev == os.stat(trash_dir()).st_dev else __import__("shutil").move(w, dest)
+    return dest
+
+
 # ---- split: one idea into a series of videos ------------------------------------------------------------------------
 def _split_path(name):
     return os.path.join(video_dir(name), "studio", "split.json")

@@ -138,6 +138,7 @@ async function videoPage(name, phaseId) {
         <div class="muted small">${esc(name)} · ${esc(v.origin || "made before the studio")}${v.part ? ` · part ${v.part}` : ""} · now in <b>${esc(d.phases[idx(d.phase)].title)}</b>${d.stage ? ` · pipeline: ${esc(d.stage)}` : ""}</div>
         <div class="row" style="margin-top:8px;justify-content:flex-start;gap:6px;flex-wrap:wrap">${(v.series || []).map(x => `<a class="pill" href="#/s/${encodeURIComponent(x.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""))}">${esc(x)}</a>`).join("")}
           <button class="btn small" id="edit-series" style="flex:0">Series…</button>
+          <span style="flex:1"></span><button class="btn small danger" id="del-video" style="flex:0">Delete…</button>
           ${d.length.minutes != null ? `${lenBadge(d.length.minutes, d.length.target, d.length.max)} <span class="small muted">target under ${d.length.target} min, never over ${d.length.max}</span>` : ""}</div></div>
       ${d.split && d.split.status === "proposed" ? splitHtml(d.split) : ""}
       ${open.length ? `<div class="panel"><h2>Questions for you</h2>${open.map(qHtml).join("")}</div>` : ""}
@@ -170,6 +171,20 @@ async function videoPage(name, phaseId) {
   bindQuestions(name);
   bindForms(name, p);
   $("#edit-series").onclick = () => editSeries(name, v.series || [], d.all_series || []);
+  $("#del-video").onclick = () => {
+    const dl = $("#dlg");
+    dl.innerHTML = `<form method="dialog" class="stack"><h2>Delete ${esc(v.title || name)}?</h2>
+      <p>The whole folder <code>videos/${esc(name)}/</code> goes to the Trash: recordings, cuts, renders, the YouTube package and its notes.
+      You can put it back from the Trash. It's also taken out of its series.</p>
+      <div><label>Type <b>${esc(name)}</b> to confirm</label><input name="c" autocomplete="off"></div>
+      <div class="row"><button class="btn" value="cancel">Cancel</button><button class="btn danger" value="ok">Move to Trash</button></div></form>`;
+    dl.showModal();
+    dl.querySelector("form").onsubmit = async ev => {
+      if (ev.submitter?.value !== "ok") return; ev.preventDefault();
+      try { await api(`/api/videos/${name}/delete`, { method: "POST", body: { confirm: dl.querySelector("[name=c]").value.trim() } }); dl.close(); toast("Moved to the Trash"); location.hash = "#/"; }
+      catch (e) { toast(e.message); }
+    };
+  };
   app.querySelector("[data-split-accept]")?.addEventListener("click", async () => {
     const parts = [...app.querySelectorAll("[data-part]")].map(r => ({ name: r.querySelector("[name=n]").value, title: r.querySelector("[name=t]").value,
       promise: r.querySelector("[name=p]").value, minutes: r.querySelector("[name=m]").value }));
@@ -225,12 +240,17 @@ async function seriesPage(slugName) {
     <aside class="stack"><div class="panel stack"><div><label>Playlist link</label><input id="pl" value="${esc(s.playlist || "")}" placeholder="https://www.youtube.com/playlist?list=…"></div>
       <div><label>Playlist description</label><textarea id="pd" rows="5" style="font-family:inherit">${esc(s.description || "")}</textarea></div>
       <div><label>Cover image (path on this Mac)</label><input id="pc" value="${esc(s.cover || "")}" placeholder="videos/_playlists/${esc(s.slug)}/playlist-cover.jpg"></div>
-      <button class="btn primary" id="ssave">Save</button></div></aside></div>`;
+      <button class="btn primary" id="ssave">Save</button></div>
+      <div class="panel"><button class="btn danger" id="sdel">Delete this series</button><p class="small muted">Removes the series page and takes the series off its videos. The videos stay.</p></div></aside></div>`;
   const order = s.videos.map(v => v.name);
   const put = body => api(`/api/series/${s.slug}`, { method: "PUT", body });
   app.querySelectorAll("[data-up],[data-down]").forEach(b => b.onclick = async () => {
     const k = +(b.dataset.up ?? b.dataset.down), j = b.dataset.up != null ? k - 1 : k + 1; [order[k], order[j]] = [order[j], order[k]];
     await put({ parts: order }); route(); });
+  $("#sdel").onclick = async () => {
+    if (!confirm(`Delete the series "${s.title}"? Its ${s.videos.length} video(s) stay; only the series page and the label go.`)) return;
+    await api(`/api/series/${s.slug}`, { method: "POST", body: { delete: true } }); toast("Series deleted"); location.hash = "#/";
+  };
   $("#ssave").onclick = async () => { await put({ playlist: $("#pl").value, description: $("#pd").value, cover: $("#pc").value }); toast("Saved"); };
   const ed = $("#editor");
   ed.innerHTML = `<div class="editor"><textarea></textarea><div class="preview"></div></div>`;

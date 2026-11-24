@@ -255,6 +255,8 @@ class Handler(BaseHTTPRequestHandler):
             ms = re.match(r"^/api/series/([a-z0-9-]+)$", path)
             if ms:
                 sr = core.get_series(ms.group(1))
+                if method == "POST" and self.body().get("delete"):
+                    return self.send(200, {"deleted": core.delete_series(ms.group(1))})
                 if method == "PUT":
                     b = self.body()
                     for k in ("playlist", "description", "cover", "parts"):
@@ -339,6 +341,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200, {"items": core.comments(name, m.group(1))})
             core.save_comments(name, m.group(1), self.body().get("items", []))
             return self.send(200, {"saved": len(core.comments(name, m.group(1)))})
+        if rest == "delete" and method == "POST":
+            if self.body().get("confirm") != name:
+                raise ValueError("type the video's folder name to delete it")
+            return self.send(200, {"trashed": core.delete_video(name)})
         if rest == "series" and method == "POST":
             return self.send(200, core.set_series(name, self.body().get("titles", [])))
         if rest == "split" and method == "POST":

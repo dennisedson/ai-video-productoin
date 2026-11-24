@@ -131,6 +131,33 @@ class CoreTest(unittest.TestCase):
         self.assertEqual(self.core.estimate_seconds(script), 60 + 45 + 30 + 120)
         self.assertEqual(self.core.profile_length("hubspot"), (6.0, 10.0))
 
+    def test_delete_video_goes_to_trash_and_leaves_series(self):
+        trash = os.path.join(self.root, "Trash"); os.environ["STUDIO_TRASH"] = trash
+        try:
+            self.core.scaffold("a", "problem"); self.core.scaffold("b", "problem")
+            self.core.set_series("a", ["S"]); self.core.set_series("b", ["S"])
+            v = self.core.load_video("b"); v["related"] = ["a"]; self.core.save_video("b", v)
+            dest = self.core.delete_video("a")
+            self.assertTrue(os.path.isfile(os.path.join(dest, "video.json")))
+            self.assertFalse(os.path.exists(self.core.video_dir("a")))
+            self.assertEqual(self.core.get_series("s")["parts"], ["b"])
+            self.assertEqual(self.core.load_video("b")["related"], [])
+        finally:
+            os.environ.pop("STUDIO_TRASH", None)
+
+    def test_delete_refuses_while_a_stage_runs(self):
+        self.core.scaffold("busy", "problem")
+        json.dump({"stage": "cutting"}, open(os.path.join(self.core.video_dir("busy"), "state.json"), "w"))
+        with self.assertRaises(ValueError):
+            self.core.delete_video("busy")
+
+    def test_delete_series_keeps_videos(self):
+        self.core.scaffold("a", "problem"); self.core.set_series("a", ["S", "T"])
+        self.core.delete_series("s")
+        self.assertEqual(self.core.load_video("a")["series"], ["T"])
+        self.assertFalse(os.path.exists(os.path.join(self.root, "catalog", "series", "s.json")))
+        self.assertTrue(os.path.isdir(self.core.video_dir("a")))
+
     def test_job_runs_and_records(self):
         self.core.scaffold("j", "problem")
         jid = self.core.start_job("j", "test", ["/bin/echo", "hello"])

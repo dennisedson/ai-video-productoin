@@ -148,6 +148,17 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(st, 200)
         self.assertTrue(os.path.isdir(os.path.join(self.root, "videos", "v2")))
 
+    def test_delete_needs_the_name(self):
+        os.environ["STUDIO_TRASH"] = os.path.join(self.root, "Trash")
+        try:
+            st, _ = self.call("POST", "/api/videos/v1/delete", {"confirm": "nope"})
+            self.assertEqual(st, 400)
+            st, body = self.call("POST", "/api/videos/v1/delete", {"confirm": "v1"})
+            self.assertEqual(st, 200)
+            self.assertFalse(os.path.exists(os.path.join(self.root, "videos", "v1")))
+        finally:
+            os.environ.pop("STUDIO_TRASH", None)
+
     def test_step_done_and_approve(self):
         st, _ = self.call("POST", "/api/videos/v1/phase", {"phase": "ideation", "step": "brief", "done": True})
         self.assertEqual(st, 200)

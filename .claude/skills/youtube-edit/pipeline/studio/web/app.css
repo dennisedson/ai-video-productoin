@@ -101,3 +101,4 @@ dialog::backdrop { background: rgba(4,39,41,.45); }
 a.pill { text-decoration: none; }
 .row > .pill, .row > .btn.small { flex: 0 0 auto; }
 .chat .m.claude { white-space: normal; } .chat .m.claude p, .chat .m.claude ul, .chat .m.claude ol { margin: 4px 0; }
+.btn.danger { border-color: #B91C1C; color: #B91C1C; } .btn.danger:hover { background: #B91C1C; color: #fff; }
