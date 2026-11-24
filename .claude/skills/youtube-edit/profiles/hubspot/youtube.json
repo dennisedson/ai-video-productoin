@@ -32,5 +32,12 @@
    "headless-blog"
   ]
  },
- "series_links_note": "Every video in a series gets these links in the description (after the first link), when each resolves; a link marked not live in LINKS.md is left out and named in for_dennis."
+ "series_links_note": "Every video in a series gets these links in the description (after the first link), when each resolves; a link marked not live in LINKS.md is left out and named in for_dennis.",
+ "drive": {
+  "root": "Shared drives/Builder Relations Team/Builder Growth/Content/Video Content",
+  "series": {
+   "hubspot-headless": "headless"
+  },
+  "note": "yt drive NAME copies the finished video, thumbnails, captions and YOUTUBE.md to <root>/<year>/<month>/<series>/ (Drive for desktop). DRIVE_ROOT in pipeline/config.sh overrides the path on a Mac whose Drive sits elsewhere."
+ }
 }

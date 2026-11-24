@@ -3,7 +3,7 @@
 #   yt status | yt watch [SECONDS] | yt run NAME cut|storyboard|render [--here|--fast] | yt log NAME | yt open NAME | yt host
 #   --fast: ignore PRIORITY=background for this run (all cores, louder); a stage already running can't be moved off it
 #   hand-off (work Mac): yt bundle NAME [DIR] | yt import NAME VIDEO [CHAPTERS]     home Mac: yt clean-renders
-#   YouTube: yt run NAME youtube (draft, beside the render) | yt youtube NAME (rebuild) | yt thumb NAME [N|frames] | yt music NAME [samples|N|none] | yt shorten NAME (Bitly) | yt published NAME URL
+#   YouTube: yt run NAME youtube (draft, beside the render) | yt youtube NAME (rebuild) | yt thumb NAME [N|frames] | yt music NAME [samples|N|none] | yt shorten NAME (Bitly) | yt published NAME URL | yt drive NAME
 s="$0"   # follow the ~/.local/bin/yt link (install.sh) back to this folder, where lib.sh is
 while [ -L "$s" ]; do t="$(readlink "$s")"; case "$t" in /*) s="$t" ;; *) s="$(dirname "$s")/$t" ;; esac; done
 . "$(cd "$(dirname "$s")" && pwd)/lib.sh"
@@ -41,6 +41,9 @@ case "${1:-status}" in
       st="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("stage",""))' "$d/status.json")"
       case "$st" in done|failed) rm -rf "$d" && echo "removed $(basename "$d") ($st)" ;; *) echo "kept $(basename "$d") ($st)" ;; esac
     done ;;
+  drive)   # the finished video, thumbnails, captions and YOUTUBE.md to the team's Drive folder (year/month/series)
+    [ -n "${2:-}" ] || { echo "yt drive NAME [--dry-run] [--month YYYY-MM]"; exit 2; }
+    DRIVE_ROOT="${DRIVE_ROOT:-}" python3 "$PIPE/drive.py" "$ROOT/videos/$2" "${@:3}" ;;
   youtube)   # rebuild youtube/YOUTUBE.md from metadata.json + the Bitly links in links.tsv (no AI)
     [ -n "${2:-}" ] || { echo "yt youtube NAME"; exit 2; }
     python3 "$SK/scripts/youtube-meta.py" build --project "$ROOT/videos/$2" ;;

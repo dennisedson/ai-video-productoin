@@ -64,7 +64,10 @@ long, so say how many are left. He can still paste a link into
 or the video's folder) and run `bash .claude/skills/youtube-edit/pipeline/yt thumb <name> [N]`; never restyle one video's thumbnail
 by hand (brand changes go in the template, for every video). When he says a video is
 live, `yt published <name> <url>`. `catalog/VIDEOS.md` is the channel's catalog (one entry per video, written by
-those commands): read it for what earlier videos covered; after it changes, commit and push it.
+those commands): read it for what earlier videos covered; after it changes, commit and push it. When the work on a
+video is finished ("move agentcli to Drive"), `bash .claude/skills/youtube-edit/pipeline/yt drive <name>` copies the
+video, thumbnails, captions and YOUTUBE.md to the team's Drive folder by year, month and series (the profile's
+youtube.json "drive"; `--dry-run` first when a video of another size is already there, and ask which one belongs).
 
 ## Machines
 
