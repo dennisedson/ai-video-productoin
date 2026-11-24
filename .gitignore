@@ -15,3 +15,7 @@ __pycache__/
 *.pyc
 .DS_Store
 .repo-export.tgz
+
+# Headshots for thumbnails: personal photos stay off GitHub; one copy per Mac
+shared/img/headshots/*
+!shared/img/headshots/README.md

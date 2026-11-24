@@ -219,6 +219,10 @@ status` shows "YouTube: ready"). It writes `videos/<name>/youtube/`:
   JetBrains Mono label, the logo. Change the words or frame ("thumbnail 2: 'Skip the HubSpot UI', the frame at 1:40")
   and a thread edits `metadata.json` and runs `yt thumb <name> [N]`; `yt thumb <name> frames` makes a fresh frame sheet.
   The first cutout on a Mac downloads the background-removal runtime once.
+  **A headshot instead of a frame:** put it in `shared/img/headshots/` on each Mac (git-ignored, so your photo stays
+  off GitHub; a guest's goes in `videos/<name>/`). Ask for it per video ("thumbnail 1: use dennis.jpg"), or make it a
+  profile's default with `"face": "dennis.jpg"` in `profiles/<profile>/thumbnail/config.json`. A PNG with a
+  transparent background is used as it is; anything else is cut out.
 - `captions.srt`: your own captions with transcription fixes; upload it in Studio (Subtitles → Upload file → With
   timing). AI search reads captions, chapter titles and descriptions, not the video.
 - `links.tsv`: every tracked link with its full UTM URL (`utm_source=youtube&utm_medium=video&utm_campaign=<series>&

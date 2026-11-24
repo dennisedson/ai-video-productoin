@@ -59,7 +59,11 @@ chapter titles and the captions are what they quote and link to. So:
   eyebrow: the series line (render.json's bookends.intro.eyebrow) or, for Devs:After Dark, the episode and guest.
   t: the frame, from {W}/youtube/frames.jpg (each tile is stamped with its time; frames.json lists them): his face
   turned towards the camera, mouth closed or mid-word, eyes open, an expression that fits the headline; a time on the
-  flat cut's clock, any time works, not only the tiles. why: one line on what the option is for. If no frame works
+  flat cut's clock, any time works, not only the tiles. face (optional): a headshot instead of a frame, by file name
+  ({W}/notes.txt or the approvals may name one; a guest's headshot sits in {W}; Dennis's in shared/img/headshots/,
+  listed by `ls shared/img/headshots`); the profile's thumbnail/config.json "face" is the default; with a headshot
+  "t" is not needed. Mix them when it helps: one option with a frame, one with the headshot. why: one line on what
+  the option is for. If no frame works
   (eyes shut in all of them, no camera), say so in for_dennis.
 - for_dennis: short, specific items he must check or supply.
 Every claim about a product must match its docs or the video; when unsure, leave it out.

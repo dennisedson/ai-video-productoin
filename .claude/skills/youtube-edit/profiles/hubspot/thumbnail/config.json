@@ -1,0 +1,4 @@
+{
+ "face": "frame",
+ "note": "\"frame\": a frame from the video (the writer picks it). A headshot file name (e.g. \"dennis.jpg\" in shared/img/headshots/, git-ignored, one copy per Mac) uses that photo for every video on this profile unless an option says otherwise."
+}

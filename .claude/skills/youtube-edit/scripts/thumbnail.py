@@ -12,7 +12,9 @@
 
 The options are metadata.json's "thumbnail": {"options": [{"headline": "Claude runs|my CRM", "key": "Claude",
 "eyebrow": "HubSpot Is Going Headless", "t": 41.2}, ...]}: "|" breaks the line, "key" is the one word in the accent
-colour, "t" the frame on the transcript's clock (the flat cut for an edited video, the video itself for a
+colour, "face" (optional) a headshot instead of a frame ("dennis.jpg": the video's folder first, for a guest, then
+shared/img/headshots/; "frame" for the video; default: the profile's thumbnail/config.json "face", else "frame"; a PNG
+that is already cut out is used as it is), "t" the frame on the transcript's clock (the flat cut for an edited video, the video itself for a
 metadata-only one). The frame comes from the 4K camera file for an edited video (cut-map.json maps the time; the
 video's grade is applied as apply-cut.py does), from the finished file for a metadata-only one. The face is cut out
 with `hyperframes remove-background`; if that fails, the photo fades into the background instead (thumbnails.json
@@ -56,6 +58,34 @@ render_cfg = load(os.path.join(W, "render.json"), {}) or {}
 PROFILE = story.get("profile") or source.get("profile") or "hubspot"
 PD = os.path.join(SK, "profiles", PROFILE)
 TPL = os.path.join(PD, "thumbnail", "index.html")
+ROOT = os.path.abspath(os.path.join(SK, "..", "..", ".."))
+HEADSHOTS = os.path.join(ROOT, "shared", "img", "headshots")    # git-ignored: each Mac keeps its own copy
+IMG = (".png", ".jpg", ".jpeg", ".webp", ".heic", ".tif", ".tiff")
+
+
+def _transparent_edges(f):
+    """True when at least a tenth of the image is (nearly) transparent: a headshot that is already a cutout."""
+    r = subprocess.run(["ffmpeg", "-v", "error", "-i", f, "-vf", "alphaextract,scale=64:64", "-f", "rawvideo",
+                        "-pix_fmt", "gray", "-"], capture_output=True)
+    return bool(r.stdout) and sum(1 for v in r.stdout if v < 48) >= len(r.stdout) // 10
+
+
+def headshots():
+    return sorted(f for f in os.listdir(HEADSHOTS) if f.lower().endswith(IMG)) if os.path.isdir(HEADSHOTS) else []
+
+
+def default_face():
+    """The profile's default face: "frame" (from the video) or a headshot file name (thumbnail/config.json)."""
+    return ((load(os.path.join(PD, "thumbnail", "config.json"), {}) or {}).get("face") or "frame").strip()
+
+
+def face_file(name):
+    """A headshot named in an option or the profile: the video's folder (a guest), then shared/img/headshots/."""
+    for base in (W, HEADSHOTS, ROOT):
+        f = os.path.join(base, name)
+        if os.path.isfile(f):
+            return f
+    return None
 
 
 def review_video():
@@ -208,14 +238,28 @@ results = load(os.path.join(Y, "thumbnails.json"), {}) or {}
 made = 0
 for i, o in opts:
     work = os.path.join(Y, "thumb-work-%d" % i); shutil.rmtree(work, ignore_errors=True); os.makedirs(work)
-    src, st, vf = full_frame_source(float(o.get("t", 0)))
+    want = (o.get("face") or default_face()).strip()
     frame = os.path.join(work, "frame.png")
-    run(["ffmpeg", "-y", "-v", "error", "-ss", "%.3f" % st, "-i", src, "-frames:v", "1"] + (["-vf", vf] if vf else []) + [frame])
+    if want != "frame":                                   # a headshot instead of a frame from the video
+        hs = face_file(want)
+        if not hs:
+            print("thumbnail %d: no headshot %s (looked in the video's folder and shared/img/headshots/)" % (i, want)); continue
+        run(["ffmpeg", "-y", "-v", "error", "-i", hs, "-frames:v", "1", frame], quiet=True)   # any format -> PNG, alpha kept
+        if not os.path.isfile(frame) and sys.platform == "darwin":                            # HEIC: sips reads it
+            run(["sips", "-s", "format", "png", hs, "--out", frame], quiet=True)
+    else:
+        src, st, vf = full_frame_source(float(o.get("t", 0)))
+        run(["ffmpeg", "-y", "-v", "error", "-ss", "%.3f" % st, "-i", src, "-frames:v", "1"] + (["-vf", vf] if vf else []) + [frame])
     if not os.path.isfile(frame):
-        print("thumbnail %d: no frame at %.1f s" % (i, float(o.get("t", 0)))); continue
+        print("thumbnail %d: no face image (%s)" % (i, want if want != "frame" else "frame at %.1f s" % float(o.get("t", 0)))); continue
     mode, face = "photo", frame                           # the cutout, if remove-background manages it
     matte, cut = os.path.join(work, "matte.png"), os.path.join(work, "face.png")
-    r = run(["npx", "--yes", "hyperframes", "remove-background", frame, "-o", matte])
+    has_alpha = lambda f: bool(re.search(r"rgba|bgra|argb|abgr|yuva|ya8|ya16|gbrap", run(["ffprobe", "-v", "error",
+        "-show_entries", "stream=pix_fmt", "-of", "csv=p=0", f], quiet=True).stdout)) if os.path.isfile(f) else False
+    if want != "frame" and has_alpha(frame) and _transparent_edges(frame):
+        shutil.copy(frame, matte); r = subprocess.CompletedProcess([], 0)           # already cut out
+    else:
+        r = run(["npx", "--yes", "hyperframes", "remove-background", frame, "-o", matte])
     pf = run(["ffprobe", "-v", "error", "-show_entries", "stream=pix_fmt", "-of", "csv=p=0", matte], quiet=True).stdout if os.path.isfile(matte) else ""
     if r.returncode == 0 and re.search(r"rgba|bgra|argb|abgr|yuva|ya8|ya16|gbrap", pf):   # it has an alpha channel
         bb = run(["ffmpeg", "-v", "info", "-i", matte, "-vf", "alphaextract,bbox=min_val=40", "-f", "null", "-"], quiet=True).stderr
@@ -243,7 +287,7 @@ for i, o in opts:
         run(["ffmpeg", "-y", "-v", "error", "-i", big, "-vf", "scale=1280:720:flags=lanczos", "-q:v", str(q), small], quiet=True)
         if os.path.isfile(small) and os.path.getsize(small) < 2_000_000:
             break
-    results[str(i)] = {"headline": o.get("headline"), "key": o.get("key"), "eyebrow": o.get("eyebrow"), "t": o.get("t"),
+    results[str(i)] = {"headline": o.get("headline"), "key": o.get("key"), "eyebrow": o.get("eyebrow"), "t": o.get("t"), "face": want,
                        "mode": mode, "file": os.path.basename(big), "mobile": os.path.basename(small),
                        "mb": round(os.path.getsize(big) / 1e6, 2) if os.path.isfile(big) else None,
                        "mobile_mb": round(os.path.getsize(small) / 1e6, 2) if os.path.isfile(small) else None}
