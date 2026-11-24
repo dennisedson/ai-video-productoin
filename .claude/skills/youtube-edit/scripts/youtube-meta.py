@@ -346,6 +346,10 @@ if a.cmd == "shorten":
         bitly_skip("no token in the Keychain as %s: add it once with  security add-generic-password -U -a \"$USER\" -s %s -w"
                    % (bcfg["keychain"], bcfg["keychain"]), 3)
     rows = link_rows(meta, ycfg)
+    domain = bcfg.get("domain", "bit.ly")
+    for r in rows:                                          # a link made on another domain (before a branded one was set) is remade
+        if r["bitly"] and urlsplit(r["bitly"]).netloc.lower() != domain.lower():
+            r["bitly"] = ""
     todo = [r for r in rows if not r["bitly"] and not youtube_url(r["url"])]
     if not todo:
         print("every link is already shortened"); os.execv(sys.executable, [sys.executable, __file__, "build", "--project", W])
@@ -359,7 +363,7 @@ if a.cmd == "shorten":
     for r in todo:
         if r["long"] in cache:                              # one Bitly link per long link (per_placement false)
             r["bitly"] = cache[r["long"]]; continue
-        st, j = bitly("POST", "/shorten", tok, {"long_url": r["long"], "domain": bcfg.get("domain", "bit.ly"), "group_guid": group})
+        st, j = bitly("POST", "/shorten", tok, {"long_url": r["long"], "domain": domain, "group_guid": group})
         if st not in (200, 201) or not j.get("link"):
             msg = j.get("message") or j.get("description") or "no answer"
             stopped = "Bitly said %s (%s): %s" % (st, msg, "the monthly link limit, most likely; the rest stay long" if st in (403, 429) or "LIMIT" in str(msg).upper() else "stopping here")

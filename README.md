@@ -243,7 +243,7 @@ Keychain as `bitly-hubspot` (it asks for the token; nothing goes in the repo or 
     security add-generic-password -U -a "$USER" -s bitly-hubspot -w
 
 Settings are in `profiles/hubspot/youtube.json` under `bitly`: `keychain` (the Keychain item), `auto` (shorten after
-each draft), `domain` (`bit.ly`, or a branded domain the plan has), `group_guid` (empty = the default group),
+each draft), `domain` (`bit.ly`, or a branded domain the plan has: the hubspot profile uses `hsdev.fyi`; links stored on another domain are remade), `group_guid` (empty = the default group),
 `per_placement` (`false` = the description and pinned comment share one link per destination, about one fewer link
 per video, for a plan's monthly cap).
 
