@@ -4,7 +4,9 @@
 #   --fast: ignore PRIORITY=background for this run (all cores, louder); a stage already running can't be moved off it
 #   hand-off (work Mac): yt bundle NAME [DIR] | yt import NAME VIDEO [CHAPTERS]     home Mac: yt clean-renders
 #   YouTube: yt run NAME youtube (draft, beside the render) | yt youtube NAME (rebuild) | yt thumb NAME [N|frames] | yt shorten NAME (Bitly) | yt published NAME URL
-. "$(cd "$(dirname "$0")" && pwd)/lib.sh"
+s="$0"   # follow the ~/.local/bin/yt link (install.sh) back to this folder, where lib.sh is
+while [ -L "$s" ]; do t="$(readlink "$s")"; case "$t" in /*) s="$t" ;; *) s="$(dirname "$s")/$t" ;; esac; done
+. "$(cd "$(dirname "$s")" && pwd)/lib.sh"
 case "${1:-status}" in
   status)   # every video, its stage and progress (render: from the log; cut and storyboard: ~ estimated from earlier runs)
     python3 "$PIPE/progress.py" "$ROOT" ;;
