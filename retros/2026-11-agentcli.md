@@ -281,3 +281,4 @@ video's own runs are the work Mac's rows.
 | Make the repo private (it's public, with HubSpot fonts in it) | GitHub settings | next |
 | Record every Claude run's cost per video (interactive threads too: paste `/cost` into the retro, or a `yt cost NAME` that totals the stage JSONs) | pipeline/yt, habit | idea |
 | Lint: drop the GSAP warning for `#tag-glass .pip.done` in the composition | compose / formats | idea |
+| Caption fixes only match inside one cue: "its up" split across two cues never changed; apply fixes to the word list before cues are cut | youtube-meta.py captions() | idea |
