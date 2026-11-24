@@ -95,7 +95,9 @@ def detail(name):
             "phases": core.PHASES, "progress": v.get("phases", {}),
             "docs": {d: os.path.exists(os.path.join(w, d)) for d in all_docs()},
             "questions": core.questions(name), "jobs": core.jobs(name, 12), "reviews": reviews(name),
-            "raw": sorted(os.listdir(os.path.join(w, "raw"))) if os.path.isdir(os.path.join(w, "raw")) else []}
+            "raw": sorted(os.listdir(os.path.join(w, "raw"))) if os.path.isdir(os.path.join(w, "raw")) else [],
+            "split": core.split_proposal(name), "all_series": [x["title"] for x in core.all_series()],
+            "length": dict(zip(("target", "max"), core.profile_length(v.get("profile"))), minutes=core.estimate_minutes(name))}
 
 
 def fill(template, values):
@@ -248,6 +250,28 @@ class Handler(BaseHTTPRequestHandler):
                 except FileExistsError as e:
                     return self.send(409, {"error": str(e)})
                 return self.send(200, {"name": name})
+            if path == "/api/series" and method == "GET":
+                return self.send(200, {"series": core.all_series()})
+            ms = re.match(r"^/api/series/([a-z0-9-]+)$", path)
+            if ms:
+                sr = core.get_series(ms.group(1))
+                if method == "PUT":
+                    b = self.body()
+                    for k in ("playlist", "description", "cover", "parts"):
+                        if k in b:
+                            sr[k] = b[k]
+                    if "md" in b:
+                        open(os.path.join(core.series_dir(), sr["slug"] + ".md"), "w").write(b["md"])
+                    sr = core.save_series(sr)
+                    return self.send(200, core.get_series(sr["slug"]))
+                mdp = os.path.join(core.series_dir(), sr["slug"] + ".md")
+                vids = []
+                for n in sr["parts"]:
+                    vv = core.load_video(n)
+                    vids.append({"name": n, "title": vv.get("title") or n, "phase": core.current_phase(n, vv), "minutes": core.estimate_minutes(n),
+                                 "part": vv.get("part")})
+                sr["videos"] = vids; sr["md"] = open(mdp).read() if os.path.isfile(mdp) else ""
+                return self.send(200, sr)
             m = re.match(r"^/api/videos/([^/]+)(?:/(.*))?$", path)
             if not m:
                 return self.send(404, {"error": "not found"})
@@ -300,13 +324,42 @@ class Handler(BaseHTTPRequestHandler):
             b = self.body()
             if b.get("ask"):
                 return self.send(200, core.ask(name, b["ask"], b.get("options"), frm="dennis"))
-            return self.send(200, core.answer(name, b["id"], b.get("answer", "")))
+            q = core.answer(name, b["id"], b.get("answer", ""))
+            if q.get("action") == "split":
+                prop = core.split_proposal(name)
+                if prop and prop.get("status") == "proposed":
+                    if b.get("answer") == "Make it a series":
+                        q["result"] = core.apply_split(name)
+                    elif b.get("answer") == "Keep one video":
+                        prop["status"] = "declined"; core._write(core._split_path(name), prop)
+            return self.send(200, q)
         m = re.match(r"^comments/(\w+)$", rest)
         if m:
             if method == "GET":
                 return self.send(200, {"items": core.comments(name, m.group(1))})
             core.save_comments(name, m.group(1), self.body().get("items", []))
             return self.send(200, {"saved": len(core.comments(name, m.group(1)))})
+        if rest == "series" and method == "POST":
+            return self.send(200, core.set_series(name, self.body().get("titles", [])))
+        if rest == "split" and method == "POST":
+            b = self.body(); prop = core.split_proposal(name)
+            if not prop:
+                raise ValueError("no split proposal")
+            if b.get("accept"):
+                r = core.apply_split(name, b.get("parts"), b.get("series"))
+                if prop.get("question"):
+                    try:
+                        core.answer(name, prop["question"], "Make it a series")
+                    except KeyError:
+                        pass
+                return self.send(200, r)
+            prop["status"] = "declined"; core._write(core._split_path(name), prop)
+            if prop.get("question"):
+                try:
+                    core.answer(name, prop["question"], "Keep one video")
+                except KeyError:
+                    pass
+            return self.send(200, prop)
         if rest == "frame" and method == "POST":
             b = self.body(); cid = re.sub(r"[^a-zA-Z0-9_-]", "", b.get("id", ""))
             if not cid:
@@ -331,7 +384,8 @@ class Handler(BaseHTTPRequestHandler):
             v = core.load_video(name)
             req = fill(form["prompt"], fields).replace("<name>", name).replace("<profile>", v.get("profile") or "hubspot")
             prompt = fill(open(os.path.join(HERE, "prompts", "form.md")).read(),
-                          {"name": name, "phase_title": ph["title"], "profile": v.get("profile") or "hubspot", "request": req})
+                          {"name": name, "phase_title": ph["title"], "profile": v.get("profile") or "hubspot", "request": req,
+                           "target": "%g" % core.profile_length(v.get("profile"))[0], "max": "%g" % core.profile_length(v.get("profile"))[1]})
             return self.send(200, {"job": core.start_job(name, "request", claude_argv(prompt), label=form["label"])})
         if rest == "notes" and method == "POST":
             b = self.body(); review = b.get("review", "B")
@@ -368,8 +422,9 @@ class Handler(BaseHTTPRequestHandler):
                 v["chat_session"] = str(uuid.uuid4()); core.save_video(name, v)
             sid = v["chat_session"]
             ph = core.phase(core.current_phase(name, v))
-            prompt = fill(open(os.path.join(HERE, "prompts", "chat.md")).read(), {"name": name, "phase_title": ph["title"], "text": text}) if first else text
-            argv = claude_argv(prompt, ["--session-id", sid] if first else ["--resume", sid])
+            system = fill(open(os.path.join(HERE, "prompts", "chat.md")).read(), {"name": name, "phase_title": ph["title"],
+                          "target": "%g" % core.profile_length(v.get("profile"))[0], "max": "%g" % core.profile_length(v.get("profile"))[1]})
+            argv = claude_argv(text, (["--session-id", sid] if first else ["--resume", sid]) + ["--append-system-prompt", system])
             jid = core.start_job(name, "chat", argv, label="chat")
             msgs = core._read(chat_path(name), []) or []
             msgs += [{"role": "dennis", "text": text, "at": core.now()}, {"role": "claude", "text": "", "job": jid, "at": core.now()}]

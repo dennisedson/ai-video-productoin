@@ -19,6 +19,15 @@ Dennis with `yt ask <name> "question" --options "a|b"`, and the answers are in `
 code is `.claude/skills/youtube-edit/pipeline/studio/` (tests: `python3 -m unittest discover` in its `tests/`).
 Scripts are written in his voice: `profiles/<profile>/VOICE.md`.
 
+Length: under 6 minutes is the target, 10 the limit (`profiles/<profile>/youtube.json` "length"); the studio estimates
+each script (150 words a minute read aloud, 45 s a demo beat, or "(~30s)" on the beat) and shows the cut's length.
+When an idea is too big for that, has two audiences, or parts that stand alone, propose a split rather than saying so
+in prose: `python3 .claude/skills/youtube-edit/pipeline/studio/core.py propose-split <name> --series "Title" --part
+"<name>::Title::Promise::minutes" --part "next-name::Title::Promise::minutes" --why "..."`. Dennis accepts it in the
+studio; the video becomes part 1 and the others are created with its research and links. A video can be in several
+series (`video.json` "series" is a list); each series has a page in `catalog/series/<slug>.json` and `.md` (order of
+the parts, playlist link and description, cover).
+
 In a thread, work on one video at a time; when a request names a video, read its `BRIEF.md`, `references.md` and
 answered questions first. A long thread that carries several videos costs far more on the work Mac: suggest a fresh
 thread, or the studio's chat for that video, when the subject moves to another video.

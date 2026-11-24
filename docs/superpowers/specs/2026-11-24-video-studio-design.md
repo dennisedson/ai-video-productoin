@@ -138,3 +138,19 @@ name, sanitises the name), script-sheets (blockquotes, demo markers, copy blocks
 derivation from state.json, the server against a temporary videos folder (board, doc save inside the folder only,
 path escapes refused, the header check, Range requests, questions and comments round trips, actions limited to the
 list). Claude and `yt` calls are replaced by a stand-in command in tests.
+
+## Addendum (2026-11-24): series, splits and length
+
+- `video.json` "series" is a list: a video can be in several series or playlists. Each series has a page
+  (`catalog/series/<slug>.json` with the parts' order, playlist link, description and cover; `<slug>.md` for the
+  write-up), made when a video first joins it.
+- Length: `profiles/<profile>/youtube.json` "length" (6 minutes target, 10 maximum). The studio estimates a script
+  (150 words a minute for the read-aloud lines, 45 s per demo beat or the beat's own "(~30s)") and uses the cut's
+  length once there is one; the badge is green, amber over the target, red over the maximum.
+- Split: Claude (the chat, a form, or ideation's "Is this one video or several?") proposes with `core.py
+  propose-split`, which writes `studio/split.json` and asks with options "Make it a series | Keep one video".
+  Accepting (the card or the answer) makes this video part 1 and creates the other parts with `scaffold`, each with
+  a copy of the research and references and the original brief quoted; every part gets "part" and "related", and the
+  series page lists them in order. The chat gets these instructions as a system prompt on every message.
+- Later: the YouTube stage reads "related" and the series page for cards, end screens and the series links (today
+  those links are in the profile by campaign).

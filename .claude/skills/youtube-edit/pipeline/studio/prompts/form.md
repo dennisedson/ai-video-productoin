@@ -11,6 +11,10 @@ If you need Dennis to decide something, ask with:
   bash .claude/skills/youtube-edit/pipeline/yt ask {name} "the question" --options "choice a|choice b"
 and carry on with your best default, saying which you chose.
 
+Length: under {target} minutes, never over {max}. If the idea is too big for one video, propose a split instead of
+cramming it in: python3 .claude/skills/youtube-edit/pipeline/studio/core.py propose-split {name} --series "Title"
+--part "{name}::Title::Promise::minutes" --part "next::Title::Promise::minutes" --why "one line".
+
 End with a short reply for the page: what you changed (file names), and anything he should look at. No preamble.
 
 The request:

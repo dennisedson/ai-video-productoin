@@ -54,6 +54,7 @@ async function route() {
   clearTimers();
   const h = location.hash.replace(/^#\/?/, "").split("/").map(decodeURIComponent);
   try {
+    if (h[0] === "s" && h[1]) return await seriesPage(h[1]);
     if (h[0] === "v" && h[1]) {
       if (h[2] === "review") return await reviewPage(h[1], h[3] || "B");
       return await videoPage(h[1], h[2]);
@@ -65,17 +66,27 @@ window.addEventListener("hashchange", route);
 const crumbs = html => { $("#crumbs").innerHTML = html; };
 
 // ---- board ------------------------------------------------------------------------------------------------------
+let boardSeries = "";
+try { boardSeries = localStorage.getItem("studio-series") || ""; } catch (e) { /* private window */ }
+const lenBadge = (m, t = 6, mx = 10) => m == null ? "" : `<span class="pill len ${m > mx ? "over" : m > t ? "warn" : "okay"}">${m} min</span>`;
 async function board() {
   crumbs("");
-  const { videos, phases } = await api("/api/videos"); PH = phases;
+  let { videos, phases } = await api("/api/videos"); PH = phases;
+  const { series } = await api("/api/series");
+  if (boardSeries) videos = videos.filter(v => (v.series || []).includes(boardSeries));
   const byPhase = Object.fromEntries(phases.map(p => [p.id, []]));
   videos.forEach(v => (byPhase[v.phase] || (byPhase[v.phase] = [])).push(v));
-  app.innerHTML = `<div class="board">${phases.map(p => `<section class="col"><h3><span>${esc(p.title)}</span><span>${byPhase[p.id].length || ""}</span></h3>
+  app.innerHTML = `<div class="row" style="margin-bottom:12px;justify-content:flex-start;gap:12px">
+      <select id="sfilter" style="max-width:320px"><option value="">Every video</option>${series.map(x => `<option ${x.title === boardSeries ? "selected" : ""}>${esc(x.title)}</option>`).join("")}</select>
+      ${series.map(x => `<a class="pill" href="#/s/${x.slug}">${esc(x.title)}</a>`).join(" ")}<span style="flex:1"></span></div>
+    <div class="board">${phases.map(p => `<section class="col"><h3><span>${esc(p.title)}</span><span>${byPhase[p.id].length || ""}</span></h3>
     ${byPhase[p.id].map(v => `<a class="card ${v.waiting_on.startsWith("you") ? "you" : ""}" href="#/v/${encodeURIComponent(v.name)}">
       <div class="t">${esc(v.title)} ${v.open_questions ? `<span class="badge">${v.open_questions}</span>` : ""}</div>
-      <div class="small muted">${esc(v.name)}${v.series ? " · " + esc(v.series) : ""}</div>
+      <div class="small muted">${esc(v.name)} ${lenBadge(v.minutes)}</div>
+      ${(v.series || []).length ? `<div class="small">${v.series.map(x => `<span class="pill">${esc(x)}</span>`).join(" ")}</div>` : ""}
       <div class="w">Waiting on ${esc(v.waiting_on)}</div></a>`).join("")}</section>`).join("")}</div>`;
-  timers.push(setInterval(async () => { if (!document.hidden && location.hash.replace(/^#\/?/, "") === "") board(); }, 15000));
+  $("#sfilter").onchange = e => { boardSeries = e.target.value; try { localStorage.setItem("studio-series", boardSeries); } catch (er) { /* fine */ } board(); };
+  timers.push(setInterval(async () => { if (!document.hidden && location.hash.replace(/^#\/?/, "") === "" && !document.activeElement.matches("select")) board(); }, 15000));
 }
 
 $("#new-video").onclick = () => {
@@ -88,14 +99,14 @@ $("#new-video").onclick = () => {
       <option value="problem">A problem to solve</option>
       <option value="feature">A new feature</option>
       <option value="finished">A finished video that only needs packaging</option></select></div>
-    <div class="row"><div><label>Series</label><input name="series" placeholder="HubSpot Is Going Headless"></div>
+    <div class="row"><div><label>Series (comma-separated; a video can be in several)</label><input name="series" placeholder="HubSpot Is Going Headless"></div>
       <div><label>Presenter or colleague</label><input name="presenter" placeholder="Dennis"></div></div>
     <div class="row"><button class="btn" value="cancel">Cancel</button><button class="btn primary" value="ok">Create</button></div></form>`;
   d.showModal();
   d.querySelector("form").onsubmit = async ev => {
     if (ev.submitter?.value !== "ok") return;
     ev.preventDefault();
-    const f = Object.fromEntries(new FormData(ev.target));
+    const f = Object.fromEntries(new FormData(ev.target)); f.series = (f.series || "").split(",").map(x => x.trim()).filter(Boolean);
     try { const r = await api("/api/videos", { method: "POST", body: f }); d.close(); location.hash = `#/v/${r.name}`; }
     catch (e) { toast(e.message); }
   };
@@ -117,14 +128,18 @@ async function videoPage(name, phaseId) {
   const idx = id => d.phases.findIndex(x => x.id === id);
   crumbs(`<a href="#/">Board</a> › ${esc(v.title || name)}`);
   const prog = d.progress[p.id] || { done: [] };
-  const open = d.questions.filter(q => !q.answer);
+  const open = d.questions.filter(q => !q.answer && !(q.action === "split" && d.split && d.split.status === "proposed"));
   app.innerHTML = `<div class="vgrid">
     <nav class="panel phases">${d.phases.map(x => {
       const st = idx(x.id) < idx(d.phase) ? "done" : x.id === d.phase ? "cur" : "";
       return `<a class="${st} ${x.id === p.id ? "sel" : ""}" href="#/v/${encodeURIComponent(name)}/${x.id}"><span class="i">${st === "done" ? "✓" : st === "cur" ? "●" : "○"}</span>${esc(x.title)}</a>`; }).join("")}</nav>
     <section class="stack">
       <div class="panel"><h1>${esc(v.title || name)}</h1>
-        <div class="muted small">${esc(name)} · ${esc(v.origin || "made before the studio")}${v.series ? " · " + esc(v.series) : ""} · now in <b>${esc(d.phases[idx(d.phase)].title)}</b>${d.stage ? ` · pipeline: ${esc(d.stage)}` : ""}</div></div>
+        <div class="muted small">${esc(name)} · ${esc(v.origin || "made before the studio")}${v.part ? ` · part ${v.part}` : ""} · now in <b>${esc(d.phases[idx(d.phase)].title)}</b>${d.stage ? ` · pipeline: ${esc(d.stage)}` : ""}</div>
+        <div class="row" style="margin-top:8px;justify-content:flex-start;gap:6px;flex-wrap:wrap">${(v.series || []).map(x => `<a class="pill" href="#/s/${encodeURIComponent(x.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""))}">${esc(x)}</a>`).join("")}
+          <button class="btn small" id="edit-series" style="flex:0">Series…</button>
+          ${d.length.minutes != null ? `${lenBadge(d.length.minutes, d.length.target, d.length.max)} <span class="small muted">target under ${d.length.target} min, never over ${d.length.max}</span>` : ""}</div></div>
+      ${d.split && d.split.status === "proposed" ? splitHtml(d.split) : ""}
       ${open.length ? `<div class="panel"><h2>Questions for you</h2>${open.map(qHtml).join("")}</div>` : ""}
       <div class="panel"><h2>${esc(p.title)}</h2><p class="muted">${esc(p.goal || "")}</p>
         ${p.where === "home" ? `<p class="pill">Happens on the home Mac</p>` : ""}
@@ -154,6 +169,14 @@ async function videoPage(name, phaseId) {
   app.querySelectorAll("[data-act]").forEach(b => b.onclick = () => runAction(name, b.dataset.act));
   bindQuestions(name);
   bindForms(name, p);
+  $("#edit-series").onclick = () => editSeries(name, v.series || [], d.all_series || []);
+  app.querySelector("[data-split-accept]")?.addEventListener("click", async () => {
+    const parts = [...app.querySelectorAll("[data-part]")].map(r => ({ name: r.querySelector("[name=n]").value, title: r.querySelector("[name=t]").value,
+      promise: r.querySelector("[name=p]").value, minutes: r.querySelector("[name=m]").value }));
+    const series = app.querySelector("[name=split-series]").value;
+    try { const r = await api(`/api/videos/${name}/split`, { method: "POST", body: { accept: true, parts, series } }); toast(`Series made: ${r.parts.length} videos`); location.hash = `#/s/${r.series}`; }
+    catch (e) { toast(e.message); } });
+  app.querySelector("[data-split-dismiss]")?.addEventListener("click", async () => { await api(`/api/videos/${name}/split`, { method: "POST", body: { accept: false } }); route(); });
   if (p.docs.length) {
     const tabs = app.querySelectorAll("[data-doc]");
     tabs.forEach(t => t.onclick = () => { tabs.forEach(x => x.classList.remove("sel")); t.classList.add("sel"); openDoc(name, t.dataset.doc); });
@@ -161,6 +184,58 @@ async function videoPage(name, phaseId) {
   }
   renderJobs(name, d.jobs);
   chat(name);
+}
+
+function splitHtml(sp) {
+  return `<div class="panel" style="border:2px solid var(--orange)"><h2>Make this a series?</h2>
+    ${sp.why ? `<p class="muted">${esc(sp.why)}</p>` : ""}
+    <label>Series</label><input name="split-series" value="${esc(sp.series)}">
+    <table style="width:100%;margin-top:10px;border-collapse:collapse"><tr class="small muted"><th align="left">#</th><th align="left">Folder</th><th align="left">Title</th><th align="left">Promise</th><th align="left">Min</th></tr>
+    ${sp.parts.map((p, k) => `<tr data-part><td>${k + 1}</td><td><input name="n" value="${esc(p.name)}" ${k ? "" : "readonly"}></td><td><input name="t" value="${esc(p.title)}"></td>
+      <td><input name="p" value="${esc(p.promise)}"></td><td style="width:70px"><input name="m" value="${esc(p.minutes)}"></td></tr>`).join("")}</table>
+    <p class="small muted">Part 1 is this video. The others are created as studio projects with this video's research and links, and every part is linked to the others.</p>
+    <div class="actions"><button class="btn primary" data-split-accept>Make it a series</button><button class="btn" data-split-dismiss>Keep one video</button></div></div>`;
+}
+function editSeries(name, mine, known) {
+  const d = $("#dlg"); const all = [...new Set([...known, ...mine])];
+  d.innerHTML = `<form method="dialog" class="stack"><h2>Series and playlists</h2><p class="small muted">A video can be in several.</p>
+    ${all.map(t => `<label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" style="width:auto" value="${esc(t)}" ${mine.includes(t) ? "checked" : ""}>${esc(t)}</label>`).join("") || '<p class="muted small">No series yet.</p>'}
+    <div><label>New series</label><input name="new" placeholder="Agent auth"></div>
+    <div class="row"><button class="btn" value="cancel">Cancel</button><button class="btn primary" value="ok">Save</button></div></form>`;
+  d.showModal();
+  d.querySelector("form").onsubmit = async ev => {
+    if (ev.submitter?.value !== "ok") return; ev.preventDefault();
+    const titles = [...d.querySelectorAll("input[type=checkbox]:checked")].map(i => i.value);
+    const nw = d.querySelector("[name=new]").value.trim(); if (nw) titles.push(nw);
+    await api(`/api/videos/${name}/series`, { method: "POST", body: { titles } }); d.close(); route();
+  };
+}
+
+// ---- series page ----------------------------------------------------------------------------------------------------
+async function seriesPage(slugName) {
+  const s = await api(`/api/series/${encodeURIComponent(slugName)}`);
+  crumbs(`<a href="#/">Board</a> › ${esc(s.title)}`);
+  const total = s.videos.reduce((a, v) => a + (v.minutes || 0), 0);
+  app.innerHTML = `<div class="vgrid" style="grid-template-columns:minmax(0,1fr) 420px"><section class="stack">
+      <div class="panel"><h1>${esc(s.title)}</h1><div class="muted small">${s.videos.length} video${s.videos.length === 1 ? "" : "s"}${total ? ` · about ${Math.round(total)} min in all` : ""}</div></div>
+      <div class="panel"><h2>The videos, in order</h2>${s.videos.map((v, k) => `<div class="row" style="margin-bottom:8px"><span style="flex:0 0 28px">${k + 1}.</span>
+        <a href="#/v/${encodeURIComponent(v.name)}" style="flex:3">${esc(v.title)}</a><span class="pill" style="flex:0">${esc((PH.find(p => p.id === v.phase) || {}).title || v.phase)}</span>
+        ${lenBadge(v.minutes)}<span style="flex:0;white-space:nowrap"><button class="btn small" data-up="${k}" ${k ? "" : "disabled"}>↑</button> <button class="btn small" data-down="${k}" ${k < s.videos.length - 1 ? "" : "disabled"}>↓</button></span></div>`).join("") || '<p class="muted">No videos yet: add one from its page (Series…).</p>'}</div>
+      <div class="panel"><h2>About the series</h2><div id="editor"></div></div></section>
+    <aside class="stack"><div class="panel stack"><div><label>Playlist link</label><input id="pl" value="${esc(s.playlist || "")}" placeholder="https://www.youtube.com/playlist?list=…"></div>
+      <div><label>Playlist description</label><textarea id="pd" rows="5" style="font-family:inherit">${esc(s.description || "")}</textarea></div>
+      <div><label>Cover image (path on this Mac)</label><input id="pc" value="${esc(s.cover || "")}" placeholder="videos/_playlists/${esc(s.slug)}/playlist-cover.jpg"></div>
+      <button class="btn primary" id="ssave">Save</button></div></aside></div>`;
+  const order = s.videos.map(v => v.name);
+  const put = body => api(`/api/series/${s.slug}`, { method: "PUT", body });
+  app.querySelectorAll("[data-up],[data-down]").forEach(b => b.onclick = async () => {
+    const k = +(b.dataset.up ?? b.dataset.down), j = b.dataset.up != null ? k - 1 : k + 1; [order[k], order[j]] = [order[j], order[k]];
+    await put({ parts: order }); route(); });
+  $("#ssave").onclick = async () => { await put({ playlist: $("#pl").value, description: $("#pd").value, cover: $("#pc").value }); toast("Saved"); };
+  const ed = $("#editor");
+  ed.innerHTML = `<div class="editor"><textarea></textarea><div class="preview"></div></div>`;
+  const ta = ed.querySelector("textarea"), pv = ed.querySelector(".preview"); ta.value = s.md; pv.innerHTML = md(s.md);
+  let tm = null; ta.oninput = () => { pv.innerHTML = md(ta.value); clearTimeout(tm); tm = setTimeout(() => put({ md: ta.value }), 1200); };
 }
 
 function qHtml(q) {
@@ -245,7 +320,7 @@ async function chat(name) {
   const box = $("#msgs"), inp = $("#chat-in"); if (!box) return;
   const draw = async () => {
     const { messages } = await api(`/api/videos/${name}/chat`);
-    box.innerHTML = messages.length ? messages.map(m => `<div class="m ${m.role}">${m.text ? esc(m.text) : "<i>thinking…</i>"}</div>`).join("")
+    box.innerHTML = messages.length ? messages.map(m => `<div class="m ${m.role}">${m.text ? (m.role === "claude" ? md(m.text) : esc(m.text)) : "<i>thinking…</i>"}</div>`).join("")
       : '<p class="muted small">Ask anything about this video. Claude works in this video only, in its own session.</p>';
     box.scrollTop = box.scrollHeight;
     return messages.some(m => m.role === "claude" && !m.text);

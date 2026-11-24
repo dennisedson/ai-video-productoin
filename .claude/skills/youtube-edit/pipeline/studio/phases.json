@@ -1,148 +1,529 @@
 {
  "phases": [
   {
-   "id": "ideation", "title": "Ideation", "where": "work",
+   "id": "ideation",
+   "title": "Ideation",
+   "where": "work",
    "goal": "One page that says who the video is for, what they get, and what you'll show.",
-   "docs": ["BRIEF.md", "research.md", "references.md"],
+   "docs": [
+    "BRIEF.md",
+    "research.md",
+    "references.md"
+   ],
    "steps": [
-    {"id": "origin", "title": "Start from where the idea came from",
-     "instructions": "A colleague's work: paste their material and links into research.md. A problem: write who has it and what they try today. A feature: add the changelog and docs links. The brief's template already matches the origin you picked."},
-    {"id": "research", "title": "Research", "instructions": "Ask Claude to research the problem or feature (the form below). Keep what's useful in research.md, links in references.md.", "done_file": "research.md"},
-    {"id": "brief", "title": "Write the brief", "instructions": "Fill BRIEF.md: the viewer, the promise (what they can do after), the demo, the links. Ask Claude to draft it from research.md if you like.", "done_file": "BRIEF.md"},
-    {"id": "approve", "title": "Approve the brief", "instructions": "When the brief reads right, approve the phase. The script starts from it."}
+    {
+     "id": "origin",
+     "title": "Start from where the idea came from",
+     "instructions": "A colleague's work: paste their material and links into research.md. A problem: write who has it and what they try today. A feature: add the changelog and docs links. The brief's template already matches the origin you picked."
+    },
+    {
+     "id": "research",
+     "title": "Research",
+     "instructions": "Ask Claude to research the problem or feature (the form below). Keep what's useful in research.md, links in references.md.",
+     "done_file": "research.md"
+    },
+    {
+     "id": "brief",
+     "title": "Write the brief",
+     "instructions": "Fill BRIEF.md: the viewer, the promise (what they can do after), the demo, the links. Ask Claude to draft it from research.md if you like.",
+     "done_file": "BRIEF.md"
+    },
+    {
+     "id": "scope",
+     "title": "One video or several?",
+     "instructions": "Under 6 minutes is the target, 10 the limit. If the brief covers more than that, two audiences, or parts that stand alone, ask for a split: you get a proposal to accept, and the other videos are created for you."
+    },
+    {
+     "id": "approve",
+     "title": "Approve the brief",
+     "instructions": "When the brief reads right, approve the phase. The script starts from it."
+    }
    ],
    "forms": [
-    {"id": "research", "label": "Research this", "fields": [{"id": "focus", "label": "What to look into", "type": "text"}],
-     "prompt": "Research for this video's idea. Read BRIEF.md and research.md first. Focus: {focus}. Use only sources you open (HubSpot docs, changelog, community, the colleague's material). Add findings to research.md (short, with links) and every link to references.md (label, URL, where it would be used, status, checked today). Don't touch other files."},
-    {"id": "draft-brief", "label": "Draft the brief from the research", "fields": [],
-     "prompt": "Draft BRIEF.md from research.md and references.md, keeping the template's sections. One page. Claims must match the sources."},
-    {"id": "freeform", "label": "Something else", "fields": [{"id": "text", "label": "What you need", "type": "textarea"}], "prompt": "{text}"}
+    {
+     "id": "research",
+     "label": "Research this",
+     "fields": [
+      {
+       "id": "focus",
+       "label": "What to look into",
+       "type": "text"
+      }
+     ],
+     "prompt": "Research for this video's idea. Read BRIEF.md and research.md first. Focus: {focus}. Use only sources you open (HubSpot docs, changelog, community, the colleague's material). Add findings to research.md (short, with links) and every link to references.md (label, URL, where it would be used, status, checked today). Don't touch other files."
+    },
+    {
+     "id": "draft-brief",
+     "label": "Draft the brief from the research",
+     "fields": [],
+     "prompt": "Draft BRIEF.md from research.md and references.md, keeping the template's sections. One page. Claims must match the sources."
+    },
+    {
+     "id": "scope",
+     "label": "Is this one video or several?",
+     "fields": [],
+     "prompt": "Read BRIEF.md and research.md. Estimate the finished length (read-aloud lines at 150 words a minute, about 45 s per demo step). If it fits under the target in one video for one audience, say so and why. If not, propose a split with core.py propose-split (each part with a one-line promise, its length, and what it assumes from the part before), and add a 'Length' line to BRIEF.md with the estimate."
+    },
+    {
+     "id": "freeform",
+     "label": "Something else",
+     "fields": [
+      {
+       "id": "text",
+       "label": "What you need",
+       "type": "textarea"
+      }
+     ],
+     "prompt": "{text}"
+    }
    ]
   },
   {
-   "id": "script", "title": "Script and direction", "where": "work",
-   "goal": "A script in your voice: the parts you read on the teleprompter, the demo beats you ad-lib, and everything you'll paste.",
-   "docs": ["SCRIPT.md", "teleprompter.txt", "recording-sheet.md", "references.md"],
-   "steps": [
-    {"id": "draft", "title": "Draft the script", "instructions": "Ask Claude for a draft from the brief (it reads your voice file). Read-aloud lines go in > blockquotes; demo beats start with → demo:; anything you'll paste goes in a ```copy: Label block.", "done_file": "SCRIPT.md"},
-    {"id": "voice", "title": "Make it yours", "instructions": "Edit until it sounds like you. Keep the reads short: the hook, the setup, the transitions, the sign-off. Demos stay beats you talk over."},
-    {"id": "sheets", "title": "Make the teleprompter and recording sheet", "instructions": "The button below turns SCRIPT.md into teleprompter.txt (only the reads) and recording-sheet.md (the outline and every copy item in order). Links in copy blocks go into references.md.", "done_file": "teleprompter.txt"},
-    {"id": "shots", "title": "Direction", "instructions": "Note in the script where results must stay on screen (hold 2 s), where text must be readable (a zoom), and the b-roll you want, with its source."},
-    {"id": "approve", "title": "Approve the script", "instructions": "Approve when you're ready to record."}
+   "id": "script",
+   "title": "Script and direction",
+   "where": "work",
+   "goal": "A script in your voice: the parts you read on the teleprompter, the demo beats you ad-lib, and everything you'll paste. Under 6 minutes (the page shows the estimate).",
+   "docs": [
+    "SCRIPT.md",
+    "teleprompter.txt",
+    "recording-sheet.md",
+    "references.md"
    ],
-   "actions": ["sheets"],
+   "steps": [
+    {
+     "id": "draft",
+     "title": "Draft the script",
+     "instructions": "Ask Claude for a draft from the brief (it reads your voice file). Read-aloud lines go in > blockquotes; demo beats start with → demo:; anything you'll paste goes in a ```copy: Label block.",
+     "done_file": "SCRIPT.md"
+    },
+    {
+     "id": "voice",
+     "title": "Make it yours",
+     "instructions": "Edit until it sounds like you. Keep the reads short: the hook, the setup, the transitions, the sign-off. Demos stay beats you talk over."
+    },
+    {
+     "id": "sheets",
+     "title": "Make the teleprompter and recording sheet",
+     "instructions": "The button below turns SCRIPT.md into teleprompter.txt (only the reads) and recording-sheet.md (the outline and every copy item in order). Links in copy blocks go into references.md.",
+     "done_file": "teleprompter.txt"
+    },
+    {
+     "id": "shots",
+     "title": "Direction",
+     "instructions": "Note in the script where results must stay on screen (hold 2 s), where text must be readable (a zoom), and the b-roll you want, with its source."
+    },
+    {
+     "id": "approve",
+     "title": "Approve the script",
+     "instructions": "Approve when you're ready to record."
+    }
+   ],
+   "actions": [
+    "sheets"
+   ],
    "forms": [
-    {"id": "draft-script", "label": "Draft the script from the brief", "fields": [{"id": "length", "label": "Target length", "type": "text", "placeholder": "about 6 minutes"}],
-     "prompt": "Write SCRIPT.md for this video from BRIEF.md, research.md and references.md, in Dennis's voice (profiles/<profile>/VOICE.md). Target length: {length}. Format: ## sections; read-aloud lines as > blockquotes (only the hook, setup, transitions and sign-off; keep them short); demo beats as lines starting '→ demo:'; everything he will paste (commands, prompts, URLs) in fenced blocks opened with ```copy: <label>. Mark holds ('hold 2 s on the result') and zooms. No claims the sources don't support."},
-    {"id": "tighten", "label": "Tighten the script", "fields": [{"id": "what", "label": "What to change", "type": "text", "placeholder": "shorter hook, less jargon"}],
-     "prompt": "Edit SCRIPT.md: {what}. Keep the format and Dennis's voice. Then say what you changed."},
-    {"id": "freeform", "label": "Something else", "fields": [{"id": "text", "label": "What you need", "type": "textarea"}], "prompt": "{text}"}
+    {
+     "id": "draft-script",
+     "label": "Draft the script from the brief",
+     "fields": [
+      {
+       "id": "length",
+       "label": "Target length",
+       "type": "text",
+       "placeholder": "about 6 minutes"
+      }
+     ],
+     "prompt": "Write SCRIPT.md for this video from BRIEF.md, research.md and references.md, in Dennis's voice (profiles/<profile>/VOICE.md). Target length: {length}. Format: ## sections; read-aloud lines as > blockquotes (only the hook, setup, transitions and sign-off; keep them short); demo beats as lines starting '→ demo:'; everything he will paste (commands, prompts, URLs) in fenced blocks opened with ```copy: <label>. Mark holds ('hold 2 s on the result') and zooms. No claims the sources don't support."
+    },
+    {
+     "id": "tighten",
+     "label": "Tighten the script",
+     "fields": [
+      {
+       "id": "what",
+       "label": "What to change",
+       "type": "text",
+       "placeholder": "shorter hook, less jargon"
+      }
+     ],
+     "prompt": "Edit SCRIPT.md: {what}. Keep the format and Dennis's voice. Then say what you changed."
+    },
+    {
+     "id": "freeform",
+     "label": "Something else",
+     "fields": [
+      {
+       "id": "text",
+       "label": "What you need",
+       "type": "textarea"
+      }
+     ],
+     "prompt": "{text}"
+    }
    ]
   },
   {
-   "id": "recording", "title": "Recording", "where": "work",
+   "id": "recording",
+   "title": "Recording",
+   "where": "work",
    "goal": "Camera with the mic, and the screen recording, into raw/.",
-   "docs": ["teleprompter.txt", "recording-sheet.md"],
-   "steps": [
-    {"id": "setup", "title": "Before you record", "instructions": "Teleprompter loaded with teleprompter.txt; recording-sheet.md open for copy and paste; a test account, not production; notifications off; the browser zoom you want readable."},
-    {"id": "habits", "title": "While you record", "instructions": "Hold every result on screen for 2 s before moving on. For a retake, pause and restart the whole sentence (say 'scratch that' if you like; the cut finds it). Say the links out loud when you mention them, so the description can point to them."},
-    {"id": "files", "title": "Put the files in raw/", "instructions": "Drop the camera file and the screen file into this video's raw/ folder (the Finder button below), or into videos/_inbox/<this video's name>/. Enhanced audio: drop the WAV in too.", "done_file": "raw"},
-    {"id": "start", "title": "Start the cut", "instructions": "When the files are in, start the cut. A notification and this page tell you when Checkpoint A is ready."}
+   "docs": [
+    "teleprompter.txt",
+    "recording-sheet.md"
    ],
-   "actions": ["finder-raw", "start-cut", "start-cut-fast"],
+   "steps": [
+    {
+     "id": "setup",
+     "title": "Before you record",
+     "instructions": "Teleprompter loaded with teleprompter.txt; recording-sheet.md open for copy and paste; a test account, not production; notifications off; the browser zoom you want readable."
+    },
+    {
+     "id": "habits",
+     "title": "While you record",
+     "instructions": "Hold every result on screen for 2 s before moving on. For a retake, pause and restart the whole sentence (say 'scratch that' if you like; the cut finds it). Say the links out loud when you mention them, so the description can point to them."
+    },
+    {
+     "id": "files",
+     "title": "Put the files in raw/",
+     "instructions": "Drop the camera file and the screen file into this video's raw/ folder (the Finder button below), or into videos/_inbox/<this video's name>/. Enhanced audio: drop the WAV in too.",
+     "done_file": "raw"
+    },
+    {
+     "id": "start",
+     "title": "Start the cut",
+     "instructions": "When the files are in, start the cut. A notification and this page tell you when Checkpoint A is ready."
+    }
+   ],
+   "actions": [
+    "finder-raw",
+    "start-cut",
+    "start-cut-fast"
+   ],
    "forms": [
-    {"id": "freeform", "label": "Something else", "fields": [{"id": "text", "label": "What you need", "type": "textarea"}], "prompt": "{text}"}
+    {
+     "id": "freeform",
+     "label": "Something else",
+     "fields": [
+      {
+       "id": "text",
+       "label": "What you need",
+       "type": "textarea"
+      }
+     ],
+     "prompt": "{text}"
+    }
    ]
   },
   {
-   "id": "cut", "title": "Cut (Checkpoint A)", "where": "work", "review": "A",
+   "id": "cut",
+   "title": "Cut (Checkpoint A)",
+   "where": "work",
+   "review": "A",
    "goal": "The paper cut: what's kept, what's dropped, the camera grade.",
-   "docs": ["PAPER-CUT.md", "notes.txt"],
-   "steps": [
-    {"id": "watch", "title": "Watch the cut", "instructions": "Open the review. Press C to comment at the moment you're watching; draw a box on the frame if it's about something on screen."},
-    {"id": "notes", "title": "Send notes or approve", "instructions": "Send notes to have Claude change the cut, or approve (with a grade) to start the storyboard."}
+   "docs": [
+    "PAPER-CUT.md",
+    "notes.txt"
    ],
-   "actions": ["approve-a", "rerun-cut"],
+   "steps": [
+    {
+     "id": "watch",
+     "title": "Watch the cut",
+     "instructions": "Open the review. Press C to comment at the moment you're watching; draw a box on the frame if it's about something on screen."
+    },
+    {
+     "id": "notes",
+     "title": "Send notes or approve",
+     "instructions": "Send notes to have Claude change the cut, or approve (with a grade) to start the storyboard."
+    }
+   ],
+   "actions": [
+    "approve-a",
+    "rerun-cut"
+   ],
    "forms": [
-    {"id": "freeform", "label": "Something else", "fields": [{"id": "text", "label": "What you need", "type": "textarea"}], "prompt": "{text}"}
+    {
+     "id": "freeform",
+     "label": "Something else",
+     "fields": [
+      {
+       "id": "text",
+       "label": "What you need",
+       "type": "textarea"
+      }
+     ],
+     "prompt": "{text}"
+    }
    ]
   },
   {
-   "id": "storyboard", "title": "Storyboard (Checkpoint B)", "where": "work", "review": "B",
+   "id": "storyboard",
+   "title": "Storyboard (Checkpoint B)",
+   "where": "work",
+   "review": "B",
    "goal": "Layout, overlays, zooms, the sting and the end card, in a preview you can watch.",
-   "docs": ["CHECKPOINT-B.md", "notes.txt"],
-   "steps": [
-    {"id": "watch", "title": "Watch the preview", "instructions": "Open the review. Comment on moments and boxes; drag a still into a comment to point at it."},
-    {"id": "notes", "title": "Send notes or approve", "instructions": "Send notes for another round, or approve to hand the render off and draft the YouTube package."}
+   "docs": [
+    "CHECKPOINT-B.md",
+    "notes.txt"
    ],
-   "actions": ["approve-b", "rerun-storyboard"],
+   "steps": [
+    {
+     "id": "watch",
+     "title": "Watch the preview",
+     "instructions": "Open the review. Comment on moments and boxes; drag a still into a comment to point at it."
+    },
+    {
+     "id": "notes",
+     "title": "Send notes or approve",
+     "instructions": "Send notes for another round, or approve to hand the render off and draft the YouTube package."
+    }
+   ],
+   "actions": [
+    "approve-b",
+    "rerun-storyboard"
+   ],
    "forms": [
-    {"id": "freeform", "label": "Something else", "fields": [{"id": "text", "label": "What you need", "type": "textarea"}], "prompt": "{text}"}
+    {
+     "id": "freeform",
+     "label": "Something else",
+     "fields": [
+      {
+       "id": "text",
+       "label": "What you need",
+       "type": "textarea"
+      }
+     ],
+     "prompt": "{text}"
+    }
    ]
   },
   {
-   "id": "render", "title": "Render and music (home Mac)", "where": "home",
+   "id": "render",
+   "title": "Render and music (home Mac)",
+   "where": "home",
    "goal": "The 4K render, with music picked on the home Mac, back here and imported.",
    "docs": [],
    "steps": [
-    {"id": "carry", "title": "Carry the bundle over", "instructions": "Drag ~/Desktop/<name>-render.zip through Screen Sharing into the home Mac's videos/_render-inbox/."},
-    {"id": "music", "title": "Pick the music (home Mac)", "instructions": "The home Mac's studio shows five samples while it renders; pick one there (yt music <name> N)."},
-    {"id": "back", "title": "Bring the video back", "instructions": "Drag the finished video (and chapters.txt) from the home Mac's _render-inbox/<name>/out/ to this Mac, then import it below."}
+    {
+     "id": "carry",
+     "title": "Carry the bundle over",
+     "instructions": "Drag ~/Desktop/<name>-render.zip through Screen Sharing into the home Mac's videos/_render-inbox/."
+    },
+    {
+     "id": "music",
+     "title": "Pick the music (home Mac)",
+     "instructions": "The home Mac's studio shows five samples while it renders; pick one there (yt music <name> N)."
+    },
+    {
+     "id": "back",
+     "title": "Bring the video back",
+     "instructions": "Drag the finished video (and chapters.txt) from the home Mac's _render-inbox/<name>/out/ to this Mac, then import it below."
+    }
    ],
-   "actions": ["import"],
+   "actions": [
+    "import"
+   ],
    "forms": [
-    {"id": "freeform", "label": "Something else", "fields": [{"id": "text", "label": "What you need", "type": "textarea"}], "prompt": "{text}"}
+    {
+     "id": "freeform",
+     "label": "Something else",
+     "fields": [
+      {
+       "id": "text",
+       "label": "What you need",
+       "type": "textarea"
+      }
+     ],
+     "prompt": "{text}"
+    }
    ]
   },
   {
-   "id": "packaging", "title": "Packaging", "where": "work", "review": "package",
+   "id": "packaging",
+   "title": "Packaging",
+   "where": "work",
+   "review": "package",
    "goal": "Title, description, thumbnail, links, captions, cards: ready to upload.",
-   "docs": ["youtube/YOUTUBE.md", "references.md"],
-   "steps": [
-    {"id": "draft", "title": "The YouTube draft", "instructions": "Drafted beside the render. Rebuild it after any change (button below)."},
-    {"id": "links", "title": "Links", "instructions": "Every link in references.md is checked and shortened on hsdev.fyi (Shorten). Scheduled links (a blog post not live yet) are listed to check before upload."},
-    {"id": "thumbnail", "title": "Thumbnail", "instructions": "Pick the face (your headshot, a guest's, a frame), then the option you like in the review."},
-    {"id": "pick", "title": "Pick the title and thumbnail", "instructions": "In the review: one title, one thumbnail. The rest are dropped."}
+   "docs": [
+    "youtube/YOUTUBE.md",
+    "references.md"
    ],
-   "actions": ["youtube", "shorten", "thumb"],
+   "steps": [
+    {
+     "id": "draft",
+     "title": "The YouTube draft",
+     "instructions": "Drafted beside the render. Rebuild it after any change (button below)."
+    },
+    {
+     "id": "links",
+     "title": "Links",
+     "instructions": "Every link in references.md is checked and shortened on hsdev.fyi (Shorten). Scheduled links (a blog post not live yet) are listed to check before upload."
+    },
+    {
+     "id": "thumbnail",
+     "title": "Thumbnail",
+     "instructions": "Pick the face (your headshot, a guest's, a frame), then the option you like in the review."
+    },
+    {
+     "id": "pick",
+     "title": "Pick the title and thumbnail",
+     "instructions": "In the review: one title, one thumbnail. The rest are dropped."
+    }
+   ],
+   "actions": [
+    "youtube",
+    "shorten",
+    "thumb"
+   ],
    "forms": [
-    {"id": "description", "label": "Rewrite the description opening", "fields": [{"id": "how", "label": "How", "type": "text", "placeholder": "more of a hook"}],
-     "prompt": "Rewrite youtube/metadata.json description.opening: {how}. Keep the search phrase in the first sentence; under about 157 characters before the fold. Then run yt youtube <name>."},
-    {"id": "thumb-words", "label": "New thumbnail headlines", "fields": [{"id": "idea", "label": "Direction", "type": "text"}],
-     "prompt": "Write three new thumbnail options in youtube/metadata.json (headline with | for the line break, 2 to 5 words, the key word, eyebrow, face as before): {idea}. Then run yt thumb <name>."},
-    {"id": "freeform", "label": "Something else", "fields": [{"id": "text", "label": "What you need", "type": "textarea"}], "prompt": "{text}"}
+    {
+     "id": "description",
+     "label": "Rewrite the description opening",
+     "fields": [
+      {
+       "id": "how",
+       "label": "How",
+       "type": "text",
+       "placeholder": "more of a hook"
+      }
+     ],
+     "prompt": "Rewrite youtube/metadata.json description.opening: {how}. Keep the search phrase in the first sentence; under about 157 characters before the fold. Then run yt youtube <name>."
+    },
+    {
+     "id": "thumb-words",
+     "label": "New thumbnail headlines",
+     "fields": [
+      {
+       "id": "idea",
+       "label": "Direction",
+       "type": "text"
+      }
+     ],
+     "prompt": "Write three new thumbnail options in youtube/metadata.json (headline with | for the line break, 2 to 5 words, the key word, eyebrow, face as before): {idea}. Then run yt thumb <name>."
+    },
+    {
+     "id": "freeform",
+     "label": "Something else",
+     "fields": [
+      {
+       "id": "text",
+       "label": "What you need",
+       "type": "textarea"
+      }
+     ],
+     "prompt": "{text}"
+    }
    ]
   },
   {
-   "id": "publish", "title": "Publish", "where": "work",
+   "id": "publish",
+   "title": "Publish",
+   "where": "work",
    "goal": "Uploaded, scheduled or live, recorded in the catalog, archived in Drive.",
-   "docs": ["youtube/YOUTUBE.md"],
-   "steps": [
-    {"id": "upload", "title": "Upload", "instructions": "Video, title, description, captions.srt, thumbnail, cards, end screen, the playlist. Open any 'scheduled' link first."},
-    {"id": "record", "title": "Record it", "instructions": "Paste the YouTube link (and the go-live date if scheduled) in the form below."},
-    {"id": "drive", "title": "Archive to Drive", "instructions": "Copy the video and its files to the team Drive (button below)."}
+   "docs": [
+    "youtube/YOUTUBE.md"
    ],
-   "actions": ["drive"],
+   "steps": [
+    {
+     "id": "upload",
+     "title": "Upload",
+     "instructions": "Video, title, description, captions.srt, thumbnail, cards, end screen, the playlist. Open any 'scheduled' link first."
+    },
+    {
+     "id": "record",
+     "title": "Record it",
+     "instructions": "Paste the YouTube link (and the go-live date if scheduled) in the form below."
+    },
+    {
+     "id": "drive",
+     "title": "Archive to Drive",
+     "instructions": "Copy the video and its files to the team Drive (button below)."
+    }
+   ],
+   "actions": [
+    "drive"
+   ],
    "forms": [
-    {"id": "published", "label": "Record the upload", "fields": [{"id": "url", "label": "YouTube link", "type": "text"}, {"id": "scheduled", "label": "Goes public on (YYYY-MM-DD, empty if live now)", "type": "text"}], "action": "published"},
-    {"id": "freeform", "label": "Something else", "fields": [{"id": "text", "label": "What you need", "type": "textarea"}], "prompt": "{text}"}
+    {
+     "id": "published",
+     "label": "Record the upload",
+     "fields": [
+      {
+       "id": "url",
+       "label": "YouTube link",
+       "type": "text"
+      },
+      {
+       "id": "scheduled",
+       "label": "Goes public on (YYYY-MM-DD, empty if live now)",
+       "type": "text"
+      }
+     ],
+     "action": "published"
+    },
+    {
+     "id": "freeform",
+     "label": "Something else",
+     "fields": [
+      {
+       "id": "text",
+       "label": "What you need",
+       "type": "textarea"
+      }
+     ],
+     "prompt": "{text}"
+    }
    ]
   },
   {
-   "id": "results", "title": "Results", "where": "work",
+   "id": "results",
+   "title": "Results",
+   "where": "work",
    "goal": "How it did, and what the next script should learn.",
-   "docs": ["results.md"],
+   "docs": [
+    "results.md"
+   ],
    "steps": [
-    {"id": "metrics", "title": "Metrics after two weeks", "instructions": "Views, thumbnail click-through, average view duration, retention around the sting, link clicks by placement. Pull them (form) or type them into results.md."},
-    {"id": "voice", "title": "Teach the voice file", "instructions": "Ask Claude to compare SCRIPT.md with what you actually said and propose changes to your voice file."},
-    {"id": "close", "title": "Close the video", "instructions": "Approve the phase when you've read the results."}
+    {
+     "id": "metrics",
+     "title": "Metrics after two weeks",
+     "instructions": "Views, thumbnail click-through, average view duration, retention around the sting, link clicks by placement. Pull them (form) or type them into results.md."
+    },
+    {
+     "id": "voice",
+     "title": "Teach the voice file",
+     "instructions": "Ask Claude to compare SCRIPT.md with what you actually said and propose changes to your voice file."
+    },
+    {
+     "id": "close",
+     "title": "Close the video",
+     "instructions": "Approve the phase when you've read the results."
+    }
    ],
    "forms": [
-    {"id": "metrics", "label": "Pull the metrics", "fields": [],
-     "prompt": "Pull this video's YouTube metrics (the link is in catalog/VIDEOS.md) with the Supermetrics or YouTube connector if one is available: views, impressions click-through rate, average view duration, retention, traffic sources; and the hsdev.fyi link clicks from Bitly for this video's links (youtube/links.tsv). Write them to results.md with the date. If no connector works, say so and leave results.md for Dennis to fill."},
-    {"id": "voice-learn", "label": "Learn from what I said", "fields": [],
-     "prompt": "Compare SCRIPT.md with transcript.json (what Dennis actually said). List the differences that show his voice (openers, phrasing he changes, things he never says) and propose edits to profiles/<profile>/VOICE.md as a question with yt ask, quoting each edit. Don't edit VOICE.md yourself."},
-    {"id": "freeform", "label": "Something else", "fields": [{"id": "text", "label": "What you need", "type": "textarea"}], "prompt": "{text}"}
+    {
+     "id": "metrics",
+     "label": "Pull the metrics",
+     "fields": [],
+     "prompt": "Pull this video's YouTube metrics (the link is in catalog/VIDEOS.md) with the Supermetrics or YouTube connector if one is available: views, impressions click-through rate, average view duration, retention, traffic sources; and the hsdev.fyi link clicks from Bitly for this video's links (youtube/links.tsv). Write them to results.md with the date. If no connector works, say so and leave results.md for Dennis to fill."
+    },
+    {
+     "id": "voice-learn",
+     "label": "Learn from what I said",
+     "fields": [],
+     "prompt": "Compare SCRIPT.md with transcript.json (what Dennis actually said). List the differences that show his voice (openers, phrasing he changes, things he never says) and propose edits to profiles/<profile>/VOICE.md as a question with yt ask, quoting each edit. Don't edit VOICE.md yourself."
+    },
+    {
+     "id": "freeform",
+     "label": "Something else",
+     "fields": [
+      {
+       "id": "text",
+       "label": "What you need",
+       "type": "textarea"
+      }
+     ],
+     "prompt": "{text}"
+    }
    ]
   }
  ]

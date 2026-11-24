@@ -97,3 +97,7 @@ dialog::backdrop { background: rgba(4,39,41,.45); }
 .row { display: flex; gap: 8px; align-items: center; }
 .row > * { flex: 1; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--teal); color: #fff; padding: 10px 16px; border-radius: 10px; z-index: 50; }
+.pill.len.okay { border-color: var(--ok); color: var(--ok); } .pill.len.warn { border-color: var(--warn); color: var(--warn); } .pill.len.over { border-color: #B91C1C; color: #B91C1C; font-weight: 600; }
+a.pill { text-decoration: none; }
+.row > .pill, .row > .btn.small { flex: 0 0 auto; }
+.chat .m.claude { white-space: normal; } .chat .m.claude p, .chat .m.claude ul, .chat .m.claude ol { margin: 4px 0; }

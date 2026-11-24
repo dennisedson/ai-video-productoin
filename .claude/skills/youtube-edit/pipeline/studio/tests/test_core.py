@@ -94,6 +94,43 @@ class CoreTest(unittest.TestCase):
         self.assertEqual(self.core.current_phase("pub"), "publish")
         self.assertEqual(self.core.list_videos()[0]["waiting_on"], "its go-live date")
 
+    def test_series_is_a_list(self):
+        self.core.scaffold("m", "problem", series="HubSpot Is Going Headless")
+        self.assertEqual(self.core.load_video("m")["series"], ["HubSpot Is Going Headless"])
+        w = self.core.video_dir("m"); v = json.load(open(os.path.join(w, "video.json"))); v["series"] = "Old string"
+        json.dump(v, open(os.path.join(w, "video.json"), "w"))
+        self.assertEqual(self.core.load_video("m")["series"], ["Old string"])
+
+    def test_set_series_makes_pages_and_orders(self):
+        self.core.scaffold("a", "problem"); self.core.scaffold("b", "problem")
+        self.core.set_series("a", ["Headless", "Auth"]); self.core.set_series("b", ["Auth"])
+        self.assertEqual(self.core.get_series("auth")["parts"], ["a", "b"])
+        self.assertEqual(sorted(s["title"] for s in self.core.all_series()), ["Auth", "Headless"])
+        self.assertTrue(os.path.isfile(os.path.join(self.root, "catalog", "series", "auth.md")))
+
+    def test_split_proposal_and_apply(self):
+        self.core.scaffold("auth", "problem", title="Authenticating", series="Headless")
+        open(os.path.join(self.core.video_dir("auth"), "research.md"), "w").write("routes: tokens, OAuth\n")
+        prop = self.core.propose_split("auth", "Agent auth", [
+            {"name": "auth", "title": "Why auth", "promise": "choose a route", "minutes": "5"},
+            {"name": "auth-devs", "title": "Auth for builders", "promise": "tokens and scopes", "minutes": "6"}])
+        q = self.core.questions("auth")[-1]
+        self.assertEqual((q["action"], q["options"][0]), ("split", "Make it a series"))
+        r = self.core.apply_split("auth")
+        self.assertEqual(r["made"], ["auth-devs"])
+        d = self.core.load_video("auth-devs")
+        self.assertEqual((d["part"], d["related"]), (2, ["auth"]))
+        self.assertIn("Agent auth", d["series"]); self.assertIn("Headless", d["series"])
+        self.assertIn("Part 2 of Agent auth", open(os.path.join(self.core.video_dir("auth-devs"), "BRIEF.md")).read())
+        self.assertIn("tokens, OAuth", open(os.path.join(self.core.video_dir("auth-devs"), "research.md")).read())
+        self.assertEqual(self.core.get_series("agent-auth")["parts"], ["auth", "auth-devs"])
+        self.assertEqual(self.core.split_proposal("auth")["status"], "accepted")
+
+    def test_length_estimate(self):
+        script = "> " + " ".join(["word"] * 150) + "\n→ demo: log in\n→ demo: run it (~30s)\n→ demo: long one (~2m)\n"
+        self.assertEqual(self.core.estimate_seconds(script), 60 + 45 + 30 + 120)
+        self.assertEqual(self.core.profile_length("hubspot"), (6.0, 10.0))
+
     def test_job_runs_and_records(self):
         self.core.scaffold("j", "problem")
         jid = self.core.start_job("j", "test", ["/bin/echo", "hello"])

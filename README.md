@@ -37,6 +37,11 @@ yt start agents-3          # recordings are in raw/: start the cut (the studio's
   drag on the frame to box what you mean, drag a still onto a note; "Send notes" hands them to Claude. Approve and the
   title and thumbnail picks are buttons.
 
+- **Series:** a video can be in several series or playlists ("Series…" on its page). Each series has a page with the
+  videos in order, their phases and lengths, the playlist link, description and cover.
+- **Length:** under 6 minutes is the target, 10 the limit. Scripts and cuts show their length; when an idea is too
+  big, Claude proposes a split ("Make this a series?"), and accepting it creates the other videos.
+
 Code: `.claude/skills/youtube-edit/pipeline/studio/` (Python standard library and plain HTML/JS; no npm). Tests:
 `cd .claude/skills/youtube-edit/pipeline/studio/tests && python3 -m unittest discover`. Design:
 `docs/superpowers/specs/2026-11-24-video-studio-design.md`. Load or reload the agent on its own with

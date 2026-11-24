@@ -8,6 +8,7 @@ video.json; it is read from state.json alone.
 
   python3 core.py new NAME --origin colleague|problem|feature|finished [--title T] [--series S] [--presenter P]
   python3 core.py ask NAME "question" [--options "a|b"]
+  python3 core.py propose-split NAME --series "Title" --part "name::title::promise::minutes" ... [--why W]
 """
 import datetime as dt, json, os, re, subprocess, sys, threading, time, uuid
 
@@ -74,6 +75,8 @@ def load_video(name):
         v = {"name": name, "title": "", "origin": "finished" if src.get("kind") == "metadata-only" else "",
              "profile": story.get("profile") or src.get("profile") or "", "phase": "", "phases": {}, "legacy": True}
     v.setdefault("name", name); v.setdefault("phases", {})
+    sr = v.get("series") or []
+    v["series"] = [sr] if isinstance(sr, str) else list(sr)
     meta = _read(os.path.join(w, "youtube", "metadata.json"), {}) or {}
     if not v.get("title") and meta.get("titles"):
         t = meta["titles"][0]
@@ -159,7 +162,7 @@ def list_videos():
         oq = sum(1 for q in questions(n) if not q.get("answer"))
         ph = current_phase(n, v, st)
         rows.append({"name": n, "title": v.get("title") or n, "phase": ph, "origin": v.get("origin", ""),
-                     "series": v.get("series", ""), "stage": (st or {}).get("stage", ""), "open_questions": oq,
+                     "series": v.get("series", []), "minutes": estimate_minutes(n), "stage": (st or {}).get("stage", ""), "open_questions": oq,
                      "waiting_on": waiting_on(v, st, oq), "legacy": bool(v.get("legacy")),
                      "updated": max((os.path.getmtime(os.path.join(videos_dir(), n, f)) for f in ("video.json", "state.json")
                                      if os.path.exists(os.path.join(videos_dir(), n, f))), default=0)})
@@ -182,12 +185,182 @@ def scaffold(name, origin, title="", series="", profile="hubspot", presenter="")
              "results.md": "results.md"}
     for out, src in files.items():
         open(os.path.join(w, out), "w").write(fill(open(os.path.join(tpl, src)).read()))
-    notes = ["Profile: %s" % profile] + (["Series: %s" % series] if series else []) + (["Presenter: %s" % presenter] if presenter else [])
+    series = [series] if isinstance(series, str) and series else list(series or [])
+    notes = ["Profile: %s" % profile] + (["Series: %s" % ", ".join(series)] if series else []) + (["Presenter: %s" % presenter] if presenter else [])
     open(os.path.join(w, "notes.txt"), "w").write("\n".join(notes) + "\n")
     save_video(name, {"name": name, "title": title, "origin": origin, "series": series, "profile": profile,
                       "presenter": presenter, "phase": "packaging" if origin == "finished" else "ideation",
                       "phases": {}, "created": now()})
     return w
+
+
+# ---- length ---------------------------------------------------------------------------------------------------------
+WPM = 150                                                  # Dennis's pace, from his transcripts (agentcli 1316 words in 6:26)
+DEMO_S = 45
+
+
+def profile_length(profile):
+    y = _read(os.path.join(SK, "profiles", profile or "hubspot", "youtube.json"), {}) or {}
+    L = y.get("length") or {}
+    return float(L.get("target_minutes", 6)), float(L.get("max_minutes", 10))
+
+
+def estimate_seconds(script):
+    """Spoken length of SCRIPT.md: read-aloud words at WPM, each demo beat DEMO_S or its own '(~30s)' / '(~2m)'."""
+    words, secs = 0, 0.0
+    for line in script.splitlines():
+        t = line.strip()
+        if t.startswith(">"):
+            words += len(t[1:].split())
+        m = re.match(r"^(?:→|->)\s*demo:(.*)$", t, re.I)
+        if m:
+            d = re.search(r"\(~\s*(\d+(?:\.\d+)?)\s*(s|sec|m|min)\w*\)", m.group(1))
+            secs += (float(d.group(1)) * (60 if d.group(2).startswith("m") else 1)) if d else DEMO_S
+    return round(words / WPM * 60 + secs)
+
+
+def estimate_minutes(name):
+    """The best length we know: the cut (flat-cut duration) once there is one, else the script's estimate; None if neither."""
+    w = video_dir(name)
+    cm = _read(os.path.join(w, "cut-map.json"), None)
+    if cm and cm.get("flat_duration"):
+        return round(float(cm["flat_duration"]) / 60, 1)
+    p = os.path.join(w, "SCRIPT.md")
+    if os.path.isfile(p):
+        text = open(p).read()
+        reads = sum(len(l.strip()[1:].split()) for l in text.splitlines() if l.strip().startswith(">"))
+        if reads < 20:                                     # still the template: no estimate yet
+            return None
+        return round(estimate_seconds(text) / 60, 1)
+    return None
+
+
+# ---- series ---------------------------------------------------------------------------------------------------------
+def series_dir():
+    return os.path.join(ROOT, "catalog", "series")
+
+
+def all_series():
+    d = series_dir(); out = []
+    if os.path.isdir(d):
+        for f in sorted(os.listdir(d)):
+            if f.endswith(".json"):
+                s = _read(os.path.join(d, f), None)
+                if s:
+                    out.append(s)
+    known = {s["title"] for s in out}
+    for n in (os.listdir(videos_dir()) if os.path.isdir(videos_dir()) else []):   # series named on a video but without a page yet
+        if n.startswith((".", "_")) or not _NAME.match(n) or not os.path.isdir(os.path.join(videos_dir(), n)):
+            continue
+        for t in load_video(n).get("series", []):
+            if t and t not in known:
+                known.add(t); out.append({"slug": slug(t), "title": t, "parts": [], "page": False})
+    return out
+
+
+def get_series(sslug):
+    s = _read(os.path.join(series_dir(), slug(sslug) + ".json"), None)
+    if s is None:
+        s = next((x for x in all_series() if x["slug"] == slug(sslug)), None)
+        if s is None:
+            raise KeyError(sslug)
+    members = [n for n in (os.listdir(videos_dir()) if os.path.isdir(videos_dir()) else [])
+               if not n.startswith((".", "_")) and _NAME.match(n) and os.path.isdir(os.path.join(videos_dir(), n))
+               and s["title"] in load_video(n).get("series", [])]
+    order = [p for p in s.get("parts", []) if p in members] + sorted(m for m in members if m not in s.get("parts", []))
+    s["parts"] = order
+    return s
+
+
+def save_series(data):
+    data = dict(data); data["slug"] = slug(data.get("slug") or data["title"]); data.pop("page", None)
+    data.setdefault("parts", []); data.setdefault("playlist", ""); data.setdefault("description", ""); data.setdefault("cover", "")
+    _write(os.path.join(series_dir(), data["slug"] + ".json"), data)
+    md = os.path.join(series_dir(), data["slug"] + ".md")
+    if not os.path.exists(md):
+        open(md, "w").write("# %s\n\nWhat the series is for, who it's for, and the order to watch it in.\n" % data["title"])
+    return data
+
+
+def set_series(name, titles):
+    v = load_video(name); v["series"] = [t for t in dict.fromkeys(t.strip() for t in titles) if t]
+    save_video(name, v)
+    for t in v["series"]:                                   # every series it joins gets a page, the video added to its order
+        try:
+            s = _read(os.path.join(series_dir(), slug(t) + ".json"), None) or {"title": t, "parts": []}
+        except ValueError:
+            continue
+        if name not in s.get("parts", []):
+            s.setdefault("parts", []).append(name)
+        save_series(s)
+    return v
+
+
+# ---- split: one idea into a series of videos ------------------------------------------------------------------------
+def _split_path(name):
+    return os.path.join(video_dir(name), "studio", "split.json")
+
+
+def propose_split(name, series_title, parts, why=""):
+    """parts: [{"name", "title", "promise", "minutes"}]; the first is this video. Writes the proposal and asks Dennis."""
+    if not parts or parts[0].get("name") != name:
+        parts = [{"name": name, "title": load_video(name).get("title") or name, "promise": "", "minutes": ""}] + [p for p in parts if p.get("name") != name]
+    for p in parts:
+        p["name"] = slug(p["name"])
+        video_dir(p["name"])
+    prop = {"series": series_title, "parts": parts, "why": why, "status": "proposed", "proposed": now()}
+    q = ask(name, "Make this a series? %s: %s" % (series_title, "; ".join("%d. %s" % (i + 1, p.get("title") or p["name"]) for i, p in enumerate(parts))),
+            ["Make it a series", "Keep one video"], frm="claude")
+    q["action"] = "split"
+    with _lock:
+        qs = questions(name)
+        for x in qs:
+            if x["id"] == q["id"]:
+                x["action"] = "split"
+        _write(_qpath(name), qs)
+    prop["question"] = q["id"]
+    _write(_split_path(name), prop)
+    return prop
+
+
+def split_proposal(name):
+    return _read(_split_path(name), None)
+
+
+def apply_split(name, parts=None, series_title=None):
+    """Make the video part 1 of a series and create the other parts as studio projects (origin and profile copied)."""
+    prop = split_proposal(name) or {}
+    parts = parts or prop.get("parts") or []
+    title = series_title or prop.get("series")
+    if not title or not parts:
+        raise ValueError("no split proposal")
+    v = load_video(name)
+    brief = open(os.path.join(video_dir(name), "BRIEF.md")).read() if os.path.isfile(os.path.join(video_dir(name), "BRIEF.md")) else ""
+    made = []
+    for i, p in enumerate(parts):
+        n = slug(p["name"])
+        if n != name and not os.path.exists(video_dir(n)):
+            scaffold(n, v.get("origin") or "problem", p.get("title", ""), v.get("series", []), v.get("profile") or "hubspot", v.get("presenter", ""))
+            w = video_dir(n)
+            for f in ("research.md", "references.md"):          # the research and links are shared; each part gets a copy
+                src = os.path.join(video_dir(name), f)
+                if os.path.isfile(src):
+                    open(os.path.join(w, f), "w").write(open(src).read())
+            open(os.path.join(w, "BRIEF.md"), "a").write(
+                "\n\n## Part %d of %s\n%s\n\nTarget length: %s min. From the original brief (videos/%s/BRIEF.md):\n\n%s\n"
+                % (i + 1, title, p.get("promise", ""), p.get("minutes") or "under 6", name, "\n".join("> " + l for l in brief.splitlines())))
+            made.append(n)
+        nv = load_video(n); nv["part"] = i + 1; nv["related"] = [slug(x["name"]) for x in parts if slug(x["name"]) != n]
+        if title not in nv.get("series", []):
+            nv["series"] = nv.get("series", []) + [title]
+        save_video(n, nv)
+    s = _read(os.path.join(series_dir(), slug(title) + ".json"), None) or {"title": title, "parts": []}
+    order = [slug(p["name"]) for p in parts]
+    s["parts"] = order + [x for x in s.get("parts", []) if x not in order]
+    save_series(s)
+    if prop:
+        prop["status"] = "accepted"; prop["accepted"] = now(); _write(_split_path(name), prop)
+    return {"series": slug(title), "made": made, "parts": order}
 
 
 # ---- questions -----------------------------------------------------------------------------------------------------
@@ -308,6 +481,9 @@ def main(argv):
     n.add_argument("--title", default=""); n.add_argument("--series", default=""); n.add_argument("--presenter", default="")
     n.add_argument("--profile", default="hubspot")
     q = sub.add_parser("ask"); q.add_argument("name"); q.add_argument("text"); q.add_argument("--options", default="")
+    sp = sub.add_parser("propose-split"); sp.add_argument("name"); sp.add_argument("--series", required=True)
+    sp.add_argument("--part", action="append", default=[], help="name::title::promise::minutes (this video first)")
+    sp.add_argument("--why", default="")
     a = ap.parse_args(argv)
     if a.cmd == "new":
         name = slug(a.name)
@@ -316,6 +492,13 @@ def main(argv):
         except (FileExistsError, ValueError) as e:
             sys.exit(str(e))
         print("made %s (%s, phase %s)" % (os.path.relpath(w, ROOT), a.origin, load_video(name)["phase"]))
+    elif a.cmd == "propose-split":
+        parts = []
+        for x in a.part:
+            bits = (x.split("::") + ["", "", "", ""])[:4]
+            parts.append({"name": bits[0], "title": bits[1], "promise": bits[2], "minutes": bits[3]})
+        p = propose_split(a.name, a.series, parts, a.why)
+        print("proposed %d videos in %s; Dennis answers in the studio" % (len(p["parts"]), a.series))
     elif a.cmd == "ask":
         q = ask(a.name, a.text, [o for o in a.options.split("|") if o] if a.options else None)
         print("asked %s: %s" % (q["id"], q["text"]))

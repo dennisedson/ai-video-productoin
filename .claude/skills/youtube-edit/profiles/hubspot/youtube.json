@@ -39,5 +39,10 @@
    "hubspot-headless": "headless"
   },
   "note": "yt drive NAME copies the finished video, thumbnails, captions and YOUTUBE.md to <root>/<year>/<month>/<series>/ (Drive for desktop). DRIVE_ROOT in pipeline/config.sh overrides the path on a Mac whose Drive sits elsewhere."
+ },
+ "length": {
+  "target_minutes": 6,
+  "max_minutes": 10,
+  "note": "The studio estimates every script (150 words a minute read aloud, 45 s per demo beat) and checks the cut; over the target it suggests a split."
  }
 }

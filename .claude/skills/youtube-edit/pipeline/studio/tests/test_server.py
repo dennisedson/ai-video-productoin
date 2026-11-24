@@ -133,6 +133,21 @@ class ServerTest(unittest.TestCase):
         self.assertEqual([m["role"] for m in chat["messages"]], ["dennis", "claude", "dennis", "claude"])
         self.assertIn("stand-in ran", chat["messages"][1]["text"])
 
+    def test_series_api_and_split_by_answer(self):
+        st, _ = self.call("POST", "/api/videos/v1/series", {"titles": ["Headless", "Auth"]})
+        self.assertEqual(st, 200)
+        st, body = self.call("GET", "/api/series")
+        self.assertEqual(sorted(s["title"] for s in body["series"]), ["Auth", "Headless"])
+        st, s = self.call("GET", "/api/series/auth")
+        self.assertEqual(s["parts"], ["v1"])
+        st, _ = self.call("PUT", "/api/series/auth", {"playlist": "https://www.youtube.com/playlist?list=X", "parts": ["v1"]})
+        self.assertEqual(self.core.get_series("auth")["playlist"], "https://www.youtube.com/playlist?list=X")
+        self.core.propose_split("v1", "Auth", [{"name": "v1"}, {"name": "v2", "title": "Second"}])
+        q = self.core.questions("v1")[-1]
+        st, _ = self.call("POST", "/api/videos/v1/questions", {"id": q["id"], "answer": "Make it a series"})
+        self.assertEqual(st, 200)
+        self.assertTrue(os.path.isdir(os.path.join(self.root, "videos", "v2")))
+
     def test_step_done_and_approve(self):
         st, _ = self.call("POST", "/api/videos/v1/phase", {"phase": "ideation", "step": "brief", "done": True})
         self.assertEqual(st, 200)
