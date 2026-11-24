@@ -12,7 +12,13 @@ wrong, what it cost and what to change. Each machine adds its own part; times ar
 | --- | --- | --- | --- | --- | --- | --- |
 | agents-2: "HubSpot Is Going Headless: Run Your CRM From Claude" (4:26) | from scratch | home Mac, in a Claude thread (before the pipeline) | home Mac | the finished file through the YouTube inbox (`final-agents-2-full-4k`) | none | scheduled, private until 12-01 |
 | agentcli: "HubSpot Is Going Headless: Stop Burning Credits on Repeat Agent Tasks" (6:44) | from scratch | work Mac, hands-off pipeline, checkpoints A and B | home Mac, by hand-off | youtube stage beside the render | skipped | scheduled, private until 12-01 |
-| whose-permissions: "HubSpot App Permissions: Whose Access Do Apps and Agents Use?" (3:25) | submission (finished video) | n/a | n/a | the YouTube inbox, metadata only | n/a | metadata final, not published yet |
+| whose-permissions: "HubSpot App Permissions: Whose Access Do Apps and Agents Use?" (3:25) | submission (finished video) | n/a | n/a | the YouTube inbox, metadata only | n/a | metadata, thumbnail and Drive done; not uploaded yet |
+
+All three are packaged the same way at the end: a chosen title, a thumbnail in the HubSpot brand (Dennis's headshot
+for agentcli and agents-2, the presenter's photo for whose-permissions), captions with fixes, tracked hsdev.fyi links
+including the series landing page and Brooke Bond's blog post, cards linking the series videos to each other, and
+the files archived in the team Drive (`Video Content/2026/11_November/headless/`). A playlist cover for the series
+was made from the intro sting.
 
 What the test proved:
 - **Both routes work end to end:** a from-scratch edit (cut, two checkpoints, render, packaging) and a finished video
@@ -24,7 +30,8 @@ What the test proved:
 
 Gaps the test left:
 - **No background music on any video.** The music pass was built afterwards (see "Ideas to improve").
-- **Thumbnails** were added after these videos were packaged; none of the three went through them.
+- **Thumbnails** were added after these videos were packaged; all three got one afterwards by hand (`yt thumb`), not
+  through the youtube stage.
 - **agents-2 has two catalog entries.** `agents-2` (from its edit, "drafted, not published") and
   `final-agents-2-full-4k` (from the inbox, scheduled) are the same video, because the inbox named the video after
   its file.
@@ -32,7 +39,7 @@ Gaps the test left:
 How to add to it: put new steps under your machine's heading in order, and add a row to "Ideas to improve" for anything
 worth changing. Tag each idea with where the fix lives (skill script, prompt, pipeline, CLAUDE.md, habit).
 
-## Summary so far (work Mac)
+## Summary (work Mac)
 
 | Stage | Wall time | Claude runs (cost) | Rounds of notes |
 | --- | --- | --- | --- |
@@ -40,7 +47,8 @@ worth changing. Tag each idea with where the fix lives (skill script, prompt, pi
 | Cut (Checkpoint A) | first run 14:06-15:15 on 11-23; rerun 20:35-21:15 | cut stage $2.85 (39 min, the rerun) | 2 (PAPER-CUT notes, enhanced audio) plus a false alarm (browser cache) |
 | Storyboard (Checkpoint B) | 21:29 on 11-23 to 12:13 on 11-24 | storyboard stage $2.15 (rerun with notes), plus interactive fixes | 3 (10 notes, 4 notes, "drop a second") |
 | YouTube metadata | drafted 21:31 on 11-23, redrafted 12:13 on 11-24 | youtube stage $0.39 per draft | links: Bitly, exercise repo, series links |
-| Render | handed off 12:13 on 11-24 | none on this Mac | rendering on the home Mac (see below) |
+| Render | handed off 12:13 on 11-24, imported 13:42 | none on this Mac | none (rendered on the home Mac) |
+| Packaging after the render (all three videos) | 13:45 to 16:00 on 11-24 | interactive | titles, thumbnails, links, Drive, scheduling, playlist cover |
 
 ## Steps on the work Mac
 
@@ -99,7 +107,34 @@ worth changing. Tag each idea with where the fix lives (skill script, prompt, pi
     videos without "HubSpot" in notes.txt need `--hubspot` each time.
 27. Added the builder-exercises repo (the exercise the videos say is "linked below") to the library and both videos.
 28. Added the series links (landing page `developers.hubspot.com/ai-tools/mcp`, Brooke Bond's blog post) as standard
-    for HubSpot Is Going Headless. The blog post 404s today, so it's held back until it's live.
+    for HubSpot Is Going Headless (`series_links` in the profile). The blog post 404s until it's published; it was
+    first held back, then put in when Dennis said it goes live before the videos, with a "check it" note per video.
+
+### 5. After the render: finishing and archiving (11-24)
+29. `yt import` from the Desktop: 403.8 s against 403.6 s expected, delivered and marked done. The YouTube draft was
+    already on the final cut's clock.
+30. Captions: "Ikebod" is Ichabod (the account name); "assembly" is "symlink", found from the screen (the skills
+    installer's "Symlink (Recommended)").
+31. Thumbnail for agentcli: frames from the video could not be cut out on this Mac (`onnxruntime-node` installs from
+    the public npm registry; the company registry blocks it, and Claude was not allowed to bypass it). Dennis gave a
+    transparent headshot (a 701 px one first, then a 2191 px one). The template cropped wide cutouts at the left
+    shoulder; fixed in the template (natural width, a soft left fade). Dennis then wrote his own headline ("Rinse
+    and Repeat | With Agent CLI") and re-rendered it himself without a Claude call.
+32. Bitly links came out on bit.ly, not HubSpot's branded domain. The profile now uses `hsdev.fyi`, and `yt shorten`
+    remakes a stored link on another domain; 24 links remade, every one checked to redirect to its tracked page.
+33. Description opening for agentcli rewritten with a hook (three options offered, one picked).
+34. `yt drive NAME`: copies the video, thumbnails, captions and YOUTUBE.md to the team Drive by year, month and series
+    (Drive for desktop, reusing the month folder names that are there). `--no-video` added when the published file was
+    already in Drive under another name and size (agents-2: 974 MB there against 591 MB here).
+35. `yt published --scheduled`: both videos are uploaded private and scheduled for 12-01; the catalog says
+    "scheduled" with the date instead of "published" on upload day. Their cards and end screens now link each other.
+36. agents-2 and whose-permissions packaged the same way: links checked and added (the Claude install page, and docs
+    for user-level access, service keys and scopes, now in LINKS.md), caption fixes (Dennis's name, "its own"), cards
+    to the other series videos, thumbnails (three options each, one picked), chosen titles.
+37. A caption fix didn't apply because the phrase was split across two caption cues ("its" / "up."); fixed with a
+    phrase inside one cue, and noted as an idea below.
+38. Playlist cover for HubSpot Is Going Headless from the intro sting (no headshot): "HubSpot Developers" over
+    "HubSpot is Going Headless" in two lines, the sprocket beside it.
 
 ## Steps on the home Mac
 
@@ -208,24 +243,50 @@ How each Mac pays for AI:
 
 List prices (Claude Opus 5.5, per million tokens): $4 input, $5 cache writes, $0.20 cache reads, $20 output.
 
-### AI, measured
+### AI on the work Mac (billed)
 
-| What | Where | Measured | Cost |
-| --- | --- | --- | --- |
-| Cut stage (headless Claude, the rerun) | work Mac, billed | Claude Code's own report | $2.85 |
-| Storyboard stage (rerun with notes) | work Mac, billed | Claude Code's own report | $2.15 |
-| YouTube draft for agentcli, twice | work Mac, billed | Claude Code's own report | $0.78 ($0.39 each) |
-| **Billed so far (measured)** | | | **$5.78** |
-| The home Mac's Claude thread: setup, hand-off, YouTube metadata, Bitly, thumbnails, music pass, this retro | home Mac, subscription | 145 requests since the thread was last summarised: 310 input, 310,742 cache-write, 43.5 M cache-read and 115,466 output tokens | not billed; $12.56 at list prices |
+Every Claude session on the work Mac since 11-22, from Claude Code's session logs (`~/.claude/projects/`). The
+unattended stages run on **Sonnet 5.5**; the interactive thread for this video ran on **Opus 5.5**. "Reported" is
+Claude Code's own figure (the stage's `pipeline/claude-*.json`, which only keeps a stage's latest run). "Estimate" is
+the run's tokens, scaled by the ratio between reported cost and list-price tokens on the same stage's reported run
+(0.56 to 0.70), or, for the Opus thread, at the list prices above. Check the estimates against the billing console.
 
-### AI, not measured (fill in)
+| Run | When (ET) | Model | Requests | Cost | How known |
+| --- | --- | --- | --- | --- | --- |
+| agentcli cut stage, first run | 11-23 15:14 | Sonnet 5.5 | 59 | about $1.50 | estimate |
+| agentcli cut stage, rerun (enhanced audio, notes) | 11-23 20:39 | Sonnet 5.5 | 78 | $2.85 | reported |
+| agentcli storyboard stage, first run | 11-23 21:28 | Sonnet 5.5 | 57 | about $1.95 | estimate |
+| agentcli storyboard stage, rerun (10 B notes) | 11-24 08:45 | Sonnet 5.5 | 69 | $2.15 | reported |
+| agentcli youtube stage, first draft | 11-23 21:31 | Sonnet 5.5 | 4 | about $0.35 | estimate |
+| agentcli youtube stage, redraft after B | 11-24 12:13 | Sonnet 5.5 | 7 | $0.39 | reported |
+| agents-2 youtube-only stage | 11-24 10:51 | Sonnet 5.5 | 6 | $0.33 | reported |
+| whose-permissions youtube-only stage | 11-24 10:54 | Sonnet 5.5 | 5 | $0.33 | reported |
+| **Unattended stages, this test** | | | | **about $9.85** | |
+| This interactive thread: setup fixes, both checkpoints' notes, rounds 2 and 3 at B, import, captions, thumbnails, Bitly domain, links, Drive, scheduling, all three videos' packaging, playlist cover, this recap | 11-23 14:29 to 11-24 16:00 | Opus 5.5 | 380 | about $26.30 | estimate (list prices) |
+| Three small interactive threads (npm registry, repo contents, a git sync) | 11-22 to 11-24 | Sonnet 5.5 | 73 | about $2.20 | estimate |
+| An earlier pipeline trial on `videos/agents` (cut and storyboard stages, 11-22) | 11-22 17:39 to 20:12 | Sonnet 5.5 | 104 | about $3.50 | estimate |
+| **Work Mac total since 11-22** | | | | **about $42** | |
+
+What that says:
+- **The interactive thread is two thirds of the bill.** It did the setup fixes, rounds 2 and 3 of B notes (each one a
+  full rebuild the stages could have run) and all of the packaging. Unattended stages for one edited video cost about
+  $9 with two runs of each; once setup is settled, about $5.
+- **Packaging after the render** (titles, thumbnails, links, Drive, three videos) was a large share of the
+  thread's 380 requests. Most of it is now scripted (`yt thumb`, `yt shorten`, `yt drive`, `yt published --scheduled`)
+  and can be run by hand without Claude.
+
+### AI on the home Mac (subscription)
+
+| What | Measured | Cost |
+| --- | --- | --- |
+| The home Mac's Claude thread: setup, hand-off, YouTube metadata, Bitly, thumbnails, music pass, its retro part | 145 requests since the thread was last summarised: 310 input, 310,742 cache-write, 43.5 M cache-read and 115,466 output tokens | not billed; $12.56 at list prices |
+| The same thread before its last summary (most of 11-22 and 11-23) | not on record | more than the figure above |
+
+### Not measured
 
 | What | Why it's missing |
 | --- | --- |
-| The first cut run (11-23, 14:06-15:15): billed | Only the rerun's cost was noted |
-| Interactive Claude Code threads on the work Mac (setup fixes, B notes rounds 2 and 3, links): billed | Interactive threads don't write a cost file; `/cost` in each thread shows it |
-| YouTube drafts for the two inbox videos: billed | Not listed in the work Mac's part (each about $0.39) |
-| The home Mac thread before its last summary (most of 11-22 and 11-23): subscription | Usage is only on record from the summary on; it used more of the plan than the figure above |
+| The agents-2 edit itself (home Mac, before the pipeline) | done in a home Mac thread before any of this was recorded |
 
 Most of the home Mac thread's usage is the context it re-reads on every request (instructions, tools, files: about
 60%) rather than the replies; long threads use more per step. That matters for the work Mac, where it's billed: start
@@ -238,7 +299,7 @@ a fresh thread for each video's notes rather than carrying one long thread from 
 | Cut stage | work Mac, billed | about $3 |
 | Storyboard stage | work Mac, billed | about $2 |
 | YouTube draft (titles, description, thumbnails' words) | work Mac, billed | about $0.40 |
-| Rounds of notes at A and B, in a thread | work Mac, billed | varies with the notes; not measured on agentcli |
+| Rounds of notes at A and B, in a thread | work Mac, billed | varies with the notes; agentcli's thread (setup, notes and packaging together) was about $26 |
 | Music pass (five candidates, samples, the pick) | home Mac, subscription | not billed |
 | **Billed, before notes** | | **about $5.40** |
 
@@ -250,7 +311,7 @@ Devs:After Dark is edited on the home Mac, so all of its AI runs on the subscrip
 | --- | --- | --- |
 | Claude | home Mac: Dennis's subscription; work Mac: HubSpot's usage-based account | The work Mac rows above are what HubSpot is billed |
 | Epidemic Sound | the existing subscription | Check that the plan covers videos on HubSpot's channel |
-| Bitly | HubSpot's account | A paid plan (the branded domain hsdev.fyi); about 5-6 links per video |
+| Bitly | HubSpot's account | A paid plan (the branded domain hsdev.fyi). This test made about 55 links: 31 in use (9 to 11 per video, one per link and placement), the rest superseded (24 bit.ly links before the domain fix). Keep an eye on the plan's monthly cap |
 | GitHub | free (private repos are free) | The repo is still public: make it private |
 | HyperFrames, FFmpeg, Parakeet, background removal | free, run locally | The background-removal runtime downloads once per Mac |
 | Machine time on the home Mac | electricity only | agentcli: about 11 min to copy the zip, 15 min for the 4K cut, about 45 min to render |
@@ -280,6 +341,13 @@ Devs:After Dark is edited on the home Mac, so all of its AI runs on the subscrip
 | New features tested on stand-ins only | risk, not time yet | No small real sample (a short 4K talking-head clip) kept for end-to-end tests |
 | No background music on agentcli | skipped this time | Music is a separate step after the render, started only by asking; the hand-off renders as soon as the zip lands, so nothing prompted it |
 | Repo name differs from the docs | not yet | The remote is `ai-video-productoin`; the README says `ai-video-production` |
+| Bitly links on bit.ly instead of hsdev.fyi | 24 links remade | The profile's domain was left at the default; nobody checked a link against the account's branded domain |
+| Frame cutouts don't work on the work Mac | the photo fallback, then Dennis supplied a headshot | `remove-background` installs `onnxruntime-node` from npm, and the company registry blocks it |
+| Headshot cropped at the shoulder | one re-render | The thumbnail template capped a cutout's width and cropped from the centre |
+| A guest video got Dennis's headshot | one re-render | The draft defaulted to his headshot; nobody asked whose video it was |
+| A caption fix didn't apply | caught by checking | Fixes match one cue at a time; the phrase was split across two |
+| A blog link that 404s | a round of back and forth | The rules leave out any link that doesn't resolve, and nothing records "scheduled, will be live" |
+| agents-2's video in Drive differs from the one here | a question to Dennis | The published file and the inbox copy are different encodes with different names |
 
 ## Ideas to improve
 
@@ -306,7 +374,15 @@ Devs:After Dark is edited on the home Mac, so all of its AI runs on the subscrip
 | Preflight prints a clear one-line reason and the fix before `install.sh` exits | install.sh, lib.sh | idea |
 | Keep a short real 4K sample (20 s talking head, git-ignored, on each Mac) and a `yt selftest` that runs cut, thumbnail and metadata on it | pipeline, tests | idea |
 | Background music pass on the home Mac, picked while the render runs: five Epidemic candidates, each edited so its drop lands on the sting's hit, compared as 30 s samples under the video; the render waits for the pick at its end and mixes it in (Dennis's spec, 11-24) | music.py, prompts/music.md, render-mac.sh (music step), render-host-job.sh, stage.sh, yt music | done (built and tested on stand-in tracks; first real run next video) |
-| First real thumbnail run on agentcli (frame and headshot), then adjust the templates | thumbnail templates | next |
+| First real thumbnail run on agentcli (frame and headshot), then adjust the templates | thumbnail templates | done (headshots on all three; wide cutouts fixed in the template) |
+| Bitly on the branded domain, and remake links made on another domain | profiles/hubspot/youtube.json, youtube-meta.py | done |
+| Archive finished videos to the team Drive by year, month and series | pipeline/drive.py, `yt drive` | done |
+| Record scheduled uploads honestly in the catalog | `yt published --scheduled` | done |
+| Ask whose face goes on the thumbnail (Dennis, a guest, the presenter) before drafting, and keep guests' photos in the video's folder | prompts/youtube.md | idea |
+| Frame cutouts on the work Mac: install `onnxruntime-node` once by hand from the public registry (Dennis), or keep a cut-out headshot per presenter | habit, README | idea |
+| A playlist cover command (the sting as a still, any title, no face) instead of a hand-staged page | thumbnail.py or bookends.py | idea |
+| Keep only the chosen title and thumbnail once Dennis picks (he deletes the rest by hand today) | youtube-meta.py | idea |
+| Finish small B rounds in the storyboard stage instead of the interactive thread: it is the costliest part of the bill | pipeline, habit | idea |
 | Fix the repo name: rename the GitHub repo to `ai-video-production` (GitHub redirects the old URL), or correct the docs | GitHub, README | next |
 | Make the repo private (it's public, with HubSpot fonts in it) | GitHub settings | next |
 | A finished file for a video that already exists (agents-2's own render through the YouTube inbox) goes onto that video, not a new one: match by `notes.txt` ("video: agents-2") or a known render name (`<name>-full-4k`), and merge the two agents-2 catalog entries now | youtube-inbox.sh, catalog | next |
