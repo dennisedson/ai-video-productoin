@@ -16,6 +16,7 @@ opened that day. Ids are what metadata.json uses (`{link:<id>}`). YouTube links 
 | agent-cli-docs | HubSpot Agent CLI guide | https://developers.hubspot.com/docs/developer-tooling/local-development/agent-cli/guide | the Agent CLI | linked 2026-11-23 |
 | agent-cli-changelog | Agent CLI public beta (changelog) | https://developers.hubspot.com/changelog/hubspot-agent-cli-available-in-public-beta | the Agent CLI announcement | opened 2026-11-23 |
 | agent-cli-blog | Introducing the HubSpot Agent CLI | https://blog.hubspot.com/marketing/introducing-the-hubspot-agent-cli | why the Agent CLI exists, use cases | linked 2026-11-23 |
+| exercise | HubSpot builder exercises (GitHub) | https://github.com/hubspotdev/builder-exercises/tree/main | the hands-on exercises the videos follow (Hannah's "One job, three tools: following up on stalled deals") | opened 2026-11-24 |
 | dev-signup | Create a free HubSpot developer account | https://app.hubspot.com/signup-hubspot/developers | standing CTA | opened 2026-11-23 |
 | dev-platform-basics | Developer platform basics | https://developers.hubspot.com/developer-platform-basics | getting started on the developer platform | opened 2026-11-23 |
 | account-types | HubSpot account types (developer test accounts) | https://developers.hubspot.com/docs/getting-started/account-types | where to try things safely | linked 2026-11-23 |
