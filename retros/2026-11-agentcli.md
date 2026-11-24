@@ -1,8 +1,33 @@
-# Retro: agentcli, end to end (Nov 2026)
+# Retro: the first test run, end to end (Nov 2026)
 
-The first HubSpot work video through the hands-off pipeline from the work Mac: two-file tutorial (camera + screen
-recording), hubspot profile, render handed off to the home Mac. This file lists every step we took, what went wrong,
-and what to change. Each machine adds its own part; times are local (ET).
+The first test of the whole setup, concluded 11-24: **two videos made from scratch and one submitted finished video**
+(YouTube packaging only), all HubSpot, series HubSpot Is Going Headless. agentcli is the one followed step by step
+below: the first work video through the hands-off pipeline on the work Mac (two-file tutorial, camera plus screen
+recording, `hubspot` profile), its render handed off to the home Mac. This file lists every step we took, what went
+wrong, what it cost and what to change. Each machine adds its own part; times are local (ET).
+
+## The test at a glance
+
+| Video | Kind | Edited | Rendered | YouTube packaging | Music | Where it stands (11-24) |
+| --- | --- | --- | --- | --- | --- | --- |
+| agents-2: "HubSpot Is Going Headless: Run Your CRM From Claude" (4:26) | from scratch | home Mac, in a Claude thread (before the pipeline) | home Mac | the finished file through the YouTube inbox (`final-agents-2-full-4k`) | none | scheduled, private until 12-01 |
+| agentcli: "HubSpot Is Going Headless: Stop Burning Credits on Repeat Agent Tasks" (6:44) | from scratch | work Mac, hands-off pipeline, checkpoints A and B | home Mac, by hand-off | youtube stage beside the render | skipped | scheduled, private until 12-01 |
+| whose-permissions: "HubSpot App Permissions: Whose Access Do Apps and Agents Use?" | submission (finished video) | n/a | n/a | the YouTube inbox, metadata only | n/a | metadata final, not published yet |
+
+What the test proved:
+- **Both routes work end to end:** a from-scratch edit (cut, two checkpoints, render, packaging) and a finished video
+  through packaging alone. Two videos are scheduled with titles, descriptions, chapters, captions, tracked short
+  links and catalog entries.
+- **The split between the Macs works:** the work Mac edits under HubSpot's rules, the home Mac renders, with the zip
+  carried over Screen Sharing.
+- **What cost the most time** was setup on a new Mac and rounds of notes at Checkpoint B (see "What went wrong").
+
+Gaps the test left:
+- **No background music on any video.** The music pass was built afterwards (see "Ideas to improve").
+- **Thumbnails** were added after these videos were packaged; none of the three went through them.
+- **agents-2 has two catalog entries.** `agents-2` (from its edit, "drafted, not published") and
+  `final-agents-2-full-4k` (from the inbox, scheduled) are the same video, because the inbox named the video after
+  its file.
 
 How to add to it: put new steps under your machine's heading in order, and add a row to "Ideas to improve" for anything
 worth changing. Tag each idea with where the fix lives (skill script, prompt, pipeline, CLAUDE.md, habit).
@@ -284,6 +309,7 @@ Devs:After Dark is edited on the home Mac, so all of its AI runs on the subscrip
 | First real thumbnail run on agentcli (frame and headshot), then adjust the templates | thumbnail templates | next |
 | Fix the repo name: rename the GitHub repo to `ai-video-production` (GitHub redirects the old URL), or correct the docs | GitHub, README | next |
 | Make the repo private (it's public, with HubSpot fonts in it) | GitHub settings | next |
+| A finished file for a video that already exists (agents-2's own render through the YouTube inbox) goes onto that video, not a new one: match by `notes.txt` ("video: agents-2") or a known render name (`<name>-full-4k`), and merge the two agents-2 catalog entries now | youtube-inbox.sh, catalog | next |
 | Record every Claude run's cost per video (interactive threads too: paste `/cost` into the retro, or a `yt cost NAME` that totals the stage JSONs) | pipeline/yt, habit | idea |
 | Lint: drop the GSAP warning for `#tag-glass .pip.done` in the composition | compose / formats | idea |
 | Caption fixes only match inside one cue: "its up" split across two cues never changed; apply fixes to the word list before cues are cut | youtube-meta.py captions() | idea |
