@@ -150,8 +150,11 @@ attached to the home Mac's Video folder. The agentcli render itself is the last 
     `hyperframes check` in 17 s (17 lint warnings, one a GSAP target that doesn't exist, `#tag-glass .pip.done`).
 21. Render started 12:40 (1 worker, 45M): 11,569 frames, 65% at 13:10, about 4.7 frames a second, so done around
     13:25 before the bookends and checks.
-22. Still to do: bookends and checks finish, music (step 11), drag back, `yt import` on the work Mac, upload with the
+22. Still to do: bookends and checks finish, drag back, `yt import` on the work Mac, upload with the
     YouTube metadata and thumbnail, `yt published`, `yt clean-renders` on the home Mac.
+
+Background music was skipped for agentcli: it's part of the home Mac's job, but the hand-off went straight to the
+render and the music step (step 11) only runs when asked, after it. Next time the music pass runs before the render.
 
 ### 7. Thumbnails (11-24, during the render)
 23. Thumbnails were missed in the YouTube packaging and added now: a one-frame template per profile in its brand,
@@ -190,6 +193,7 @@ attached to the home Mac's Video folder. The agentcli render itself is the last 
 | Hand-off zip 2.49 GB, not the 1.3 GB the README says | about 11 min to copy | The bundle carries the whole 627 s camera file; only 386 s of it is used |
 | 4K flat cut on the home Mac: 15 min before the render starts | 15 min per render | Every hand-off rebuilds the graded 4K cut from the raw camera file |
 | New features tested on stand-ins only | risk, not time yet | No small real sample (a short 4K talking-head clip) kept for end-to-end tests |
+| No background music on agentcli | skipped this time | Music is a separate step after the render, started only by asking; the hand-off renders as soon as the zip lands, so nothing prompted it |
 | Repo name differs from the docs | not yet | The remote is `ai-video-productoin`; the README says `ai-video-production` |
 
 ## Ideas to improve
@@ -216,6 +220,7 @@ attached to the home Mac's Video folder. The agentcli render itself is the last 
 | Show on the work Mac how far the home render is: the home Mac writes `status.json` into `out/`, visible over Screen Sharing; or `yt status` on the home Mac lists `_render-inbox` jobs (it does; say so in the runbook) | README, render-host-job.sh | idea |
 | Preflight prints a clear one-line reason and the fix before `install.sh` exits | install.sh, lib.sh | idea |
 | Keep a short real 4K sample (20 s talking head, git-ignored, on each Mac) and a `yt selftest` that runs cut, thumbnail and metadata on it | pipeline, tests | idea |
+| Background music pass before the render on the home Mac: pick and cut the tracks (Epidemic Sound) when the zip lands, then render with the music mixed in (ducked, limiter, a no-music twin) | render-host.sh, render-mac.sh, skill Music rules, CLAUDE.md | next |
 | First real thumbnail run on agentcli (frame and headshot), then adjust the templates | thumbnail templates | next |
 | Fix the repo name: rename the GitHub repo to `ai-video-production` (GitHub redirects the old URL), or correct the docs | GitHub, README | next |
 | Make the repo private (it's public, with HubSpot fonts in it) | GitHub settings | next |
