@@ -30,7 +30,10 @@ Do:
    "~/Movies/YouTube Renders/<name>".
 6b. When the profile has bookends (profiles/<profile>/intro, outro): choose the sting point and the end card's "next"
    by the skill ("Bookends"), add "bookends" to render.json, and run bookends.py --project {W} --preview (the two
-   clips land in {W}/bookends/; copy them into {W}/review/).
+   clips land in {W}/bookends/; copy them into {W}/review/). Then, after card-check, splice them into
+   {W}/review/preview.mp4 the way the render will (the sting cut in at bookends.intro.at, the video resuming at .resume,
+   the end card after; ffmpeg, re-encoded at draft quality, audio kept), so the preview Dennis watches plays in the
+   published order and he sees the sting land. Times in CHECKPOINT-B.md stay on the flat cut's clock; say so there.
 7. Write {W}/CHECKPOINT-B.md (including the sting point and the end card text): the layout, every overlay and zoom with its time, the variants, open questions.
 
 Rules: never render 4K, never encode a 4K flat cut except for the exception in step 1, and never run render-mac.sh; look at images sparingly; write only inside {W}; do not change the
