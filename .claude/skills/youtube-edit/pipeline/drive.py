@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """drive.py: copy a finished video and its YouTube files to the team's Google Drive folder (Drive for desktop).
 
-  python3 drive.py videos/NAME [--dry-run] [--month YYYY-MM]
+  python3 drive.py videos/NAME [--dry-run] [--month YYYY-MM] [--no-video]
 
 Where: the profile's youtube.json "drive": {"root": <path under the Drive mount>, "series": {<campaign>: <folder>}}.
 The mount is ~/Library/CloudStorage/GoogleDrive-*/ (the one where root exists); DRIVE_ROOT (an absolute path, e.g. in
@@ -19,6 +19,7 @@ import argparse, glob, json, os, re, shutil, sys, time
 
 ap = argparse.ArgumentParser()
 ap.add_argument("project"); ap.add_argument("--dry-run", action="store_true"); ap.add_argument("--month", default="")
+ap.add_argument("--no-video", action="store_true", help="leave the video out (the published one is already in Drive under another name)")
 a = ap.parse_args()
 W = os.path.abspath(a.project.rstrip("/")); NAME = os.path.basename(W); Y = os.path.join(W, "youtube")
 SK = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -75,10 +76,12 @@ dest = os.path.join(ydir, mname, series) if series else os.path.join(ydir, mname
 files = []                                                  # (source, name in Drive, is the video)
 for f in sorted(glob.glob(os.path.join(W, "*.mp4")) + glob.glob(os.path.join(W, "*.mov"))):
     files.append((f, os.path.basename(f), True))
-if not any(v for _, _, v in files):
+if not a.no_video and not any(v for _, _, v in files):
     sys.exit("no finished video at the top of %s (import the render first: yt import %s VIDEO)" % (W, NAME))
 for f in sorted(glob.glob(os.path.join(Y, "thumbnail-[0-9].jpg")) + glob.glob(os.path.join(Y, "thumbnail-[0-9][0-9].jpg"))):
     files.append((f, "%s-%s" % (NAME, os.path.basename(f)), False))
+if a.no_video:
+    files = [x for x in files if not x[2]]
 for n in ("captions.srt", "YOUTUBE.md"):
     if os.path.isfile(os.path.join(Y, n)):
         files.append((os.path.join(Y, n), "%s-%s" % (NAME, n), False))

@@ -21,7 +21,7 @@ One entry per video: what it covers, where it lives, what it links to. Written b
 <!-- /video:agents-2 -->
 
 <!-- video:agentcli -->
-### HubSpot Agent CLI: Find Stale Deals and Create Tasks in a Script
+### HubSpot Is Going Headless: Stop Burning Credits on Repeat Agent Tasks
 
 - **Slug:** `agentcli` · **Channel:** HubSpot Developers · **Series:** HubSpot Is Going Headless
 - **Status:** scheduled (private until 2026-12-01)
@@ -38,7 +38,7 @@ One entry per video: what it covers, where it lives, what it links to. Written b
 <!-- /video:agentcli -->
 
 <!-- video:final-agents-2-full-4k -->
-### Connect Claude to HubSpot: Manage Deals Without Opening HubSpot
+### HubSpot Is Going Headless: Run Your CRM From Claude
 
 - **Slug:** `final-agents-2-full-4k` · **Channel:** HubSpot Developers · **Series:** HubSpot Is Going Headless
 - **Status:** drafted, not published
@@ -50,7 +50,7 @@ One entry per video: what it covers, where it lives, what it links to. Written b
 - **Topics:** HubSpot connector for Claude, HubSpot MCP server, connector scopes, deals, stale deals, tasks, scheduled tasks in Claude, headless HubSpot
 - **Questions it answers:** How do I connect Claude to HubSpot? · Which scopes should the HubSpot connector get? · Can Claude create deals in HubSpot? · How do I find stale deals in HubSpot with an AI agent? · Can I schedule a recurring HubSpot task in Claude?
 - **Chapters:** 00:00 HubSpot is going headless: agents in Claude · 00:26 Connect Claude to HubSpot with the connector · 01:00 Choose the connector's scopes · 01:33 Create HubSpot deals from a Claude prompt · 02:21 Find stale deals and add follow-up tasks · 03:25 Schedule the stale-deal check in Claude · 04:00 Next: the HubSpot Agent CLI
-- **Links used:** [Create a free HubSpot developer account](https://app.hubspot.com/signup-hubspot/developers), [Get the HubSpot connector for Claude](https://www.hubspot.com/claude/connector), [How the HubSpot MCP server works (docs)](https://developers.hubspot.com/docs/build-with-ai/remote-mcp-server), [HubSpot Agent CLI guide](https://developers.hubspot.com/docs/developer-tooling/local-development/agent-cli/guide), [HubSpot MCP server: connect your AI tools](https://developers.hubspot.com/ai-tools/mcp), [Join the HubSpot builder and developer community](https://developers.hubspot.com/community), [Read the walkthrough: HubSpot's CRM is going headless (blog)](https://developers.hubspot.com/blog/hubspots-crm-is-going-headless-now-choose-your-own-adventure), [Subscribe to HubSpot Developers](https://www.youtube.com/@HubSpotDevelopers?sub_confirmation=1), [Try the exercise yourself (GitHub)](https://github.com/hubspotdev/builder-exercises/tree/main)
+- **Links used:** [Create a free HubSpot developer account](https://app.hubspot.com/signup-hubspot/developers), [Get the HubSpot connector for Claude](https://www.hubspot.com/claude/connector), [How the HubSpot MCP server works (docs)](https://developers.hubspot.com/docs/build-with-ai/remote-mcp-server), [HubSpot Agent CLI guide](https://developers.hubspot.com/docs/developer-tooling/local-development/agent-cli/guide), [HubSpot MCP server: connect your AI tools](https://developers.hubspot.com/ai-tools/mcp), [Install the HubSpot connector in Claude](https://claude.ai/directory/connectors/hubspot), [Join the HubSpot builder and developer community](https://developers.hubspot.com/community), [Read the walkthrough: HubSpot's CRM is going headless (blog)](https://developers.hubspot.com/blog/hubspots-crm-is-going-headless-now-choose-your-own-adventure), [Subscribe to HubSpot Developers](https://www.youtube.com/@HubSpotDevelopers?sub_confirmation=1), [Try the exercise yourself (GitHub)](https://github.com/hubspotdev/builder-exercises/tree/main)
 - **Related:** agentcli (next, not published yet)
 <!-- /video:final-agents-2-full-4k -->
 
